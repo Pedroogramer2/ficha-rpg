@@ -13,9 +13,40 @@ const IMAGENS_RACAS = {
   "Halfling": "https://www.dndbeyond.com/attachments/thumbnails/0/626/250/364/halfling.png",
   "Gnomo": "https://www.dndbeyond.com/attachments/thumbnails/0/637/300/300/gnome.png",  
   "Draconato (Dragonborn)": "https://www.dndbeyond.com/attachments/thumbnails/0/633/260/603/dragonborn.png",
-  "Orc": "https://www.dndbeyond.com/attachments/0/728/c3orcintro.png",
-  "Golias (Goliath)": "https://www.dndbeyond.com/attachments/0/744/c3goliathintro.png",
-  "Tiefling": "https://www.dndbeyond.com/attachments/thumbnails/0/646/260/410/tiefling.png"
+  "Orc": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRd3SWl_suxSQ_8UpZjMcnc7VKmgcCgL_u8fMcyle3smd49aWUq09UC8zo&s=10",
+  "Golias (Goliath)": "https://preview.redd.it/art-comm-goliath-monk-v0-u63qknjfw0ga1.jpg?width=1080&crop=smart&auto=webp&s=1d66e7fc94d96881beec4db3a868ea2f0b0bdbb6",
+  "Tiefling": "https://www.dndbeyond.com/attachments/thumbnails/0/646/260/410/tiefling.png",
+  "Dhampir": "https://markberepeterson.com/wp-content/uploads/2021/03/img_6707.jpg?w=640",
+  "Sangue-Bruxo (Hexblood)": "https://wa-cdn.nyc3.cdn.digitaloceanspaces.com/user-data/production/81a94115-689c-4302-bcee-8e06d56df3fb/uploads/images/859d78054ec8413355ec851fc6d52f43.png",
+  "Lupino (Lupin)": "https://uploads.worldanvil.com/uploads/images/e31dec314f0d3c6168bc89779686c49d.jpg",
+  "Renascido (Reborn)": "https://media.dndbeyond.com/compendium-images/vrgtr/U9mBj5XfiTD1mHie/01-007.reborn-phantom-limb.png",
+  "Metamorfo (Changeling)": "https://static.wikia.nocookie.net/forgottenrealms/images/4/47/Changeling_MotM.png/revision/latest?cb=20230822130023",
+  "Kalashtar": "https://static.wikia.nocookie.net/eberron/images/5/55/Kalashtar-5e.webp/revision/latest?cb=20251002033725",
+  "Khoravar (Meio-Elfo)": "https://klubbsaga2015.wdfiles.com/local--files/khoravar/Dragonmarked%20PrC%2003.png",
+  "Shifter": "https://arcaneeye.com/wp-content/uploads/2021/07/path-of-the-beast-1.png",
+  "Forjado Bélico (Warforged)": "https://static.wikia.nocookie.net/eberron/images/0/09/Warforged3e.jpg/revision/latest/scale-to-width/360?cb=20220414180349",
+  "Boggart": "https://static.wikia.nocookie.net/gamelore/images/9/9b/Adder-Staff_Boggart.jpg/revision/latest?cb=20151005124710",
+  "Fada (Faerie)": "https://i0.wp.com/dungeonmister.com/wp-content/uploads/2022/07/Fairy.jpg",
+  "Flamekin": "https://uploads.worldanvil.com/uploads/images/ba750d1f4cd54e2b7a62add6b2d87478.JPG",
+  "Metamorfo de Lorwyn (Lorwyn Changeling)": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe_gKiTb5YvU9L7DoJ2rItJCh-cXl1cvJTEDRkmKrIeA&s=10",
+  "Rimekin": "https://i0.wp.com/dungeonmister.com/wp-content/uploads/2025/11/01-010.rimekin.png?fit=1568%2C944&ssl=1",
+  "Aarakocra": "https://static.wikia.nocookie.net/dungeonsdragons/images/a/af/Aarakocra5e.jpg/revision/latest/thumbnail/width/360/height/450?cb=20201006074948",
+  "Metamorfo (Multiverso)": "https://www.wargamer.com/wp-content/sites/wargamer/2022/07/dnd-changeling-5e-with-cape.jpg",
+  "Gnomo Profundo (Svirfneblin)": "https://static.wikia.nocookie.net/emerald-isles/images/a/af/Gnome_-_Deep.jpg/revision/latest?cb=20200108024247",
+  "Duergar": "https://www.dndbeyond.com/avatars/thumbnails/30782/763/1000/1000/638061975214164210.png",
+  "Eladrin": "https://www.dndbeyond.com/attachments/thumbnails/3/907/300/494/spring-eladrin.png",
+  "Fada (Multiverso)": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSPC19eOhGGJUKDTfi7mJ4Gu4vB5Z8hawMjsBKbCx8cMvGvk1dq5A1Koo&s=10",
+  "Genasi do Ar (Air Genasi)": "https://static.wikia.nocookie.net/penrith/images/3/32/Air-genasi-2.png/revision/latest?cb=20180627180151",
+  "Genasi da Terra (Earth Genasi)": "https://velantis.wordpress.com/wp-content/uploads/2020/01/earth-genasi-1.jpg",
+  "Genasi do Fogo (Fire Genasi)": "https://static.wixstatic.com/media/795b3d_960bc813f37244bdb92cecf66e86a855~mv2.png/v1/fill/w_435,h_435,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Fire%20Genasi.png",
+  "Genasi da Água (Water Genasi)": "https://i.pinimg.com/236x/04/eb/9d/04eb9da5be65971390e2ffea6c7eff4a.jpg",
+  "Githyanki": "",
+  "Githzerai": "",
+  "Golias (Goliath - MotM)": "",
+  "Harengon": "",
+  "Kenku": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpRXc3qWQ9bledxcCEtNflH0bZJSdfA3Ft6nXSFgksYw&s=10",
+  "Locathah": "",
+  "Owlin": "https://static.wikia.nocookie.net/dungeonsdragons/images/7/7f/Owlin.png/revision/latest?cb=20250715160508",
 };
 
 export function PassoEspecie() {
@@ -96,13 +127,40 @@ export function PassoEspecie() {
           {listaRacas.map(chave => {
             const isSelected = dados.raca === chave;
             return (
-              <div key={chave} className={`carta-classe ${isSelected ? 'ativa' : ''}`} onClick={() => selecionarRaca(chave)}>
-                <div className="carta-icone">
+              <div 
+                key={chave} 
+                className={`carta-classe ${isSelected ? 'ativa' : ''}`} 
+                onClick={() => selecionarRaca(chave)}
+                style={{ position: 'relative', overflow: 'hidden' }} // 👈 Segura o texto dentro
+              >
+                <div className="carta-icone" style={{ width: '100%', height: '100%' }}>
                   {IMAGENS_RACAS[chave] ? (
                     <img src={IMAGENS_RACAS[chave]} alt={chave} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', borderRadius: '4px' }} />
-                  ) : (chave.charAt(0))}
+                  ) : (
+                    <span style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '3rem'}}>{chave.charAt(0)}</span>
+                  )}
                 </div>
-                <div className="carta-nome">{chave}</div>
+                
+                {/* 👇 O NOME FORÇADO COM O GRADIENTE PRETO 👇 */}
+                <div className="carta-nome" style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  padding: '25px 5px 8px 5px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
+                  color: '#fff',
+                  textAlign: 'center',
+                  fontWeight: '900',
+                  fontSize: '1.2rem',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 4px #000',
+                  boxSizing: 'border-box'
+                }}>
+                  {chave}
+                </div>
+
                 {isSelected && <div className="brilho-borda"></div>}
               </div>
             );

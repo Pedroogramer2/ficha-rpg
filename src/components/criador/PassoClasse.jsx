@@ -133,15 +133,36 @@ export function PassoClasse() {
                 key={chave} 
                 className={`carta-classe ${dados.classe === chave ? 'ativa' : ''}`}
                 onClick={() => selecionarClasse(chave)}
+                style={{ position: 'relative', overflow: 'hidden' }} // Força o card a segurar o nome dentro dele
               >
-                <div className="carta-icone">
+                <div className="carta-icone" style={{ width: '100%', height: '100%' }}>
                   {IMAGENS_CLASSES[chave] ? (
                     <img src={IMAGENS_CLASSES[chave]} alt={chave} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', borderRadius: '4px' }} />
                   ) : (
-                    chave.charAt(0) 
+                    <span style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '3rem'}}>{chave.charAt(0)}</span> 
                   )}
                 </div>
-                <div className="carta-nome">{chave}</div>
+                
+                {/* 👇 O NOME FORÇADO VIA CSS INLINE (IMPOSSÍVEL DAR ERRO) 👇 */}
+                <div className="carta-nome" style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  padding: '25px 5px 8px 5px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
+                  color: '#fff',
+                  textAlign: 'center',
+                  fontWeight: '900',
+                  fontSize: '1.2rem',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 4px #000',
+                  boxSizing: 'border-box'
+                }}>
+                  {chave}
+                </div>
+                
                 {dados.classe === chave && <div className="brilho-borda"></div>}
               </div>
             ))}
