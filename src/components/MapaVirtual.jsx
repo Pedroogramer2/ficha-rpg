@@ -420,13 +420,15 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
             onDrop={soltarTokenArrastado}          
             style={{
               backgroundImage: `url(${mapaBg})`,
-              backgroundSize: '100% 100%',
+              backgroundSize: 'contain', 
+              backgroundPosition: 'center', 
               backgroundRepeat: 'no-repeat',
               width: '2000px', height: '1500px',
               position: 'relative',
               transform: `scale(${zoom})`,
               transformOrigin: '0 0',
-              cursor: modoNevoa || modoRegua ? 'crosshair' : 'default'
+              cursor: modoNevoa || modoRegua ? 'crosshair' : 'default',
+              backgroundColor: '#0a0a0a'
             }}
           >
             {/* 👇 3. APLICAÇÃO DINÂMICA DA OPACIDADE NAS LINHAS 👇 */}
