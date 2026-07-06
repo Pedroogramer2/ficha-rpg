@@ -165,7 +165,6 @@ function CriadorPersonagemInterno() {
         });
       }
 
-      // 👇 INJETOR DE MAGIAS BÔNUS 👇
       const magiasFinais = { 
         truques: [...(rascunho.magiasConhecidas?.truques || [])], 
         nivel1: [...(rascunho.magiasConhecidas?.nivel1 || [])],
@@ -211,32 +210,25 @@ function CriadorPersonagemInterno() {
       const dadosVidaInicial = { total: rascunho.nivel || 1, gastos: rascunho.dadosVida?.gastos || 0, tipo: dv };
       let ataquesIniciais = rascunho.ataques || [];
 
-      // 👇 AUTOMATIZAÇÃO DE BÔNUS DE ATRIBUTOS (ANTECEDENTES) 👇
-      let atributosFinais = { ...(rascunho.atributos || {}) };
-      
-      if (rascunho.bonusAtributos) {
-        const { principal, secundario, terciario } = rascunho.bonusAtributos;
-        const mapeamentoAtr = {
-          "Força": "forca", "Destreza": "destreza", "Constituição": "constituicao",
-          "Inteligência": "inteligencia", "Sabedoria": "sabedoria", "Carisma": "carisma"
-        };
-        
-        if (principal && secundario && !terciario) {
-           if (mapeamentoAtr[principal]) atributosFinais[mapeamentoAtr[principal]] += 2;
-           if (mapeamentoAtr[secundario]) atributosFinais[mapeamentoAtr[secundario]] += 1;
-        } 
-        else if (principal && secundario && terciario) {
-           if (mapeamentoAtr[principal]) atributosFinais[mapeamentoAtr[principal]] += 1;
-           if (mapeamentoAtr[secundario]) atributosFinais[mapeamentoAtr[secundario]] += 1;
-           if (mapeamentoAtr[terciario]) atributosFinais[mapeamentoAtr[terciario]] += 1;
-        }
-      }
+      // 👇 MÁGICA DOS ATRIBUTOS (FIM DO LOOP INFINITO) 👇
+      // Nós APAGAMOS a soma dupla de antecedentes que tinha aqui!
+      // O PassoAtributos e o Antivirus já fazem o cálculo perfeitamente.
+      // Aqui a gente só embala pra viagem!
+      let atributosFinais = {
+        forca: Number(rascunho.atributos?.forca ?? rascunho.forca ?? 10),
+        destreza: Number(rascunho.atributos?.destreza ?? rascunho.destreza ?? 10),
+        constituicao: Number(rascunho.atributos?.constituicao ?? rascunho.constituicao ?? 10),
+        inteligencia: Number(rascunho.atributos?.inteligencia ?? rascunho.inteligencia ?? 10),
+        sabedoria: Number(rascunho.atributos?.sabedoria ?? rascunho.sabedoria ?? 10),
+        carisma: Number(rascunho.atributos?.carisma ?? rascunho.carisma ?? 10),
+      };
 
+      // Tira a pasta "atributos" do rascunho pra jogar eles espalhados na raiz do banco de dados
       const { atributos, ...restoRascunho } = rascunho; 
 
       const personagemFinal = {
         ...restoRascunho,
-        ...atributosFinais, // 👈 Atributos com o bônus do antecedente somado!
+        ...atributosFinais, // 👈 Exporta os atributos certinhos pra raiz sem somar +2 fantasma!
         atributos: null,
         profArmasArmaduras: textoProficiencias,
         idiomas: textoIdiomas,
@@ -249,7 +241,7 @@ function CriadorPersonagemInterno() {
         visaoEspecial: visaoExtra,
         ataques: ataquesIniciais,
         tracosRaciais: rascunho.tracosRaciais || [],
-        talentos: rascunho.talentos || [], // 👈 Puxa tudo perfeitamente do PassoTalentos
+        talentos: rascunho.talentos || [],
         inventario: rascunho.inventario || [],
         magiasConhecidas: magiasFinais, 
         ultimaEdicao: new Date().toISOString()

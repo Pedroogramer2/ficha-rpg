@@ -1499,13 +1499,15 @@ body {
 
 .tooltip-passo {
   position: absolute;
-  top: -25px;
+  top: 40px;
   font-size: 0.7rem;
   white-space: nowrap;
   color: #aaa;
   opacity: 0; /* Escondido por padrão */
+  transition: all 0.2s ease-in-out;
+  pointer-events: none; 
 }
-.bolinha-passo:hover .tooltip-passo { opacity: 1; }
+.bolinha-passo:hover .tooltip-passo { opacity: 1; color: #fff;}
 .bolinha-passo.ativa .tooltip-passo { opacity: 1; color: #ffcc00; top: 40px; }
 
 /* Conteúdo */

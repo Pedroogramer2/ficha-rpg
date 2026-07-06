@@ -1,22 +1,15 @@
 // src/components/criador/PassoAtributos.jsx
-import { useState, useEffect } from 'react';
-
-// 👇 IMPORTAMOS O CÉREBRO 👇
+import { useEffect, useCallback } from 'react';
 import { useCriador } from '../../context/CriadorContext';
 
 const ATRIBUTOS = ["forca", "destreza", "constituicao", "inteligencia", "sabedoria", "carisma"];
 const NOMES = { forca: "Força", destreza: "Destreza", constituicao: "Constituição", inteligencia: "Inteligência", sabedoria: "Sabedoria", carisma: "Carisma" };
 const ARRAY_PADRAO = [15, 14, 13, 12, 10, 8];
 
-// 👇 TIRAMOS AS PROPS DAQUI 👇
 export function PassoAtributos() {
-  
-  // 👇 E PUXAMOS ELAS DA NUVEM AQUI! 👇
   const { rascunho: dados, setRascunho: atualizar } = useCriador();
 
-  const [metodo, setMetodo] = useState("padrao"); 
-  
-  function getBonusAntecedente(chaveAttr) {
+  const getBonusAntecedente = useCallback((chaveAttr) => {
     const nomeFormatado = NOMES[chaveAttr]; 
     const bonus = dados.bonusAtributos || {};
     
@@ -30,25 +23,23 @@ export function PassoAtributos() {
     if (bonus.principal === nomeFormatado) return 2;
     if (bonus.secundario === nomeFormatado) return 1;
     return 0;
-  }
+  }, [dados.bonusAtributos]);
 
-  const [valoresSimples, setValoresSimples] = useState(() => {
-    if (dados.atributos && Object.keys(dados.atributos).length > 0) {
-      return {
-        forca: (dados.atributos.forca || 10) - getBonusAntecedente('forca'),
-        destreza: (dados.atributos.destreza || 10) - getBonusAntecedente('destreza'),
-        constituicao: (dados.atributos.constituicao || 10) - getBonusAntecedente('constituicao'),
-        inteligencia: (dados.atributos.inteligencia || 10) - getBonusAntecedente('inteligencia'),
-        sabedoria: (dados.atributos.sabedoria || 10) - getBonusAntecedente('sabedoria'),
-        carisma: (dados.atributos.carisma || 10) - getBonusAntecedente('carisma')
-      };
-    }
-    return { forca: 8, destreza: 8, constituicao: 8, inteligencia: 8, sabedoria: 8, carisma: 8 };
-  });
+  // 👇 SINGLE SOURCE OF TRUTH: Lendo direto da nuvem, sem useState! 👇
+  const metodo = dados.metodoCriacaoAtributos || (dados.atributos && Object.keys(dados.atributos).length > 0 ? 'manual' : 'padrao');
+  const rolagens = dados.dadosRoladosSalvos || [];
+  const alocacoes = dados.alocacoesSalvas || {};
+  
+  const valoresSimples = dados.valoresSimplesSalvos || {
+    forca: (dados.atributos?.forca || 10) - getBonusAntecedente('forca'),
+    destreza: (dados.atributos?.destreza || 10) - getBonusAntecedente('destreza'),
+    constituicao: (dados.atributos?.constituicao || 10) - getBonusAntecedente('constituicao'),
+    inteligencia: (dados.atributos?.inteligencia || 10) - getBonusAntecedente('inteligencia'),
+    sabedoria: (dados.atributos?.sabedoria || 10) - getBonusAntecedente('sabedoria'),
+    carisma: (dados.atributos?.carisma || 10) - getBonusAntecedente('carisma')
+  };
 
-  const [rolagens, setRolagens] = useState([]); 
-  const [alocacoes, setAlocacoes] = useState({});
-
+  // 👇 O MOTOR MATEMÁTICO BLINDADO 👇
   useEffect(() => {
     let resultadoFinal = {};
 
@@ -60,13 +51,25 @@ export function PassoAtributos() {
       const pool = metodo === 'padrao' ? ARRAY_PADRAO : rolagens;
       ATRIBUTOS.forEach(attr => {
         const index = alocacoes[attr];
-        const valorBase = index !== undefined && index !== "" ? pool[index] : 10;
+        const valorBase = (index !== undefined && index !== "" && pool[index] !== undefined) ? pool[index] : 10;
         resultadoFinal[attr] = valorBase + getBonusAntecedente(attr);
       });
     }
     
-    atualizar(prev => ({ ...prev, atributos: resultadoFinal }));
-  }, [valoresSimples, alocacoes, rolagens, metodo]);
+    // Anti-Loop Infinito: Só manda salvar se a matemática gerar um número diferente do que já está na ficha
+    const mudouAlgo = ATRIBUTOS.some(attr => dados.atributos?.[attr] !== resultadoFinal[attr]);
+    
+    if (mudouAlgo) {
+      atualizar(prev => ({ ...prev, atributos: resultadoFinal }));
+    }
+  }, [valoresSimples, alocacoes, rolagens, metodo, getBonusAntecedente, atualizar, dados.atributos]);
+
+  // --- FUNÇÕES DE INTERAÇÃO (Salvando direto no Cérebro) ---
+  function setMetodo(m) {
+    if (metodo !== m) {
+      atualizar(prev => ({ ...prev, metodoCriacaoAtributos: m, alocacoesSalvas: {} }));
+    }
+  }
 
   function rolarTudo() {
     const novasRolagens = [];
@@ -75,12 +78,14 @@ export function PassoAtributos() {
       d.sort((a, b) => b - a);
       novasRolagens.push(d[0] + d[1] + d[2]);
     }
-    setRolagens(novasRolagens);
-    setAlocacoes({});
+    atualizar(prev => ({ ...prev, dadosRoladosSalvos: novasRolagens, alocacoesSalvas: {} }));
   }
 
   function alocar(atributo, indexDoArray) {
-    setAlocacoes(prev => ({ ...prev, [atributo]: indexDoArray }));
+    atualizar(prev => ({ 
+      ...prev, 
+      alocacoesSalvas: { ...prev.alocacoesSalvas, [atributo]: indexDoArray } 
+    }));
   }
 
   const CUSTO = { 8:0, 9:1, 10:2, 11:3, 12:4, 13:5, 14:7, 15:9 };
@@ -94,7 +99,10 @@ export function PassoAtributos() {
     const diferenca = CUSTO[novo] - CUSTO[val];
     if (gasto + diferenca > 27) return;
 
-    setValoresSimples(prev => ({ ...prev, [attr]: novo }));
+    atualizar(prev => ({ 
+      ...prev, 
+      valoresSimplesSalvos: { ...prev.valoresSimplesSalvos, [attr]: novo } 
+    }));
   }
 
   function renderSeletor(attr) {
@@ -121,7 +129,7 @@ export function PassoAtributos() {
     if (metodo === 'manual' || metodo === 'pointbuy') return valoresSimples[attr];
     const pool = metodo === 'padrao' ? ARRAY_PADRAO : rolagens;
     const idx = alocacoes[attr];
-    return (idx !== undefined && idx !== "") ? pool[idx] : "-";
+    return (idx !== undefined && idx !== "" && pool[idx] !== undefined) ? pool[idx] : "-";
   };
 
   const pontosGastos = Object.values(valoresSimples).reduce((acc, v) => acc + (CUSTO[v]||0), 0);
@@ -189,7 +197,13 @@ export function PassoAtributos() {
                     <input 
                       type="number" className="input-manual-fino"
                       value={valoresSimples[attr]}
-                      onChange={(e) => setValoresSimples({...valoresSimples, [attr]: parseInt(e.target.value)||10})}
+                      onChange={(e) => {
+                        const novoVal = parseInt(e.target.value) || 10;
+                        atualizar(prev => ({
+                          ...prev,
+                          valoresSimplesSalvos: { ...prev.valoresSimplesSalvos, [attr]: novoVal }
+                        }));
+                      }}
                     />
                   )}
                 </div>

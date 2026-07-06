@@ -52,7 +52,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     localStorage.setItem('opacidadeGrid', novoValor.toString());
   }
 
-  function handleUploadMapa(e) {
+  async function handleUploadMapa(e) {
     if (!isMestre) return;
     
     const nomeCena = prompt("Digite um nome para este novo cenário (Ex: Covil do Dragão, Esgotos):");
@@ -61,40 +61,44 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 2000; 
-        let width = img.width; let height = img.height;
-        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const base64 = canvas.toDataURL('image/jpeg', 0.6); 
-        
+    alert(`Subindo o mapa "${nomeCena}" para o servidor... Aguarde.`);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      // 🔒 AQUI FOI FEITA A LIMPEZA! Não tem mais import.meta.env.VITE_...
+      // O fetch agora manda a imagem pro seu "Guarda-Costas" na Vercel
+      const resposta = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const dados = await resposta.json();
+
+      if (dados.success) {
+        const urlMapa = dados.url; // A API já devolve a URL limpinha
         const novaCenaId = "scene_" + Date.now();
+
         const novasCenas = {
           ...cenas,
-          [novaCenaId]: { id: novaCenaId, nome: nomeCena, bg: base64 }
+          [novaCenaId]: { id: novaCenaId, nome: nomeCena, bg: urlMapa }
         };
 
-        try {
-          await updateDoc(doc(db, "mesas", mesaId), { 
-            cenas: novasCenas,
-            cenaAtivaId: novaCenaId
-          });
-        } catch (error) {
-          console.error("Erro ao subir mapa:", error);
-          alert("O mapa é muito pesado para o armazenamento em texto. Tente uma imagem menor.");
-        }
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+        await updateDoc(doc(db, "mesas", mesaId), { 
+          cenas: novasCenas,
+          cenaAtivaId: novaCenaId
+        });
+        
+        alert("Mapa subiu com sucesso!");
+      } else {
+        alert("Erro ao subir a imagem no Servidor.");
+      }
+
+    } catch (error) {
+      console.error("Erro no Upload:", error);
+      alert("Ocorreu um erro na conexão.");
+    }
   }
 
   async function apagarCenaAtual() {
@@ -526,7 +530,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
         .controles-mapa { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #1a1a1a; border-bottom: 2px solid #ffcc00; z-index: 50; }
         .btn-upload-mapa { background: #333; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px dashed #666; font-size: 0.9rem; transition: 0.2s; font-weight: bold; }
         .btn-upload-mapa:hover { background: #444; border-color: #ffcc00; color: #ffcc00; }
-        .area-scroll-mapa { flex: 1; overflow: auto; background: #0a0a0a; position: relative; cursor: grab; }
+        .area-scroll-mapa { flex: 1; overflow: auto; background: #0a0a0a; position: relative; cursor: grab; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;}
         .area-scroll-mapa.arrastando { cursor: grabbing; user-select: none; }
         .area-scroll-mapa.modo-regua { cursor: crosshair; }
         .area-scroll-mapa::-webkit-scrollbar { display: none; }

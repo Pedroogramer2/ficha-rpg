@@ -42,8 +42,23 @@ function calcularDanoUpcast(danoBase, upcastInfo, niveisAcima) {
 export function Grimorio(props) {
   const [expandida, setExpandida] = useState(null);
   const dados = props.dados || {};
+
+  const classeMinúscula = dados.classe?.toLowerCase() || '';
+  let atributoMagico = 'inteligencia';
+
+  if (['bardo', 'feiticeiro', 'bruxo', 'paladino'].includes(classeMinúscula)) {
+    atributoMagico = 'carisma';
+  } else if (['clérigo', 'druida', 'patrulheiro'].includes(classeMinúscula)) {
+    atributoMagico = 'sabedoria';
+  }
+
+  const profBonus = Math.ceil((dados.nivel || 1) / 4) + 1;
+  const valorAtributo = dados[atributoMagico] || dados.atributos?.[atributoMagico] || 10;
+  const modAtributo = Math.floor((valorAtributo - 10) / 2);
+
+  const cdMagia = 8 + profBonus + modAtributo;
+  const ataqueMagico = profBonus + modAtributo;
   
-  // 1. SLOTS E NÍVEIS
   const infoClasse = CLASSES_DETALHADAS[dados.classe];
   const nivelPersonagem = dados.nivel || 1;
   const linhaNivel = infoClasse?.tabelaNiveis?.find(l => l.nivel === nivelPersonagem);
@@ -96,6 +111,23 @@ export function Grimorio(props) {
 
   return (
     <div className="painel-grimorio">
+
+      <div style={{ display: 'flex', gap: '15px', background: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid #444', marginBottom: '20px', alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, color: '#ffcc00' }}>Conjuração: {dados.classe || 'Desconhecida'}</h3>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: '#aaa', textTransform: 'capitalize' }}>Atributo Chave: {atributoMagico}</p>
+        </div>
+        
+        <div style={{ textAlign: 'center', background: '#333', padding: '10px 20px', borderRadius: '6px', border: '1px solid #555' }}>
+          <span style={{ display: 'block', fontSize: '0.7rem', color: '#ccc', textTransform: 'uppercase' }}>CD de Magia</span>
+          <strong style={{ fontSize: '1.5rem', color: 'white' }}>{cdMagia}</strong>
+        </div>
+
+        <div style={{ textAlign: 'center', background: '#333', padding: '10px 20px', borderRadius: '6px', border: '1px solid #555' }}>
+          <span style={{ display: 'block', fontSize: '0.7rem', color: '#ccc', textTransform: 'uppercase' }}>Ataque Mágico</span>
+          <strong style={{ fontSize: '1.5rem', color: 'white' }}>+{ataqueMagico}</strong>
+        </div>
+      </div>
       
       {/* --- NÍVEL 0 (TRUQUES) --- */}
       <div className="nivel-magia-container">

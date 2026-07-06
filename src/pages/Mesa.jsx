@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { MapaVirtual } from '../components/MapaVirtual';
 import { CaixaDeDados } from '../components/CaixaDeDados';
+import { BESTIARIO } from '../data/bestiario';
 
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
@@ -29,6 +30,7 @@ export function Mesa() {
   
   const [modalHp, setModalHp] = useState(null); 
   const [modalHpNpc, setModalHpNpc] = useState(null);
+  const [modalNpcAberto, setModalNpcAberto] = useState(false);
   const [valorHpInput, setValorHpInput] = useState("");
 
   const [fichaParaRemover, setFichaParaRemover] = useState(null);
@@ -90,6 +92,12 @@ export function Mesa() {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [mesaDados?.historico, mostrarChat]);
+
+  useEffect(() => {
+    if (!isMestre && mesaDados?.mapaBloqueado && abaAtiva === 'mapa') {
+      setAbaAtiva('combate');
+    }
+  }, [mesaDados?.mapaBloqueado, isMestre, abaAtiva]);
 
   let indiceUltimoCombate = -1;
   if (mesaDados?.historico) {
@@ -170,6 +178,28 @@ export function Mesa() {
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
     } catch (e) { console.error("Erro ao adicionar NPC:", e); }
+  }
+
+  async function adicionarNpcDoBestiario(nomeBase, dadosNpc) {
+    if (!isMestre) return;
+
+    // A MÁGICA DA NUMERAÇÃO: Se já tem "Goblin", ele cria o "Goblin 2", "Goblin 3", etc.
+    const qtdExistente = listaNpcs.filter(n => n.nome.startsWith(nomeBase)).length;
+    const nomeFinal = qtdExistente > 0 ? `${nomeBase} ${qtdExistente + 1}` : nomeBase;
+
+    const novoNPC = {
+      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      nome: nomeFinal,
+      vidaMaxima: dadosNpc.hp,
+      vidaAtual: dadosNpc.hp,
+      foto: dadosNpc.foto || "",
+      faccao: dadosNpc.faccao || "hostil"
+    };
+
+    try {
+      await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
+      setModalNpcAberto(false); // Fecha o modal depois de invocar!
+    } catch (e) { console.error("Erro ao adicionar NPC do bestiário:", e); }
   }
 
   async function apagarCapanga(npcId) {
@@ -308,26 +338,36 @@ export function Mesa() {
     }
   }
 
-  function handleEnviarImagem(e) {
+  async function handleEnviarImagem(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; 
-        let width = img.width; let height = img.height;
-        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const base64 = canvas.toDataURL('image/jpeg', 0.6); 
-        enviarMensagemOuDado(nomeRemetente, base64, "imagem");
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+
+    // Aviso visual pro mestre/jogador saber que a foto tá subindo
+    enviarMensagemOuDado(nomeRemetente, "⏳ Enviando imagem para a mesa...", "sistema");
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      // 🛡️ Manda pro "Guarda-Costas" (A sua rota /api/upload na Vercel)
+      const resposta = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const dados = await resposta.json();
+
+      if (dados.success) {
+        // Sucesso! Envia a URL limpa pro chat!
+        enviarMensagemOuDado(nomeRemetente, dados.url, "imagem");
+      } else {
+        alert("Erro ao subir a imagem.");
+        enviarMensagemOuDado(nomeRemetente, "❌ Falha no envio da imagem.", "sistema");
+      }
+    } catch (error) {
+      console.error("Erro no Upload do Chat:", error);
+      alert("Ocorreu um erro na conexão. Verifique sua internet.");
+    }
   }
 
   if (erro) return <div style={{color:'white', textAlign:'center', marginTop:'50px'}}>Mesa não encontrada! O código {codigoSala} está correto?</div>;
@@ -381,15 +421,43 @@ export function Mesa() {
         </div>
       )}
 
-      {modalHpNpc && isMestre && (
-        <div className="overlay-modal" onClick={() => { setModalHpNpc(null); setValorHpInput(""); }}>
-          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ width: '300px', textAlign: 'center', alignItems: 'center', border: '2px solid #ff4444' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#ff4444' }}>Alterar HP (NPC)</h3>
-            <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '15px' }}>Modificando a vida de <strong>{listaNpcs.find(n => n.id === modalHpNpc)?.nome}</strong></p>
-            <input type="number" placeholder="Digite o valor..." value={valorHpInput} onChange={e => setValorHpInput(e.target.value)} onFocus={e => e.target.select()} style={{ width: '100%', padding: '15px', fontSize: '1.2rem', textAlign: 'center', background: '#111', border: '1px solid #ff4444', color: '#fff', borderRadius: '8px', marginBottom: '20px', boxSizing: 'border-box' }}/>
-            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-              <button onClick={() => alterarVidaNpc('dano')} style={{ flex: 1, padding: '12px', background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💔 Dano</button>
-              <button onClick={() => alterarVidaNpc('cura')} style={{ flex: 1, padding: '12px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💚 Cura</button>
+      {modalNpcAberto && isMestre && (
+        <div className="overlay-modal" onClick={() => setModalNpcAberto(false)}>
+          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ff4444' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0, color: '#ff4444' }}>Adicionar Ameaça</h3>
+              <button onClick={() => setModalNpcAberto(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+            </div>
+            
+            <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '15px' }}>Escolha um NPC do Bestiário para adicionar rapidamente à mesa:</p>
+
+            <div className="lista-fichas-modal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {Object.entries(BESTIARIO).map(([nome, info]) => (
+                <div
+                  key={nome}
+                  onClick={() => adicionarNpcDoBestiario(nome, info)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#252525', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.borderColor = '#ff4444'}
+                  onMouseOut={(e) => e.currentTarget.style.borderColor = '#444'}
+                >
+                  <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {info.foto ? <img src={info.foto} alt={nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👹'}
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.9rem', color: 'white' }}>{nome}</strong>
+                    <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{info.hp} HP | {info.faccao}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px', textAlign: 'center' }}>
+              <button 
+                onClick={() => { setModalNpcAberto(false); adicionarCapanga(); }} 
+                style={{ background: 'transparent', color: '#ffcc00', border: '1px dashed #ffcc00', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                + Criar NPC Customizado (Prompt)
+              </button>
             </div>
           </div>
         </div>
@@ -415,6 +483,21 @@ export function Mesa() {
            >
              🗺️ Mapa Virtual
            </button>
+
+           {isMestre && (
+             <button
+               onClick={async () => {
+                 await updateDoc(doc(db, "mesas", codigoSala), { mapaBloqueado: !mesaDados?.mapaBloqueado });
+               }}
+               style={{
+                 background: mesaDados?.mapaBloqueado ? '#f44336' : '#4caf50',
+                 color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+               }}
+               title={mesaDados?.mapaBloqueado ? "Desbloquear Mapa para Jogadores" : "Bloquear Mapa para Jogadores"}
+             >
+               {mesaDados?.mapaBloqueado ? '🔒 Trancado' : '🔓 Liberado'}
+             </button>
+           )}
            
            <button 
              onClick={() => setMostrarChat(!mostrarChat)} 
@@ -549,8 +632,8 @@ export function Mesa() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '40px', borderBottom: '2px solid #ff4444', paddingBottom: '10px', marginBottom: '20px' }}>
               <h2 className="titulo-secao-mesa" style={{ margin: 0, border: 'none', padding: 0, color: '#ff4444' }}>Ameaças & NPCs</h2>
               {isMestre && (
-                <button onClick={adicionarCapanga} style={{ background: '#ff4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  ➕ Novo NPC
+                <button onClick={() => setModalNpcAberto(true)} style={{ background: '#ff4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
+                ➕ Novo NPC
                 </button>
               )}
             </div>
