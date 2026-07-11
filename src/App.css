@@ -3308,7 +3308,185 @@ body {
 .btn-chute-gatilho:hover { color: #f44336; }
 .btn-chute-confirma { background: #f44336; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
 
-/* Organização Interna do HP */
+
 .info-vida { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 5px; }
 .texto-editar-hp { font-size: 0.75rem; color: #ffcc00; opacity: 0; transition: 0.2s; }
 .barra-vida-mestre:hover .texto-editar-hp { opacity: 1; }
+
+@keyframes piscarPendencia {
+  0% { box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.7); border-color: #ffcc00; }
+  70% { box-shadow: 0 0 10px 10px rgba(255, 204, 0, 0); border-color: #fff; }
+  100% { box-shadow: 0 0 0 0 rgba(255, 204, 0, 0); border-color: #ffcc00; }
+}
+
+.aba-pendente {
+  animation: piscarPendencia 2s infinite;
+  position: relative;
+  border: 1px solid #ffcc00 !important;
+}
+
+
+.bolinha-passo.aba-pendente:not(.ativa) {
+  color: #ffcc00 !important;
+}
+
+
+.aba-pendente::after {
+  content: '!';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f44336;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+
+.xp-wrapper {
+  margin-top: 10px;
+  width: 100%;
+  display: flex;          
+  align-items: center;     
+  gap: 15px;              
+}
+
+.xp-container {
+  flex: 1;                 
+  background: #1a1a1a;
+  border-radius: 6px;
+  position: relative;
+  height: 20px;
+  border: 1px solid #444;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.xp-fill {
+  background: linear-gradient(90deg, #ffcc00, #ff9900);
+  height: 100%;
+  transition: width 0.5s ease-out;
+}
+
+.xp-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: white;
+  line-height: 20px;
+  text-shadow: 1px 1px 2px black;
+  pointer-events: none;
+}
+
+.xp-input-area {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #aaa;
+  white-space: nowrap; 
+}
+
+.xp-input {
+  background: #111;
+  color: #ffcc00;
+  border: 1px solid #444;
+  border-radius: 4px;
+  width: 70px;
+  padding: 3px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.xp-input:focus {
+  outline: none;
+  border-color: #ffcc00;
+}
+
+.inspiracao-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.inspiracao-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #ccc;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.btn-inspiracao {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  background: #222;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-inspiracao:hover {
+  background: #333;
+  transform: scale(1.05);
+}
+
+.btn-inspiracao.ativa {
+  border-color: #ffcc00;
+  background: radial-gradient(circle, #000000 0%, #d4a000 100%);
+  color: #111;
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+  transform: scale(1.1);
+}
+
+.barra-pesquisa-container {
+  margin-bottom: 15px;
+  position: relative;
+  width: 100%;
+}
+
+.input-pesquisa {
+  width: 100%;
+  padding: 10px 15px 10px 35px; 
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #111;
+  color: white;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  box-sizing: border-box; 
+}
+
+.input-pesquisa:focus {
+  outline: none;
+  border-color: #ffcc00;
+  box-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+}
+
+.icone-pesquisa {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 1rem;
+  pointer-events: none;
+}

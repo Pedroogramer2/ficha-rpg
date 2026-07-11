@@ -8,20 +8,50 @@ export function StatusCombate(props) {
   const [armaduraNome, setArmaduraNome] = useState(dados.armaduraEquipada || "");
   const [escudoCA, setEscudoCA] = useState(dados.escudoCA || 0); 
   const deslocamento = dados.deslocamento || 30;
-  const [bonusOutros, setBonusOutros] = useState(dados.bonusCA || 0);
+  const [bonusManual, setBonusManual] = useState(dados.bonusCA_Manual || 0);
+  const bonusPassivo = dados.bonusCA_Passivo || 0;
+  const totalExtra = bonusManual + bonusPassivo;
 
-  // 👇 ESTADO DO NOVO MODAL DE LEVEL UP 👇
   const [modalLevelUp, setModalLevelUp] = useState(false);
 
   const dex = dados.destreza || 10;
   const modDex = Math.floor((dex - 10) / 2);
 
-  // --- CÁLCULO DE CA INTELIGENTE ---
+  // 👇 Faz a CA atualizar na hora se o jogador equipar algo pelo Inventário 👇
+  useEffect(() => {
+    setArmaduraNome(dados.armaduraEquipada || "");
+    setEscudoCA(dados.escudoCA || 0);
+  }, [dados.armaduraEquipada, dados.escudoCA]);
+
+  // --- CÁLCULO DE CA INTELIGENTE (COM PROTEÇÃO ANTI-TRADUÇÃO) ---
   let caFinal = 0;
   let componenteArmadura = 10; 
   let componenteDex = modDex; 
 
-  const armaduraObj = ARMADURAS.find(a => a.nome === armaduraNome);
+  // 🛡️ A BUSCA INTELIGENTE (Ignora parênteses e nomes parciais) 🛡️
+  const nomeParaBuscar = (armaduraNome || "").toLowerCase().trim();
+  
+  let armaduraObj = null;
+
+  if (nomeParaBuscar) {
+    // 1. Tenta achar exatamente o nome (quando seleciona pelo Dropdown)
+    armaduraObj = ARMADURAS.find(a => a.nome.toLowerCase() === nomeParaBuscar);
+    
+    // 2. Se não achou, ignora os parênteses do inglês e tenta achar por aproximação
+    if (!armaduraObj) {
+      // Ordena das maiores pra menores pra não confundir "Couro" com "Couro Batido"
+      const armadurasOrdenadas = [...ARMADURAS].sort((a,b) => b.nome.length - a.nome.length);
+      
+      armaduraObj = armadurasOrdenadas.find(a => {
+        // Pega só o "Cota de Malha" do "Cota de Malha (Chain Mail)"
+        const nomePtBr = a.nome.toLowerCase().split(' (')[0].trim();
+        return nomeParaBuscar === nomePtBr || nomeParaBuscar.includes(nomePtBr) || nomePtBr.includes(nomeParaBuscar);
+      });
+    }
+  }
+  
+  // Guardamos o nome oficial para o dropdown não bugar e ficar em branco
+  const valorSelectArmadura = armaduraObj ? armaduraObj.nome : "";
 
   if (armaduraObj) {
     componenteArmadura = armaduraObj.caBase;
@@ -39,7 +69,7 @@ export function StatusCombate(props) {
     componenteDex = modDex;
   }
 
-  caFinal = componenteArmadura + componenteDex + escudoCA + bonusOutros;
+  caFinal = componenteArmadura + componenteDex + escudoCA + totalExtra;
 
   useEffect(() => {
     if (props.aoSalvar) {
@@ -66,7 +96,6 @@ export function StatusCombate(props) {
   return (
     <div className="status-combate-container">
       
-      {/* 👇 MODAL CUSTOMIZADO DE LEVEL UP 👇 */}
       {modalLevelUp && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={() => setModalLevelUp(false)}>
           <div style={{ background: '#1a1a1a', padding: '25px', borderRadius: '12px', border: '1px solid #4caf50', width: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.8)' }} onClick={(e) => e.stopPropagation()}>
@@ -111,7 +140,8 @@ export function StatusCombate(props) {
         </div>
 
         <div className="controles-ac">
-          <select className="select-armadura" value={armaduraNome} onChange={handleChangeArmadura}>
+          {/* 👇 DROPDOWN USANDO O NOME OFICIAL 👇 */}
+          <select className="select-armadura" value={valorSelectArmadura} onChange={handleChangeArmadura}>
             <option value="">Sem Armadura (Roupas)</option>
             <optgroup label="Armaduras Leves">
               {ARMADURAS.filter(a => a.tipo === "Leve").map(a => <option key={a.nome} value={a.nome}>{a.nome} (11+Des)</option>)}
@@ -136,17 +166,17 @@ export function StatusCombate(props) {
             <div className="controle-bonus-extra" title="Bônus Extras de CA (Anel de Proteção, etc)">
               <button 
                 onClick={() => {
-                  const novoBonus = Math.max(0, bonusOutros - 1);
-                  setBonusOutros(novoBonus);
-                  if (props.aoSalvar) props.aoSalvar("bonusCA", novoBonus);
+                  const novoBonus = Math.max(0, bonusManual - 1);
+                  setBonusManual(novoBonus);
+                  if (props.aoSalvar) props.aoSalvar("bonusCA_Manual", novoBonus);
                 }} 
-                disabled={bonusOutros <= 0}
+                disabled={bonusManual <= 0}
               >-</button>
-              <span>+{bonusOutros} Extra</span>
+              <span>+{totalExtra} Extra</span>
               <button onClick={() => {
-                  const novoBonus = bonusOutros + 1;
-                  setBonusOutros(novoBonus);
-                  if (props.aoSalvar) props.aoSalvar("bonusCA", novoBonus);
+                  const novoBonus = bonusManual + 1;
+                  setBonusManual(novoBonus);
+                  if (props.aoSalvar) props.aoSalvar("bonusCA_Manual", novoBonus);
               }}>+</button>
             </div>
           </div>
@@ -155,7 +185,7 @@ export function StatusCombate(props) {
             <span>Base {componenteArmadura}</span>
             <span style={{color: componenteDex === 0 ? '#555' : 'inherit'}}> + Des {componenteDex}</span>
             {escudoCA > 0 && <span style={{color:'#44ff44'}}> + Esc {escudoCA}</span>}
-            {bonusOutros > 0 && <span style={{color:'#ffcc00'}}> + Ext {bonusOutros}</span>}
+            {totalExtra > 0 && <span style={{color:'#ffcc00'}}> + Ext {totalExtra}</span>}
           </div>
         </div>
       </div>

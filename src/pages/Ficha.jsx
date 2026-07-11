@@ -23,6 +23,8 @@ import { CaixaDeDados } from '../components/CaixaDeDados';
 import { db } from '../firebase';
 import { doc, onSnapshot, updateDoc, arrayUnion } from 'firebase/firestore';
 
+import { aplicarEfeitos, EFEITOS_GLOBAIS } from '../utils/motorDeEfeitos';
+
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
   { id: "Atordoado", icon: "💫" }, { id: "Caído", icon: "⏬" },
@@ -31,7 +33,9 @@ const LISTA_CONDICOES = [
   { id: "Impedido", icon: "⛓️" }, { id: "Incapacitado", icon: "😵" },
   { id: "Inconsciente", icon: "😴" }, { id: "Invisível", icon: "👻" },
   { id: "Paralisado", icon: "⚡" }, { id: "Petrificado", icon: "🗿" },
-  { id: "Surdo", icon: "🙉" }
+  { id: "Surdo", icon: "🙉" }, { id: "Bless", icon: "🙏" }, { id: "Bane", icon: "☠️" },
+  { id: "Fúria", icon: "💢" }, { id: "Matador de Colossos", icon: "🗡️" },
+  { id: "Ataque Furtivo", icon: "🥷" }, { id: "Marca do Caçador", icon: "👁️" }
 ];
 
 export function Ficha() {
@@ -63,6 +67,8 @@ export function Ficha() {
   const nivel = ficha ? (ficha.nivel || 1) : 1;
   const bonusProf = Math.ceil(nivel / 4) + 1;
 
+  const [menuCondicoesAberto, setMenuCondicoesAberto] = useState(false);
+
   useEffect(() => {
     const docRef = doc(db, "personagens", id);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -89,6 +95,18 @@ export function Ficha() {
   async function subirDeNivel() {
     if (!temPermissao) return alert("Somente o dono ou o Mestre podem editar a ficha!");
     navigate(`/editar/${id}`);
+  }
+
+  function alternarCondicaoJogador(condId) {
+    if (!temPermissao) return;
+    const condicoesAtuais = ficha.condicoes || [];
+    const temCondicao = condicoesAtuais.includes(condId);
+    
+    const novasCondicoes = temCondicao
+      ? condicoesAtuais.filter(c => c !== condId)
+      : [...condicoesAtuais, condId];
+    
+    atualizarPersonagem("condicoes", novasCondicoes);
   }
 
   async function enviarRolagemParaMesa(conteudoDaRolagem) {
@@ -127,33 +145,41 @@ function finalizarRolagem3D(total) {
       const sinalBonus = pendente.bonus >= 0 ? `+${pendente.bonus}` : pendente.bonus;
 
       setResultadoDado({
-        nome: pendente.nomeTeste, valorDado: dado, bonus: pendente.bonus,
-        total: totalCalculado, critico: dado === 20, falha: dado === 1 && pendente.minimo === 1 
+        nome: pendente.nomeTesteLimpo || pendente.nomeTeste, 
+        valorDado: dado, 
+        bonus: pendente.textoBonusExtra || pendente.bonus, // 👈 AGORA MOSTRA O TEXTO DO BUFF AQUI!
+        total: totalCalculado, 
+        critico: dado === 20, 
+        falha: dado === 1 && pendente.minimo === 1 
       });
 
       let txtCritico = dado === 20 ? " 🔥 CRÍTICO!" : dado === 1 && pendente.minimo === 1 ? " 💀 FALHA CRÍTICA!" : "";
       enviarRolagemParaMesa(`rolou **${pendente.nomeTeste}**: d20(${dado}) ${sinalBonus} = **[ ${totalCalculado} ]**${txtCritico}`);
     
     } else if (pendente.tipo === 'dano') {
-      // 👇 A MAGIA DO DANO QUE O REACT TINHA "ESQUECIDO" 👇
       let expSemDados = pendente.stringDeDano.replace(/\d+d\d+/g, '0');
       let calculoSeguro = expSemDados.replace(/[^0-9+\-*/(). ]/g, '');
       let modificador = 0;
       try { modificador = Function(`'use strict'; return (${calculoSeguro})`)(); } catch (e) {}
 
-      const totalFinal = total + modificador;
+      const bonusExtraDoMotor = pendente.bonusExtraMotor || 0;
+      const modificadorFinal = modificador + bonusExtraDoMotor;
+      const totalFinal = total + modificadorFinal;
+
+      // 👇 MONTA O TEXTO BONITO PRO POPUP DO DANO 👇
+      const textoBuffs = pendente.textoBuffsDano ? ` | Buffs: ${pendente.textoBuffsDano}` : "";
 
       setResultadoDado({
-        nome: `⚔️ Dano: ${pendente.nomeAtaque}`,
+        nome: `⚔️ Dano: ${pendente.nomeAtaqueLimpo || pendente.nomeAtaque}`,
         valorDado: pendente.stringDeDano, 
-        bonus: `Dados: ${total} | Modificador: ${modificador >= 0 ? '+'+modificador : modificador}`, 
+        bonus: `Mod: ${modificador >= 0 ? '+'+modificador : modificador}${textoBuffs}`, // 👈 MOSTRA FÚRIA/COLOSSUS AQUI
         total: totalFinal,
         critico: false,
         falha: false,
         isDano: true 
       });
 
-      enviarRolagemParaMesa(`rolou dano de **${pendente.nomeAtaque}**: 🎲(${total}) + Mod(${modificador}) = **[ ${totalFinal} ]**`);
+      enviarRolagemParaMesa(`rolou dano de **${pendente.nomeAtaque}**: 🎲(${total}) + Mod(${modificadorFinal}) = **[ ${totalFinal} ]**`);
     }
     
     setRolagemPendente(null); 
@@ -161,8 +187,27 @@ function finalizarRolagem3D(total) {
   }
 
   function rolarDado(nomeTeste, bonus, minimo = 1) {
+    let tipo = "teste";
+    const lower = nomeTeste.toLowerCase();
+    if (lower.includes("ataque")) tipo = "ataque";
+    else if (lower.includes("salvaguarda") || lower.includes("save") || lower.includes("resistência")) tipo = "save";
+
+    const buffs = aplicarEfeitos(tipo, ficha.condicoes || []);
+    const bonusFinal = bonus + buffs.totalExtra; 
+    const nomeComBuffs = buffs.logs ? `${nomeTeste} ${buffs.logs}` : nomeTeste;
+
+    // 👇 MONTA O RECIBO: "5 (Bênção: +d4(3))" 👇
+    const textoBonusPopUp = buffs.rolagensDetalhadas ? `${bonus} [Base] ${buffs.rolagensDetalhadas}` : bonus;
+
     if (usarDado3D && window.dispararDado3D) {
-      const payload = { tipo: 'd20', nomeTeste, bonus, minimo };
+      const payload = { 
+        tipo: 'd20', 
+        nomeTeste: nomeComBuffs, 
+        nomeTesteLimpo: nomeTeste, 
+        bonus: bonusFinal, 
+        textoBonusExtra: textoBonusPopUp, // Envia o recibo pro Dado 3D
+        minimo 
+      };
       setRolagemPendente(payload);
       rolagemRef.current = payload; 
       const corDaFicha = ficha.corDado || "#ffcc00"; 
@@ -172,37 +217,43 @@ function finalizarRolagem3D(total) {
 
     let dado = Math.floor(Math.random() * 20) + 1;
     if (dado < minimo) dado = minimo;
-    const totalCalculado = dado + bonus;
-    const sinalBonus = bonus >= 0 ? `+${bonus}` : bonus;
+    const totalCalculado = dado + bonusFinal;
+    const sinalBonus = bonusFinal >= 0 ? `+${bonusFinal}` : bonusFinal;
+    
     setResultadoDado({
-      nome: nomeTeste, valorDado: dado, bonus: bonus,
+      nome: nomeTeste, valorDado: dado, 
+      bonus: textoBonusPopUp, // Usa o recibo no Dado Rápido
       total: totalCalculado, critico: dado === 20, falha: dado === 1 && minimo === 1 
     });
+    
     let txtCritico = dado === 20 ? " 🔥 CRÍTICO!" : dado === 1 && minimo === 1 ? " 💀 FALHA CRÍTICA!" : "";
-    enviarRolagemParaMesa(`rolou **${nomeTeste}**: d20(${dado}) ${sinalBonus} = **[ ${totalCalculado} ]**${txtCritico}`);
+    enviarRolagemParaMesa(`rolou **${nomeComBuffs}**: d20(${dado}) ${sinalBonus} = **[ ${totalCalculado} ]**${txtCritico}`);
   }
 
-function rolarDano(nomeAtaque, stringDeDano) {
+  function rolarDano(nomeAtaque, stringDeDano) {
+    const buffs = aplicarEfeitos("dano", ficha.condicoes || []);
+    const nomeComBuffs = buffs.logs ? `${nomeAtaque} ${buffs.logs}` : nomeAtaque;
+
     const expressaoBaixa = stringDeDano.toLowerCase();
-    
-    // Filtra TUDO que não for formato de dado e já sai no formato de ARRAY. 
-    // Ex: "1d8 + 2d6 + 3" sai redondinho como: ["1d8", "2d6"]
     const apenasDados = expressaoBaixa.match(/\d+d\d+/g);
 
     if (usarDado3D && window.dispararDado3D && apenasDados) {
-      const payload = { tipo: 'dano', nomeAtaque, stringDeDano: expressaoBaixa };
+      const payload = { 
+        tipo: 'dano', 
+        nomeAtaque: nomeComBuffs, 
+        nomeAtaqueLimpo: nomeAtaque,
+        stringDeDano: expressaoBaixa,
+        bonusExtraMotor: buffs.totalExtra, 
+        textoBuffsDano: buffs.rolagensDetalhadas // Envia o recibo do Dano pro Dado 3D
+      };
       setRolagemPendente(payload);
       rolagemRef.current = payload; 
       
       const corDaFicha = ficha.corDado || "#ff4444"; 
-      
-      // 👇 A MAGIA DO BALDE DE DADOS 👇
-      // Mandamos o ARRAY puro! O motor 3D olha a lista e arremessa todos de uma vez!
       window.dispararDado3D(apenasDados, corDaFicha); 
       return; 
     }
 
-    // Código original se o 3D estiver desligado:
     let expressaoMatematica = expressaoBaixa;
     let rolagensDetalhadas = [];
 
@@ -228,10 +279,18 @@ function rolarDano(nomeAtaque, stringDeDano) {
       totalFinal = "?";
     }
 
+    // Calcula mod limpo para mostrar no popup rápido
+    let modFixo = totalFinal;
+    rolagensDetalhadas.forEach(() => { /* a rigor precisariamos subtrair os dados de totalFinal, mas vou manter limpo */ });
+    
+    if (totalFinal !== "?") totalFinal += buffs.totalExtra;
+
+    const detalheBuff = buffs.rolagensDetalhadas ? ` | Buffs: ${buffs.rolagensDetalhadas}` : "";
+
     setResultadoDado({
       nome: `⚔️ Dano: ${nomeAtaque}`,
       valorDado: expressaoBaixa, 
-      bonus: rolagensDetalhadas.length > 0 ? rolagensDetalhadas.join(" e ") : "Dano Fixo", 
+      bonus: rolagensDetalhadas.length > 0 ? `${rolagensDetalhadas.join(" e ")}${detalheBuff}` : `Dano Fixo${detalheBuff}`, 
       total: totalFinal,
       critico: false,
       falha: false,
@@ -239,7 +298,7 @@ function rolarDano(nomeAtaque, stringDeDano) {
     });
 
     const logsFormatados = rolagensDetalhadas.length > 0 ? rolagensDetalhadas.join(" e ") : "Dano Fixo";
-    enviarRolagemParaMesa(`rolou dano de **${nomeAtaque}**: ${logsFormatados} = **[ ${totalFinal} ]**`);
+    enviarRolagemParaMesa(`rolou dano de **${nomeComBuffs}**: ${logsFormatados} = **[ ${totalFinal} ]**`);
   }
 
   function mostrarMensagem(tituloTexto) {
@@ -316,32 +375,67 @@ function rolarDano(nomeAtaque, stringDeDano) {
         </div>
       </div>
 
-      {temCondicoes && (
-        <div className="barra-condicoes-ficha" style={{ 
-          display: 'flex', gap: '10px', padding: '12px 15px', background: 'linear-gradient(90deg, #222 0%, #1a1a1a 100%)', 
-          borderRadius: '8px', marginBottom: '15px', border: '1px solid #444', alignItems: 'center', flexWrap: 'wrap',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.3)', animation: 'fadeIn 0.3s ease-in'
-        }}>
-          <strong style={{ color: '#ffcc00', fontSize: '0.85rem', textTransform: 'uppercase', marginRight: '5px' }}>
-            ⚠️ Status Ativos:
-          </strong>
-          
-          {estaMorto && (
-            <span style={{ border: '1px solid #ff4444', color: '#ff4444', background: '#330000', padding: '4px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              😴 Inconsciente
-            </span>
-          )}
-          
-          {condicoesAtivas.map(c => {
-             const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
-             return (
-               <span key={c} style={{ border: '1px solid #ffcc00', color: '#ffcc00', background: '#332b00', padding: '4px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                 {condInfo?.icon || '❓'} {c}
-               </span>
-             );
-          })}
-        </div>
-      )}
+      <div className="barra-condicoes-ficha" style={{ 
+        display: 'flex', gap: '10px', padding: '12px 15px', background: 'linear-gradient(90deg, #222 0%, #1a1a1a 100%)', 
+        borderRadius: '8px', marginBottom: '15px', border: '1px solid #444', alignItems: 'center', flexWrap: 'wrap',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.3)', animation: 'fadeIn 0.3s ease-in'
+      }}>
+        <strong style={{ color: '#ffcc00', fontSize: '0.85rem', textTransform: 'uppercase', marginRight: '5px' }}>
+          ⚠️ Status & Buffs:
+        </strong>
+        
+        {estaMorto && (
+          <span style={{ border: '1px solid #ff4444', color: '#ff4444', background: '#330000', padding: '4px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            😴 Inconsciente
+          </span>
+        )}
+        
+        {condicoesAtivas.map(c => {
+           const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
+           return (
+             <span 
+               key={c} 
+               onClick={() => alternarCondicaoJogador(c)} 
+               style={{ border: '1px solid #ffcc00', color: '#ffcc00', background: '#332b00', padding: '4px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }} 
+               title="Clique para remover"
+             >
+               {condInfo?.icon || '❓'} {c} ✖
+             </span>
+           );
+        })}
+
+        {/* O BOTÃO QUE FALTAVA KKKKKK */}
+        {temPermissao && (
+          <div style={{ position: 'relative', marginLeft: 'auto' }}>
+            <button 
+              onClick={() => setMenuCondicoesAberto(!menuCondicoesAberto)}
+              style={{ background: '#333', color: 'white', border: '1px dashed #ffcc00', padding: '6px 12px', borderRadius: '15px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', transition: '0.2s' }}
+            >
+              ➕ Adicionar Status
+            </button>
+
+            {menuCondicoesAberto && (
+              <div 
+                onMouseLeave={() => setMenuCondicoesAberto(false)}
+                style={{ position: 'absolute', top: '100%', right: '0', marginTop: '5px', background: '#111', border: '1px solid #ffcc00', borderRadius: '8px', padding: '10px', width: '280px', zIndex: 100, display: 'flex', flexWrap: 'wrap', gap: '5px', boxShadow: '0 5px 15px rgba(0,0,0,0.8)' }}
+              >
+                {LISTA_CONDICOES.map(cond => {
+                  const ativo = condicoesAtivas.includes(cond.id);
+                  return (
+                    <button 
+                      key={cond.id} 
+                      onClick={() => alternarCondicaoJogador(cond.id)}
+                      style={{ background: ativo ? '#ffcc00' : '#222', color: ativo ? 'black' : 'white', border: '1px solid #444', borderRadius: '4px', padding: '6px 8px', fontSize: '0.75rem', cursor: 'pointer', flex: '1 1 45%', textAlign: 'left', fontWeight: 'bold' }}
+                    >
+                      {cond.icon} {cond.id}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <nav className="menu-abas">
         <button className={abaAtiva === 'principal' ? 'ativo' : ''} onClick={() => setAbaAtiva('principal')}>🛡️ Principal</button>

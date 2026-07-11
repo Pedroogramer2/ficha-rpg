@@ -6,6 +6,9 @@ import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc } from 'fir
 import { MapaVirtual } from '../components/MapaVirtual';
 import { CaixaDeDados } from '../components/CaixaDeDados';
 import { BESTIARIO } from '../data/bestiario';
+import { ARMAS } from '../data/armas'; 
+import itensMagicos from '../data/itensMagicos';
+import { aplicarEfeitos } from '../utils/motorDeEfeitos';
 
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
@@ -15,7 +18,9 @@ const LISTA_CONDICOES = [
   { id: "Impedido", icon: "⛓️" }, { id: "Incapacitado", icon: "😵" },
   { id: "Inconsciente", icon: "😴" }, { id: "Invisível", icon: "👻" },
   { id: "Paralisado", icon: "⚡" }, { id: "Petrificado", icon: "🗿" },
-  { id: "Surdo", icon: "🙉" }
+  { id: "Surdo", icon: "🙉" }, { id: "Bless", icon: "🙏" }, { id: "Bane", icon: "☠️" },
+  { id: "Fúria", icon: "💢" }, { id: "Matador de Colossos", icon: "🗡️" },
+  { id: "Ataque Furtivo", icon: "🥷" }, { id: "Marca do Caçador", icon: "👁️" } 
 ];
 
 export function Mesa() {
@@ -52,6 +57,15 @@ export function Mesa() {
 
   const [usarDado3D, setUsarDado3D] = useState(localStorage.getItem('usarDado3D') !== 'false');
   const [dadoPendenteNome, setDadoPendenteNome] = useState(null);
+
+  const [modalLootAberto, setModalLootAberto] = useState(false);
+  const [buscaLoot, setBuscaLoot] = useState("");
+  const [itemSelecionadoLoot, setItemSelecionadoLoot] = useState(null);
+
+  const [mostrarRolador, setMostrarRolador] = useState(false);
+  const [avulsoQtd, setAvulsoQtd] = useState(1);
+  const [avulsoFaces, setAvulsoFaces] = useState(20);
+  const [avulsoMod, setAvulsoMod] = useState(0);
 
   useEffect(() => {
     const mesaRef = doc(db, "mesas", codigoSala);
@@ -126,11 +140,22 @@ export function Mesa() {
 
   const ordemIniciativa = Object.entries(iniciativaTracker).sort((a,b) => b[1] - a[1]);
   const turnoAtual = mesaDados?.turnoAtual || 0;
+  const rodadaAtual = mesaDados?.rodadaAtual || 1;
 
   async function avancarTurno() {
     if (!isMestre) return;
     const proximo = (turnoAtual + 1) % ordemIniciativa.length;
-    await updateDoc(doc(db, "mesas", codigoSala), { turnoAtual: proximo });
+    
+    let novaRodada = rodadaAtual;
+    if (proximo === 0 && ordemIniciativa.length > 0) {
+      novaRodada += 1;
+      enviarMensagemOuDado("Sistema", `🔄 **Início da Rodada ${novaRodada}**`, "sistema");
+    }
+
+    await updateDoc(doc(db, "mesas", codigoSala), { 
+      turnoAtual: proximo,
+      rodadaAtual: novaRodada
+    });
   }
 
   function adicionarMonstroIniciativa() {
@@ -153,15 +178,16 @@ export function Mesa() {
   // ==========================================
   async function adicionarCapanga() {
     if (!isMestre) return;
-    const nome = prompt("Nome do Inimigo/NPC (Ex: Goblin 1):");
+    const nome = prompt("Nome do Inimigo/NPC (Ex: Orc Chefe):");
     if (!nome) return;
     const hp = parseInt(prompt(`Vida Máxima de ${nome}:`), 10);
     if (!hp || hp <= 0) return;
+    const ca = parseInt(prompt(`Classe de Armadura (CA) de ${nome}:`) || "10", 10);
+    const ini = parseInt(prompt(`Bônus de Iniciativa de ${nome} (Ex: +2):`) || "0", 10);
     
-    const urlFoto = prompt("Cole a URL da imagem do token (ou deixe em branco para usar emoji):") || "";
-
-    // 👇 NOVA PERGUNTA: FACÇÃO 👇
+    const urlFoto = prompt("Cole a URL da imagem do token (ou deixe em branco):") || "";
     const faccaoOpcao = prompt("Qual a aliança desse NPC?\n1 = 🔴 Hostil (Inimigo)\n2 = 🟡 Neutro (Povo local)\n3 = 🟢 Aliado (Amigo)", "1");
+    
     let faccao = "hostil";
     if (faccaoOpcao === "2") faccao = "neutro";
     if (faccaoOpcao === "3") faccao = "aliado";
@@ -172,7 +198,11 @@ export function Mesa() {
       vidaMaxima: hp,
       vidaAtual: hp,
       foto: urlFoto.trim(),
-      faccao: faccao // 👈 SALVANDO A FACÇÃO NO BANCO
+      faccao: faccao,
+      ca: ca,
+      iniciativa: ini,
+      ataques: [], // NPC customizado nasce sem botão de arma rápida
+      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } // Atributos padrão pra não quebrar a tela
     };
 
     try {
@@ -183,22 +213,26 @@ export function Mesa() {
   async function adicionarNpcDoBestiario(nomeBase, dadosNpc) {
     if (!isMestre) return;
 
-    // A MÁGICA DA NUMERAÇÃO: Se já tem "Goblin", ele cria o "Goblin 2", "Goblin 3", etc.
     const qtdExistente = listaNpcs.filter(n => n.nome.startsWith(nomeBase)).length;
     const nomeFinal = qtdExistente > 0 ? `${nomeBase} ${qtdExistente + 1}` : nomeBase;
 
+    // 👇 O pacote agora leva os atributos e as armas do monstro pro Firebase! 👇
     const novoNPC = {
       id: Date.now().toString() + Math.random().toString(16).slice(2),
       nome: nomeFinal,
       vidaMaxima: dadosNpc.hp,
       vidaAtual: dadosNpc.hp,
       foto: dadosNpc.foto || "",
-      faccao: dadosNpc.faccao || "hostil"
+      faccao: dadosNpc.faccao || "hostil",
+      ca: dadosNpc.ca || 10,
+      iniciativa: dadosNpc.iniciativa || 0,
+      ataques: dadosNpc.ataques || [],
+      atributos: dadosNpc.atributos || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } // 👈 ISSO AQUI
     };
 
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
-      setModalNpcAberto(false); // Fecha o modal depois de invocar!
+      setModalNpcAberto(false); 
     } catch (e) { console.error("Erro ao adicionar NPC do bestiário:", e); }
   }
 
@@ -284,17 +318,30 @@ export function Mesa() {
     } catch (error) { console.error(error); }
   }
 
-  async function alternarCondicao(fichaId, nomeFicha, condicaoId) {
-    const ficha = jogadores[fichaId];
-    if (!ficha) return;
-    const temCondicao = ficha.condicoes?.includes(condicaoId);
-    try {
-      await updateDoc(doc(db, "personagens", fichaId), {
-        condicoes: temCondicao ? arrayRemove(condicaoId) : arrayUnion(condicaoId)
-      });
-      if (!temCondicao) enviarMensagemOuDado("👑 Mestre", `O herói *${nomeFicha}* agora está **${condicaoId}**!`, "sistema");
-      else enviarMensagemOuDado("👑 Mestre", `O herói *${nomeFicha}* curou a condição **${condicaoId}**!`, "sistema");
-    } catch (error) { console.error("Erro ao aplicar condição:", error); }
+  async function alternarCondicao(alvoId, nomeAlvo, condicaoId, tipoAlvo = 'jogador') {
+    if (tipoAlvo === 'jogador') {
+      const ficha = jogadores[alvoId];
+      if (!ficha) return;
+      const temCondicao = ficha.condicoes?.includes(condicaoId);
+      try {
+        await updateDoc(doc(db, "personagens", alvoId), {
+          condicoes: temCondicao ? arrayRemove(condicaoId) : arrayUnion(condicaoId)
+        });
+        enviarMensagemOuDado("👑 Mestre", `O herói *${nomeAlvo}* ${temCondicao ? 'curou a condição' : 'agora está com'} **${condicaoId}**!`, "sistema");
+      } catch (error) {}
+    } else {
+      const npcAlvo = listaNpcs.find(n => n.id === alvoId);
+      if (!npcAlvo) return;
+      const conds = npcAlvo.condicoes || [];
+      const temCondicao = conds.includes(condicaoId);
+      const novasConds = temCondicao ? conds.filter(c => c !== condicaoId) : [...conds, condicaoId];
+      
+      const novaListaNpcs = listaNpcs.map(n => n.id === alvoId ? { ...n, condicoes: novasConds } : n);
+      try {
+        await updateDoc(doc(db, "mesas", codigoSala), { npcs: novaListaNpcs });
+        enviarMensagemOuDado("👑 Mestre", `Ameaça *${nomeAlvo}* ${temCondicao ? 'perdeu' : 'recebeu'} **${condicaoId}**!`, "sistema");
+      } catch (e) {}
+    }
   }
 
   async function enviarMensagemOuDado(remetente, conteudo, tipo = "chat") {
@@ -338,6 +385,35 @@ export function Mesa() {
     }
   }
 
+  function rolarDadosAvulsos(e) {
+    e.preventDefault();
+    const qtd = Math.max(1, parseInt(avulsoQtd) || 1);
+    const faces = Math.max(2, parseInt(avulsoFaces) || 20);
+    const mod = parseInt(avulsoMod) || 0;
+
+    let total = 0;
+    let rolagens = [];
+    
+    for (let i = 0; i < qtd; i++) {
+      const r = Math.floor(Math.random() * faces) + 1;
+      rolagens.push(r);
+      total += r;
+    }
+    total += mod;
+
+    const strMod = mod > 0 ? `+${mod}` : mod < 0 ? `${mod}` : "";
+    const expressao = `${qtd}d${faces}${strMod}`;
+    const detalhes = `[ ${rolagens.join(' + ')} ] ${strMod}`;
+
+    enviarMensagemOuDado(
+      nomeRemetente, 
+      `rolou **${expressao}** 🎲<br/><small>${detalhes}</small> = <strong style="font-size: 1.2rem; color: #ffcc00;">[ ${total} ]</strong>`, 
+      "dado"
+    );
+    
+    setMostrarRolador(false); 
+  }
+
   async function handleEnviarImagem(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -372,6 +448,68 @@ export function Mesa() {
 
   if (erro) return <div style={{color:'white', textAlign:'center', marginTop:'50px'}}>Mesa não encontrada! O código {codigoSala} está correto?</div>;
   if (!mesaDados) return <div style={{color:'white', textAlign:'center', marginTop:'50px'}}>Carregando a Taverna...</div>;
+
+  // 👇 JUNTA TODOS OS ITENS DO JOGO NUMA LISTA SÓ PARA O MESTRE 👇
+  const todosOsItensDoBanco = [
+    ...ARMAS.map(a => ({ ...a, isMagico: false, tipoItem: "Arma" })),
+    ...Object.values(itensMagicos).flatMap(arr => arr).map(i => ({ ...i, isMagico: true }))
+  ];
+
+  const resultadosLoot = buscaLoot.trim() === "" 
+    ? [] 
+    : todosOsItensDoBanco.filter(i => i.nome.toLowerCase().includes(buscaLoot.toLowerCase()));
+
+  // 👇 FUNÇÃO SUPREMA: MESTRE DÁ O ITEM PRO JOGADOR 👇
+  async function entregarLoot(itemDoBanco, jogadorId) {
+    if (!isMestre) return;
+
+    // A mesma lógica ninja de cargas que usamos no jogador
+    let cargasMaximas = 0;
+    if (itemDoBanco.descricao) {
+      const matchCargas = itemDoBanco.descricao.match(/(\d+)\s+cargas/i);
+      if (matchCargas && matchCargas[1]) {
+        cargasMaximas = parseInt(matchCargas[1]);
+      }
+    }
+
+    const itemFormatado = {
+      id: Date.now().toString(),
+      nome: itemDoBanco.nome,
+      qtd: 1,
+      peso: itemDoBanco.peso || 0,
+      descricao: itemDoBanco.descricao || `Dano: ${itemDoBanco.dano} ${itemDoBanco.tipoDano || itemDoBanco.tipo}`,
+      equipado: false,
+      sintonizado: false,
+      exigeSintonia: itemDoBanco.attunement || false,
+      cargasTotais: cargasMaximas, 
+      cargasAtuais: cargasMaximas
+    };
+
+    const nomeJogador = jogadores[jogadorId]?.nome || "Jogador";
+
+    try {
+      // 1. Salva o item na ficha do cara (lá no banco)
+      await updateDoc(doc(db, "personagens", jogadorId), {
+        inventario: arrayUnion(itemFormatado)
+      });
+
+      // 2. Anuncia no chat geral da mesa que fulano achou loot!
+      enviarMensagemOuDado(
+        "👑 Mestre", 
+        `✨ O Mestre concedeu o item **${itemDoBanco.nome}** para *${nomeJogador}*!`, 
+        "sistema"
+      );
+
+      // 3. Reseta os painéis
+      setItemSelecionadoLoot(null);
+      setModalLootAberto(false);
+      setBuscaLoot("");
+
+    } catch (e) {
+      console.error("Erro ao enviar Loot:", e);
+      alert("Erro ao entregar o item.");
+    }
+  }
 
   return (
     <div className="mesa-layout-global" onClick={() => setMenuCondicoesFicha(null)}>
@@ -417,6 +555,96 @@ export function Mesa() {
               <button onClick={() => alterarVidaDoJogador('dano')} style={{ flex: 1, padding: '12px', background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💔 Dano</button>
               <button onClick={() => alterarVidaDoJogador('cura')} style={{ flex: 1, padding: '12px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💚 Cura</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 👇 MODAL DO DESPACHANTE DE LOOT (MESTRE) 👇 */}
+      {modalLootAberto && isMestre && (
+        <div className="overlay-modal" onClick={() => { setModalLootAberto(false); setItemSelecionadoLoot(null); }}>
+          
+          <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '2px solid #8e44ad', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(142,68,173,0.3)' }} onClick={e => e.stopPropagation()}>
+            
+            <div style={{ padding: '15px 20px', background: '#111', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, color: '#9b59b6' }}>🎁 Distribuição de Loot</h3>
+              <button onClick={() => { setModalLootAberto(false); setItemSelecionadoLoot(null); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', fontSize: '1.2rem', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
+            </div>
+
+            {!itemSelecionadoLoot ? (
+              <>
+                <div style={{ padding: '15px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Pesquise o item que o grupo encontrou..." 
+                    value={buscaLoot}
+                    onChange={(e) => setBuscaLoot(e.target.value)}
+                    autoFocus
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #5c0099', background: '#0a0a0a', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 15px 15px 15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {buscaLoot.trim() === "" ? (
+                    <p style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>O que estava dentro do baú do dragão?</p>
+                  ) : resultadosLoot.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: '#ffcc00' }}>Item não encontrado no banco.</p>
+                  ) : (
+                    resultadosLoot.map(item => (
+                      <div 
+                        key={item.nome}
+                        onClick={() => setItemSelecionadoLoot(item)}
+                        style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: item.isMagico ? '4px solid #8e44ad' : '4px solid #3498db' }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#222'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#111'}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                          <strong style={{ color: item.isMagico ? '#9b59b6' : '#3498db' }}>{item.nome}</strong>
+                          <span style={{ fontSize: '0.7rem', color: '#888', background: '#000', padding: '2px 6px', borderRadius: '10px' }}>{item.raridade || "Comum"}</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#aaa', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {item.descricao || `Dano: ${item.dano} ${item.tipo}`}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              
+              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                
+                <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>Item Selecionado</span>
+                  <h3 style={{ margin: '5px 0', color: itemSelecionadoLoot.isMagico ? '#9b59b6' : '#3498db' }}>{itemSelecionadoLoot.nome}</h3>
+                  <button onClick={() => setItemSelecionadoLoot(null)} style={{ background: 'transparent', border: '1px dashed #555', color: '#aaa', padding: '4px 10px', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>⬅ Trocar Item</button>
+                </div>
+
+                <h4 style={{ color: '#fff', textAlign: 'center', marginBottom: '15px' }}>Entregar para qual Herói?</h4>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', overflowY: 'auto' }}>
+                  {(!mesaDados.jogadores || mesaDados.jogadores.length === 0) ? (
+                    <p style={{ color: '#ff4444' }}>Não há jogadores na mesa para receber o item.</p>
+                  ) : (
+                    Object.values(jogadores).map(ficha => (
+                      <div 
+                        key={ficha.id} 
+                        onClick={() => entregarLoot(itemSelecionadoLoot, ficha.id)}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: '#222', border: '1px solid #444', borderRadius: '10px', width: '100px', transition: '0.2s' }}
+                        onMouseOver={(e) => e.currentTarget.style.borderColor = '#4caf50'}
+                        onMouseOut={(e) => e.currentTarget.style.borderColor = '#444'}
+                      >
+                        <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', background: '#111', border: '2px solid #555' }}>
+                          {ficha.foto ? <img src={ficha.foto} alt={ficha.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{ficha.nome?.charAt(0) || "?"}</span>}
+                        </div>
+                        <span style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90%' }}>{ficha.nome}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+              </div>
+            )}
+            
           </div>
         </div>
       )}
@@ -508,6 +736,14 @@ export function Mesa() {
            </button>
 
            <button className="btn-entrar-ficha" onClick={abrirModalDeFichas} style={{marginLeft: '10px'}}>➕ Entrar com Ficha</button>
+           {isMestre && (
+             <button 
+               onClick={() => setModalLootAberto(true)} 
+               style={{ background: 'linear-gradient(90deg, #8e44ad 0%, #3498db 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(142,68,173,0.5)' }}
+             >
+               🎁 Dar Loot
+             </button>
+           )}
         </div>
       </div>
 
@@ -528,7 +764,7 @@ export function Mesa() {
           <div className="area-principal-cards">
             
             <h2 className="titulo-secao-mesa">🛡️ Heróis da Mesa</h2>
-            <div className="area-cards-jogadores">
+            <div className="area-cards-jogadores" style={{ flexShrink: 0, minHeight: 'min-content' }}>
               {!mesaDados.jogadores || mesaDados.jogadores.length === 0 ? (
                 <div className="aviso-vazio-mesa"><p>Nenhum herói na mesa.</p></div>
               ) : (
@@ -600,7 +836,7 @@ export function Mesa() {
                               <div className="menu-condicoes-flutuante" onClick={(e) => e.stopPropagation()}>
                                  <div style={{fontSize:'0.65rem', color:'#888', padding:'2px 8px', textTransform:'uppercase', borderBottom:'1px solid #333', marginBottom:'4px'}}>Aplicar Condição</div>
                                  {LISTA_CONDICOES.map(cond => (
-                                   <div key={cond.id} className={`item-condicao ${condicoesAtivas.includes(cond.id) ? 'ativo' : ''}`} onClick={() => alternarCondicao(ficha.id, ficha.nome, cond.id)}>
+                                   <div key={cond.id} className={`item-condicao ${condicoesAtivas.includes(cond.id) ? 'ativo' : ''}`} onClick={() => alternarCondicao(ficha.id, ficha.nome, cond.id, 'jogador')}>
                                      <span>{cond.icon}</span> {cond.id}
                                    </div>
                                  ))}
@@ -639,7 +875,7 @@ export function Mesa() {
             </div>
 
             {/* 👇 EXIBIÇÃO DE RETRATOS NOS CARDS DE MONSTROS 👇 */}
-            <div className="area-cards-npcs" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
+            <div className="area-cards-npcs" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px', flexShrink: 0, minHeight: 'min-content', paddingBottom: '30px' }}>
               {listaNpcs.length === 0 ? (
                 <p style={{ color: '#666', gridColumn: '1 / -1' }}>Nenhuma ameaça na mesa no momento.</p>
               ) : (
@@ -647,8 +883,7 @@ export function Mesa() {
                   const porcentagemNpc = Math.min(100, (npc.vidaAtual / npc.vidaMaxima) * 100);
                   const isMorto = npc.vidaAtual === 0;
 
-                  // 👇 LÓGICA DAS CORES E ÍCONES BASEADA NA FACÇÃO 👇
-                  let corBaseNpc = '#ff4444'; // Hostil padrão (Vermelho)
+                  let corBaseNpc = '#ff4444'; 
                   let iconeFaccao = '👹';
                   if (npc.faccao === 'neutro') { corBaseNpc = '#ffcc00'; iconeFaccao = '😐'; }
                   if (npc.faccao === 'aliado') { corBaseNpc = '#4caf50'; iconeFaccao = '🛡️'; }
@@ -675,10 +910,44 @@ export function Mesa() {
                             <span>{isMorto ? '💀' : iconeFaccao}</span>
                           )}
                         </div>
-                        <h4 style={{ margin: '0', color: isMorto ? '#888' : '#fff', fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                          {npc.nome}
-                        </h4>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{ margin: '0 0 5px 0', color: isMorto ? '#888' : '#fff', fontSize: '1.05rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {npc.nome}
+                          </h4>
+                          
+                          <div style={{ display: 'flex', gap: '10px', fontSize: '0.75rem', color: '#aaa', fontWeight: 'bold' }}>
+                            <span title="Classe de Armadura">🛡️ CA {npc.ca || 10}</span>
+                            
+                            {isMestre && !isMorto && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const r = Math.floor(Math.random() * 20) + 1;
+                                  const mod = npc.iniciativa || 0;
+                                  const sinal = mod >= 0 ? `+${mod}` : mod;
+                                  enviarMensagemOuDado(npc.nome, `rolou **Iniciativa**: d20(${r}) ${sinal} = **[ ${r + mod} ]**`, "sistema");
+                                }}
+                                style={{ background: 'transparent', border: '1px solid #555', color: '#ffcc00', borderRadius: '4px', cursor: 'pointer', padding: '0 4px' }}
+                                title="Rolar Iniciativa pra este NPC"
+                              >
+                                ⚡ Ini {npc.iniciativa >= 0 ? `+${npc.iniciativa || 0}` : npc.iniciativa}
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* 👇 FITA DE ATRIBUTOS PARA O MESTRE OLHAR RÁPIDO 👇 */}
+                      {isMestre && !isMorto && npc.atributos && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', background: '#111', padding: '4px 6px', borderRadius: '4px', marginTop: '6px', fontSize: '0.68rem', color: '#ccc', border: '1px solid #333', marginBottom: '8px' }}>
+                          <span title="Força">FOR <strong>{npc.atributos.for}</strong></span>
+                          <span title="Destreza">DES <strong>{npc.atributos.des}</strong></span>
+                          <span title="Constituição">CON <strong>{npc.atributos.con}</strong></span>
+                          <span title="Inteligência">INT <strong>{npc.atributos.int}</strong></span>
+                          <span title="Sabedoria">SAB <strong>{npc.atributos.sab}</strong></span>
+                          <span title="Carisma">CAR <strong>{npc.atributos.car}</strong></span>
+                        </div>
+                      )}
 
                       <div className="barra-vida-mestre" onClick={() => isMestre && setModalHpNpc(npc.id)} style={{ cursor: isMestre ? 'pointer' : 'default', padding: '8px', border: `1px solid ${corBaseNpc}` }}>
                         <div className="info-vida" style={{ fontSize: '0.75rem' }}>
@@ -689,6 +958,101 @@ export function Mesa() {
                           <div className="preenchimento-vida" style={{ width: `${Math.max(0, porcentagemNpc)}%`, background: corVidaNpc }}></div>
                         </div>
                       </div>
+
+                      {/* 👇 ÁREA DE CONDIÇÕES / BUFFS DO NPC 👇 */}
+                      <div className="area-condicoes" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
+                        {(npc.condicoes || []).map(c => {
+                           const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
+                           return (
+                             <span key={c} className="badge-condicao" onClick={(e) => { e.stopPropagation(); alternarCondicao(npc.id, npc.nome, c, 'npc'); }}>
+                               {condInfo?.icon || '❓'} {c}
+                             </span>
+                           );
+                        })}
+                        {isMestre && !isMorto && (
+                          <div style={{ position: 'relative' }}>
+                            <button className="btn-add-condicao" onClick={(e) => { e.stopPropagation(); setMenuCondicoesFicha(menuCondicoesFicha === npc.id ? null : npc.id); }}>+ Status</button>
+                            {menuCondicoesFicha === npc.id && (
+                              <div className="menu-condicoes-flutuante" onClick={(e) => e.stopPropagation()}>
+                                 {LISTA_CONDICOES.map(cond => (
+                                   <div key={cond.id} className={`item-condicao ${(npc.condicoes||[]).includes(cond.id) ? 'ativo' : ''}`} onClick={() => alternarCondicao(npc.id, npc.nome, cond.id, 'npc')}>
+                                     <span>{cond.icon}</span> {cond.id}
+                                   </div>
+                                 ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 👇 ARSENAL COM O NOVO MOTOR PLUGADO 👇 */}
+                      {isMestre && !isMorto && npc.ataques && npc.ataques.length > 0 && (
+                        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          {npc.ataques.map((atk, i) => (
+                            <div key={i} style={{ display: 'flex', background: '#222', borderRadius: '4px', border: '1px solid #333', overflow: 'hidden' }}>
+                              
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // CHAMA O MOTOR PRA ATAQUE!
+                                  const buffs = aplicarEfeitos("ataque", npc.condicoes);
+                                  const r = Math.floor(Math.random() * 20) + 1;
+                                  
+                                  const somaGeral = r + atk.bonusAtaque + buffs.totalExtra;
+                                  const sinal = atk.bonusAtaque >= 0 ? `+${atk.bonusAtaque}` : atk.bonusAtaque;
+                                  const txtCrit = r === 20 ? "🔥 CRÍTICO!" : r === 1 ? "💀 FALHA CRÍTICA" : "";
+                                  
+                                  enviarMensagemOuDado(npc.nome, `atacou com **${atk.nome}**: d20(${r}) ${sinal} = **[ ${somaGeral} ]** ${txtCrit} ${buffs.logs}`, "dado");
+                                }}
+                                style={{ flex: 1, padding: '6px', background: 'transparent', border: 'none', color: '#fff', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', borderRight: '1px solid #333' }}
+                              >
+                                ⚔️ {atk.nome} ({atk.bonusAtaque >= 0 ? `+${atk.bonusAtaque}` : atk.bonusAtaque})
+                              </button>
+
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // CHAMA O MOTOR PRA DANO!
+                                  const buffs = aplicarEfeitos("dano", npc.condicoes);
+
+                                  let expressaoLimpa = atk.dano.toLowerCase().replace(/\s/g, ''); 
+                                  let totalDano = 0;
+                                  let logDados = "";
+                                  let match = expressaoLimpa.match(/(\d+)d(\d+)(?:([+-])(\d+))?/);
+                                  
+                                  if(match) {
+                                      let qtd = parseInt(match[1]);
+                                      let faces = parseInt(match[2]);
+                                      let sinal = match[3];
+                                      let mod = parseInt(match[4]) || 0;
+                                      
+                                      let rolagens = [];
+                                      for(let k = 0; k < qtd; k++){
+                                          let r = Math.floor(Math.random() * faces) + 1;
+                                          rolagens.push(r);
+                                          totalDano += r;
+                                      }
+                                      if(sinal === '+') totalDano += mod;
+                                      if(sinal === '-') totalDano -= mod;
+                                      logDados = `[ ${rolagens.join(' + ')} ] ${sinal ? sinal + ' ' + mod : ''}`;
+                                  } else {
+                                     totalDano = parseInt(expressaoLimpa) || 0;
+                                     logDados = `${totalDano}`;
+                                  }
+                                  
+                                  // SOMA O VALOR DO MOTOR NO DANO FINAL!
+                                  totalDano += buffs.totalExtra;
+                                  
+                                  enviarMensagemOuDado(npc.nome, `causou dano com **${atk.nome}**: 🎲 ${logDados} = **[ ${totalDano} ]** <br/><small>${atk.tipo}</small> ${buffs.logs}`, "dado");
+                                }}
+                                style={{ padding: '6px 10px', background: '#331a00', border: 'none', color: '#ffcc00', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold' }}
+                              >
+                                💥 {atk.dano.split(' ').join('')}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -702,14 +1066,18 @@ export function Mesa() {
             {ordemIniciativa.length > 0 && (
               <div className="painel-iniciativa" style={{ background: '#181818', borderBottom: '2px solid #ffcc00', padding: '12px' }}>
                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
-                    <span style={{color: '#ffcc00', fontWeight: 'bold', fontSize: '0.85rem', textTransform: 'uppercase'}}>⚔️ Turnos de Combate</span>
+                    
+                    <span style={{color: '#ffcc00', fontWeight: 'bold', fontSize: '0.85rem', textTransform: 'uppercase'}}>
+                      ⚔️ Combate <span style={{color: '#fff', background: '#333', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px'}}>Rodada {rodadaAtual}</span>
+                    </span>
+                    
                     {isMestre && (
                        <div style={{display: 'flex', gap: '8px'}}>
                           <button onClick={adicionarMonstroIniciativa} style={{background:'#f44336', border:'none', color:'white', fontSize:'0.7rem', padding:'4px 8px', borderRadius:'3px', cursor:'pointer', fontWeight: 'bold'}} title="Rolar Iniciativa Falsa pro Monstro">+ NPC</button>
                           <button onClick={avancarTurno} style={{background:'#4caf50', border:'none', color:'white', fontSize:'0.7rem', padding:'4px 8px', borderRadius:'3px', cursor:'pointer', fontWeight: 'bold'}}>Passar Turno ➡</button>
                           <button onClick={() => {
                              enviarMensagemOuDado("Sistema", "--- FIM DO COMBATE ---", "limpar_iniciativa");
-                             updateDoc(doc(db, "mesas", codigoSala), { turnoAtual: 0 }); 
+                             updateDoc(doc(db, "mesas", codigoSala), { turnoAtual: 0, rodadaAtual: 1 }); 
                           }} style={{background:'transparent', border:'1px solid #555', color:'#aaa', fontSize:'0.7rem', padding:'4px 8px', borderRadius:'3px', cursor:'pointer'}}>Encerrar</button>
                        </div>
                     )}
@@ -758,7 +1126,7 @@ export function Mesa() {
                     {[20, 12, 10, 8, 6, 4].map(f => <button key={f} onClick={() => rolarDadoRapido(f)}>d{f}</button>)}
                   </div>
                 </div>
-                <button onClick={limparChat} style={{ background: 'transparent', border: '1px solid #ff4444', color: '#ff4444', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer', height: 'fit-content' }} title="Limpar Histórico">🗑️ Limpar Chat</button>
+                <button onClick={limparChat} style={{ background: 'transparent', border: '1px solid #ff4444', color: '#ff4444', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer', height: 'fit-content', }} title="Limpar Histórico">🗑️ Limpar Chat</button>
               </div>
             )}
 
@@ -791,6 +1159,27 @@ export function Mesa() {
               })}
             </div>
 
+            {/* 👇 GAVETA DO ROLADOR AVULSO 👇 */}
+            {mostrarRolador && (
+              <form onSubmit={rolarDadosAvulsos} style={{ padding: '10px', background: '#1a1a1a', borderTop: '2px solid #ffcc00', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s' }}>
+                <input type="number" min="1" max="50" value={avulsoQtd} onChange={e => setAvulsoQtd(e.target.value)} style={{ width: '45px', padding: '6px', background: '#000', color: 'white', border: '1px solid #555', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }} title="Quantidade de Dados" />
+                <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>d</span>
+                <select value={avulsoFaces} onChange={e => setAvulsoFaces(e.target.value)} style={{ padding: '6px', background: '#000', color: 'white', border: '1px solid #555', borderRadius: '4px', fontWeight: 'bold' }}>
+                  <option value="4">4</option>
+                  <option value="6">6</option>
+                  <option value="8">8</option>
+                  <option value="10">10</option>
+                  <option value="12">12</option>
+                  <option value="20">20</option>
+                  <option value="100">100</option>
+                </select>
+                <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>+</span>
+                <input type="number" value={avulsoMod} onChange={e => setAvulsoMod(e.target.value)} style={{ width: '55px', padding: '6px', background: '#000', color: 'white', border: '1px solid #555', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }} title="Modificador (Ex: 2 ou -1)" />
+                
+                <button type="submit" style={{ background: '#ffcc00', color: 'black', border: 'none', padding: '6px 15px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '5px', textTransform: 'uppercase' }}>Rolar</button>
+              </form>
+            )}
+
             <form className="input-chat-container" onSubmit={(e) => {
               e.preventDefault();
               if(!textoChat.trim()) return;
@@ -801,6 +1190,28 @@ export function Mesa() {
                 🖼️
                 <input type="file" accept="image/*" onChange={handleEnviarImagem} hidden />
               </label>
+
+              {/* 👇 NOVO BOTÃO DE ABRIR O ROLADOR AVULSO 👇 */}
+              <button 
+                type="button" 
+                onClick={() => setMostrarRolador(!mostrarRolador)} 
+                title="Rolar Dados Avulsos" 
+                style={{ 
+                  background: mostrarRolador ? '#ffcc00' : '#333', 
+                  color: mostrarRolador ? 'black' : 'white', 
+                  border: '1px solid #444', 
+                  borderRadius: '4px', 
+                  padding: '0 10px', 
+                  cursor: 'pointer', 
+                  fontSize: '1.2rem', 
+                  transition: '0.2s',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                🎲
+              </button>
+
               <input type="text" placeholder={`Falar como ${nomeRemetente}...`} value={textoChat} onChange={e => setTextoChat(e.target.value)} />
               <button type="submit">Enviar</button>
             </form>
@@ -870,7 +1281,7 @@ export function Mesa() {
         .btn-abrir-ficha-nova-aba:hover { background: #ffcc00; color: black; font-weight: bold; }
 
         .painel-lateral-chat { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; height: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.4); animation: fadeIn 0.2s ease-out; }
-        .aba-rolamento-mestre { background: #222; padding: 10px; border-bottom: 1px solid #333; font-size: 0.8rem; color: #aaa; }
+        .aba-rolamento-mestre { background: #222; padding: 10px; border-bottom: 1px solid #333; font-size: 0.8rem; color: #aaa; gap: 10px; }
         .botoes-dados-mestre { display: flex; gap: 5px; margin-top: 5px; }
         .botoes-dados-mestre button { flex: 1; padding: 6px; background: #333; border: 1px solid #444; border-radius: 4px; color: #ffcc00; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
         .botoes-dados-mestre button:hover { background: #ffcc00; color: #000; }
@@ -892,6 +1303,14 @@ export function Mesa() {
         .input-chat-container input[type="text"] { flex: 1; padding: 10px; background: #111; border: 1px solid #444; color: white; border-radius: 4px; font-size: 0.9rem; }
         .input-chat-container button { padding: 0 15px; background: #4caf50; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
         .input-chat-container button:hover { background: #45a049; }
+
+        .area-principal-cards::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Edge */
+        }
+        .area-principal-cards {
+          -ms-overflow-style: none;  /* IE e Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
       `}</style>

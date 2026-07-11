@@ -8,9 +8,9 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     tracos: [
-      { nome: "Engenhoso", desc: "Você ganha Inspiração Heroica sempre que termina um Descanso Longo." },
-      { nome: "Habilidoso", desc: "Você ganha proficiência em uma perícia à sua escolha." },
-      { nome: "Versátil", desc: "Você ganha um Talento de Origem à sua escolha." }
+      { nome: "Engenhoso (Resourceful)", desc: "Ao terminar um Descanso Longo, você ganha 1 Ponto de Inspiração Heroica." },
+      { nome: "Habilidoso (Skillful)", desc: "Você ganha Proficiência em 1 perícia à sua escolha." },
+      { nome: "Versátil (Versatile)", desc: "Você ganha 1 Talento de Origem (Origin Feat) à sua escolha." }
     ]
   },
   "Aasimar": {
@@ -20,14 +20,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Radiante", "Necrótico"],
-    // 👇 Magia Nativa da Raça Inteira 👇
     magiasBonus: {
-      truques: ["Luz"]
+      truques: [{ id: "light", nome: "Light" }]
     },
     tracos: [
-      { nome: "Mãos Curativas", desc: "Ação Mágica: Toca uma criatura e cura PV igual a um rolar de d4s (qtd = Proficiência). 1x/Descanso Longo." },
-      { nome: "Portador da Luz", desc: "Você conhece o truque Luz (Light). Carisma é seu atributo para ele." },
-      { nome: "Revelação Celestial (Nível 3)", desc: "Bônus: Transformação por 1 min. Escolha: Asas Celestiais, Resplendor Interno ou Manto Necrótico." }
+      { nome: "Mãos Curativas", desc: "Ação Mágica (Toque): Cura PV igual a um rolar de d4s. Quantidade de d4s = seu Bônus de Proficiência. Usos: 1/Descanso Longo." },
+      { nome: "Portador da Luz", desc: "Você conhece o truque Light. Você conjura usando Sabedoria, Inteligência ou Carisma (escolha na criação)." },
+      { nome: "Revelação Celestial (Nível 3)", desc: "Ação Bônus: Transforma-se por 1 minuto (ou até usar Bônus para encerrar). Usos: Prof/Descanso Longo. Uma vez no seu turno, ao causar dano, dá dano extra (Proficiência). Tipo: Radiante (Asas/Luz) ou Necrótico (Manto). Escolha a forma ao ativar:\n• Asas Celestiais: Deslocamento de voo = caminhada.\n• Resplendor Interno: Emite Luz. Fim do seu turno, toda criatura a 10ft de você toma dano Radiante (igual sua Proficiência).\n• Manto Necrótico: Ao ativar, criaturas a 10ft (exceto aliados) fazem Save de Carisma (CD 8 + Carisma + Proficiência) ou ficam Amedrontadas (Frightened) até o fim do seu próximo turno." }
     ]
   },
   "Draconato (Dragonborn)": {
@@ -40,15 +39,16 @@ export const RACAS = {
     escolhaRacial: {
       titulo: "Ancestralidade Dracônica",
       opcoes: [
-        { nome: "Fogo (Ouro, Vermelho, Latão)", resistenciaExtra: "Fogo", tracoExtra: "Arma de Sopro: Cone 15ft (Fogo)" },
-        { nome: "Frio (Prata, Branco)", resistenciaExtra: "Frio", tracoExtra: "Arma de Sopro: Cone 15ft (Frio)" },
-        { nome: "Ácido (Cobre, Negro)", resistenciaExtra: "Ácido", tracoExtra: "Arma de Sopro: Linha 30ft (Ácido)" },
-        { nome: "Elétrico (Azul, Bronze)", resistenciaExtra: "Elétrico", tracoExtra: "Arma de Sopro: Linha 30ft (Elétrico)" },
-        { nome: "Veneno (Verde)", resistenciaExtra: "Veneno", tracoExtra: "Arma de Sopro: Cone 15ft (Veneno)" }
-      ]
+        { nome: "Fogo (Ouro, Vermelho, Latão)", resistenciaExtra: "Fogo", tracoExtra: "Sopro: Dano de Fogo." },
+        { nome: "Frio (Prata, Branco)", resistenciaExtra: "Frio", tracoExtra: "Sopro: Dano de Frio." },
+        { nome: "Ácido (Cobre, Negro)", resistenciaExtra: "Ácido", tracoExtra: "Sopro: Dano Ácido." },
+        { nome: "Elétrico (Azul, Bronze)", resistenciaExtra: "Elétrico", tracoExtra: "Sopro: Dano Elétrico." },
+        { nome: "Veneno (Verde)", resistenciaExtra: "Veneno", tracoExtra: "Sopro: Dano Venenoso." }
+      ] 
     },
     tracos: [
-      { nome: "Voo Dracônico (Nível 5)", desc: "Bônus: Cria asas espectrais e ganha Voo por 10 minutos (1x/Descanso Longo)." }
+      { nome: "Arma de Sopro", desc: "Ação de Ataque: Você pode substituir UM dos seus ataques para exalar energia destrutiva. Escolha o formato na hora: Cone de 15ft ou Linha de 30ft. Criaturas na área fazem Save de Destreza (CD 8 + CON + Prof). Dano: 1d10 (Nv 1), 2d10 (Nv 5), 3d10 (Nv 11), 4d10 (Nv 17). Metade do dano num sucesso. Usos: Proficiência/Descanso Longo." },
+      { nome: "Voo Dracônico (Nível 5)", desc: "Ação Bônus: Brotam asas espectrais. Ganha deslocamento de Voo igual seu deslocamento normal por 10 minutos. Usos: 1/Descanso Longo." }
     ]
   },
   "Anão": {
@@ -59,8 +59,9 @@ export const RACAS = {
     visaoEscuro: "120 ft",
     resistenciasPadrao: ["Veneno"],
     tracos: [
-      { nome: "Robustez Anã", desc: "+1 PV máximo por nível." },
-      { nome: "Sentido de Pedra (Stonecunning)", desc: "Bônus: Ganha Sentido Sísmico de 60ft por 10 min se estiver na pedra." }
+      { nome: "Resiliência Anã", desc: "Vantagem em Testes de Resistência para evitar ou encerrar a condição Envenenado (Poisoned)." },
+      { nome: "Robustez Anã", desc: "Seus Pontos de Vida máximos aumentam em 1 para cada nível de personagem que possuir." },
+      { nome: "Sentido de Pedra (Stonecunning)", desc: "Ação Bônus: Ganha Sentido Sísmico (Tremorsense) 60ft por 10 minutos. Deve estar e permanecer sobre superfície de pedra natural. Usos: Proficiência/Descanso Longo." }
     ]
   },
   "Elfo": {
@@ -76,33 +77,34 @@ export const RACAS = {
         { 
           nome: "Drow (Elfo Negro)", 
           visaoEscuroExtra: "120 ft", 
-          tracoExtra: "Magia Drow: Escuridão e Fogo das Fadas.",
-          // 👇 Magias Específicas do Drow 👇
+          tracoExtra: "Magia Drow: Faerie Fire (Nv 3) e Darkness (Nv 5). Usos: 1/Descanso Longo ou com Slots.",
           magiasBonus: {
-            nivel1: ["Fogo das Fadas"],
-            nivel2: ["Escuridão"]
+            nivel1: [{ id: "faerie-fire", nome: "Faerie Fire" }],
+            nivel2: [{ id: "darkness", nome: "Darkness" }]
           }
         },
         { 
           nome: "Alto Elfo", 
-          tracoExtra: "Magia Superior: 1 Truque de Mago (Adicione manualmente) e Passo Nebuloso (Misty Step).",
+          tracoExtra: "Magia Superior: Escolha 1 Truque de Mago. Detect Magic (Nv 3) e Misty Step (Nv 5). Usos: 1/Descanso Longo ou com Slots.",
           magiasBonus: {
-            nivel2: ["Passo Nebuloso"]
+            nivel1: [{ id: "detect-magic", nome: "Detect Magic" }],
+            nivel2: [{ id: "misty-step", nome: "Misty Step" }]
           }
         },
         { 
           nome: "Elfo da Floresta", 
-          tracoExtra: "Passos da Floresta: Seu Deslocamento base vira 35ft. Acesso a Passos sem Pegadas.",
+          tracoExtra: "Passos da Floresta: Deslocamento vira 35ft. Magias: Longstrider (Nv 3) e Pass without Trace (Nv 5). Usos: 1/Descanso Longo ou com Slots.",
           magiasBonus: {
-            nivel2: ["Passos sem Pegadas"]
+            nivel1: [{ id: "longstrider", nome: "Longstrider" }],
+            nivel2: [{ id: "pass-without-trace", nome: "Pass without Trace" }]
           }
         }
       ]
     },
     tracos: [
-      { nome: "Ancestralidade Feérica", desc: "Vantagem contra Charme. Imune a sono mágico." },
-      { nome: "Sentidos Aguçados", desc: "Proficiência em Percepção, Intuição ou Sobrevivência." },
-      { nome: "Transe", desc: "Descanso Longo em 4 horas consciente." }
+      { nome: "Ancestralidade Feérica", desc: "Vantagem em Testes de Resistência para evitar ou encerrar a condição Enfeitiçado (Charmed)." },
+      { nome: "Sentidos Aguçados", desc: "Proficiência na perícia Percepção (Perception), Intuição (Insight) ou Sobrevivência (Survival)." },
+      { nome: "Transe", desc: "Não precisa dormir. Imune a magias de sono. Descanso Longo termina após 4 horas de meditação consciente." }
     ]
   },
   "Gnomo": {
@@ -117,23 +119,23 @@ export const RACAS = {
       opcoes: [
         { 
           nome: "Gnomo da Floresta", 
-          tracoExtra: "Magia da Floresta: Ilusão Menor e Falar com Animais.",
+          tracoExtra: "Magia da Floresta: Minor Illusion (sempre) e Speak with Animals (apenas conjura, pode usar Slots). Atributo: Int, Sab ou Car.",
           magiasBonus: {
-            truques: ["Ilusão Menor"],
-            nivel1: ["Falar com Animais"]
+            truques: [{ id: "minor-illusion", nome: "Minor Illusion" }],
+            nivel1: [{ id: "speak-with-animals", nome: "Speak with Animals" }]
           }
         },
         { 
           nome: "Gnomo das Rochas", 
-          tracoExtra: "Engenhoqueiro: Truques Consertar e Prestidigitação. Criação de Dispositivos.",
+          tracoExtra: "Engenhoqueiro: Truques Mending e Prestidigitação (apenas para criar minidispositivos mecânicos temporários). Atributo: Int, Sab ou Car.",
           magiasBonus: {
-            truques: ["Consertar", "Prestidigitação"]
+            truques: [{ id: "mending", nome: "Mending" }, { id: "prestidigitation", nome: "Prestidigitation" }]
           }
         }
       ]
     },
     tracos: [
-      { nome: "Astúcia Gnômica", desc: "Vantagem em saves de Inteligência, Sabedoria e Carisma." }
+      { nome: "Astúcia Gnômica", desc: "Vantagem em Testes de Resistência de Inteligência, Sabedoria e Carisma." }
     ]
   },
   "Golias (Goliath)": {
@@ -146,14 +148,17 @@ export const RACAS = {
     escolhaRacial: {
       titulo: "Ancestralidade Gigante",
       opcoes: [
-        { nome: "Nuvem", tracoExtra: "Passo de Nuvem: Teleporte como bônus." },
-        { nome: "Fogo", tracoExtra: "Ataque de Fogo: Dano extra de 1d10 num acerto." },
-        { nome: "Pedra", tracoExtra: "Resistência de Pedra: Usa reação para reduzir dano sofrido em 1d12 + CON." }
+        { nome: "Colina (Hill)", tracoExtra: "Tombo do Gigante: Ao acertar ataque corpo-a-corpo, alvo cai Deitado (Prone). Usos: Prof/Longo." },
+        { nome: "Fogo (Fire)", tracoExtra: "Ataque de Fogo: Acerto soma +1d10 de Fogo. Usos: Prof/Longo." },
+        { nome: "Frio (Frost)", tracoExtra: "Ataque Frio: Acerto toma +1d6 Frio e Deslocamento reduz em 10ft até o início do seu próximo turno. Usos: Prof/Longo." },
+        { nome: "Nuvem (Cloud)", tracoExtra: "Passo de Nuvem: Ação Bônus, Teleporta 30ft sem oportunidade. Usos: Prof/Longo." },
+        { nome: "Pedra (Stone)", tracoExtra: "Resistência de Pedra: Reação ao tomar dano. Reduz o dano em 1d12 + CON. Usos: Prof/Longo." },
+        { nome: "Tempestade (Storm)", tracoExtra: "Reação à Dor: Reação ao tomar dano. Causador a 60ft faz Save de DES ou toma 1d8 Elétrico. Usos: Prof/Longo." }
       ]
     },
     tracos: [
-      { nome: "Forma Grande (Nível 5)", desc: "Bônus: Fica tamanho Grande por 10 min. Vantagem em Força e +10ft Speed." },
-      { nome: "Constituição Poderosa", desc: "Vantagem para sair de Agarrão. Carga conta como Grande." }
+      { nome: "Forma Grande (Nível 5)", desc: "Ação Bônus: Fica categoria Grande (Large). Seu alcance aumenta em 5ft e tem Vantagem em testes de Força. Duração 10 min. Usos: 1/Descanso Longo." },
+      { nome: "Constituição Poderosa", desc: "Vantagem para escapar da condição Agarrado (Grappled). Conta como tamanho Grande para carregar/puxar peso." }
     ]
   },
   "Halfling": {
@@ -164,10 +169,10 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     tracos: [
-      { nome: "Sorte (Lucky)", desc: "Se rolar 1 no d20, pode rerolar (usa o novo resultado)." },
-      { nome: "Bravura", desc: "Vantagem contra Medo." },
-      { nome: "Agilidade Halfling", desc: "Pode se mover pelo espaço de criaturas maiores que você." },
-      { nome: "Furtividade Natural", desc: "Pode se esconder atrás de criaturas maiores que você." }
+      { nome: "Sorte (Lucky)", desc: "Se rolar 1 natural no d20 (Ataque, Teste ou Save), pode rerolar o dado. Você DEVE usar o novo resultado." },
+      { nome: "Bravura", desc: "Vantagem em Testes de Resistência para evitar ou encerrar a condição Amedrontado (Frightened)." },
+      { nome: "Agilidade Halfling", desc: "Você pode se mover através do espaço de criaturas que sejam Médias ou maiores que você." },
+      { nome: "Furtividade Natural", desc: "Você tem Proficiência em Furtividade (Stealth). Pode tentar se esconder mesmo que esteja coberto apenas por aliados maiores." }
     ]
   },
   "Orc": {
@@ -178,8 +183,8 @@ export const RACAS = {
     visaoEscuro: "120 ft",
     resistenciasPadrao: [],
     tracos: [
-      { nome: "Adrenalina", desc: "Bônus: Disparada. Ganha PV Temp igual a Proficiência." },
-      { nome: "Resistência Implacável", desc: "Se cair a 0 PV, cai a 1 PV (1x/Descanso Longo)." }
+      { nome: "Adrenalina (Adrenaline Rush)", desc: "Ação Bônus: Usa a ação Disparada (Dash). Imediatamente ganha PV Temporário igual ao seu Nível de personagem. Usos: Proficiência/Descanso Longo ou Curto." },
+      { nome: "Resistência Implacável", desc: "Quando seus PV chegam a 0 (mas você não morre na hora), você pode cair a 1 PV em vez disso. Usos: 1/Descanso Longo." }
     ]
   },
   "Tiefling": {
@@ -189,9 +194,8 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
-    // 👇 Magia Nativa da Raça 👇
     magiasBonus: {
-      truques: ["Taumaturgia"]
+      truques: [{ id: "thaumaturgy", nome: "Thaumaturgy" }]
     },
     escolhaRacial: {
       titulo: "Legado Infernal",
@@ -199,36 +203,34 @@ export const RACAS = {
         { 
           nome: "Abissal", 
           resistenciaExtra: "Veneno", 
-          tracoExtra: "Magia Abissal: Raio de Veneno e Imobilizar Pessoa.",
-          // 👇 Magias Específicas da Linhagem 👇
+          tracoExtra: "Magia: Ray of Sickness (Nv 3) e Hold Person (Nv 5). Usos: 1/Longo ou Slots.",
           magiasBonus: {
-            nivel1: ["Raio de Veneno"],
-            nivel2: ["Imobilizar Pessoa"]
+            nivel1: [{ id: "ray-of-sickness", nome: "Ray of Sickness" }],
+            nivel2: [{ id: "hold-person", nome: "Hold Person" }]
           }
         },
         { 
           nome: "Ctônico", 
           resistenciaExtra: "Necrótico", 
-          tracoExtra: "Magia Ctônica: Toque Arrepiante, Falsa Vida, Raio do Enfraquecimento.",
+          tracoExtra: "Magia: False Life (Nv 3) e Ray of Enfeeblement (Nv 5). Usos: 1/Longo ou Slots.",
           magiasBonus: {
-            truques: ["Toque Arrepiante"],
-            nivel1: ["Falsa Vida"],
-            nivel2: ["Raio do Enfraquecimento"]
+            nivel1: [{ id: "false-life", nome: "False Life" }],
+            nivel2: [{ id: "ray-of-enfeeblement", nome: "Ray of Enfeeblement" }]
           }
         },
         { 
           nome: "Infernal", 
           resistenciaExtra: "Fogo", 
-          tracoExtra: "Magia Infernal: Raio de Fogo, Mãos Flamejantes.",
+          tracoExtra: "Magia: Hellish Rebuke (Nv 3) e Darkness (Nv 5). Usos: 1/Longo ou Slots.",
           magiasBonus: {
-            truques: ["Raio de Fogo"],
-            nivel1: ["Mãos Flamejantes"]
+            nivel1: [{ id: "hellish-rebuke", nome: "Hellish Rebuke" }],
+            nivel2: [{ id: "darkness", nome: "Darkness" }]
           }
         }
       ]
     },
     tracos: [
-      { nome: "Presença de Outro Mundo", desc: "Conhece o truque Taumaturgia." }
+      { nome: "Presença de Outro Mundo", desc: "Você conhece o truque Thaumaturgy. Suas magias bônus desta raça usam Int, Sab ou Car (sua escolha)." }
     ]
   },
   "Dhampir": {
@@ -257,7 +259,7 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
     magiasBonus: {
-      nivel1: ["Disfarce", "Bruxaria"]
+      nivel1: [{ id: "disguise-self", nome: "Disguise Self" }, { id: "hex", nome: "Hex" }]
     },
     tracos: [
       { 
@@ -366,7 +368,7 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
     magiasBonus: {
-      truques: ["Amizade"]
+      truques: [{ id: "friends", nome: "Friends" }]
     },
     tracos: [
       { 
@@ -470,9 +472,9 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     magiasBonus: {
-      truques: ["Artifício Druídico"],
-      nivel1: ["Fogo das Fadas"],
-      nivel2: ["Aumentar/Reduzir"]
+      truques: [{ id: "druidcraft", nome: "Druidcraft" }],
+      nivel1: [{ id: "faerie-fire", nome: "Faerie Fire" }],
+      nivel2: [{ id: "enlarge-reduce", nome: "Enlarge/Reduce" }]
     },
     escolhaRacial: {
       titulo: "Origem da Fada",
@@ -496,9 +498,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Fogo"],
     magiasBonus: {
-      truques: ["Criar Chama"],
-      nivel1: ["Mãos Flamejantes"],
-      nivel2: ["Lâmina Flamejante"]
+      truques: [{ id: "produce-flame", nome: "Produce Flame" }],
+      nivel1: [{ id: "burning-hands", nome: "Burning Hands" }],
+      nivel2: [{ id: "flame-blade", nome: "Flame Blade" }]
     },
     tracos: [
       { 
@@ -537,9 +539,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Frio"],
     magiasBonus: {
-      truques: ["Raio de Gelo"],
-      nivel1: ["Faca de Gelo"],
-      nivel2: ["Lâmina Flamejante"]
+      truques: [{ id: "ray-of-frost", nome: "Ray of Frost" }],
+      nivel1: [{ id: "ice-knife", nome: "Ice Knife" }],
+      nivel2: [{ id: "flame-blade", nome: "Flame Blade" }]
     },
     tracos: [
       { 
@@ -556,7 +558,7 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     magiasBonus: {
-      nivel2: ["Lufada de Vento"]
+      nivel2: [{ id: "gust-of-wind", nome: "Gust of Wind" }]
     },
     tracos: [
       { 
@@ -595,8 +597,8 @@ export const RACAS = {
     visaoEscuro: "120 ft",
     resistenciasPadrao: [],
     magiasBonus: {
-      nivel1: ["Disfarce"],
-      nivel3: ["Dificultar Detecção"]
+      nivel1: [{ id: "disguise-self", nome: "Disguise Self" }],
+      nivel3: [{ id: "nondetection", nome: "Nondetection" }]
     },
     tracos: [
       { 
@@ -617,7 +619,7 @@ export const RACAS = {
     visaoEscuro: "120 ft",
     resistenciasPadrao: ["Veneno"],
     magiasBonus: {
-      nivel2: ["Aumentar/Reduzir", "Invisibilidade"]
+      nivel2: [{ id: "enlarge-reduce", nome: "Enlarge/Reduce" }, { id: "invisibility", nome: "Invisibility" }]
     },
     tracos: [
       { 
@@ -673,9 +675,9 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     magiasBonus: {
-      truques: ["Artifício Druídico"],
-      nivel1: ["Fogo das Fadas"],
-      nivel2: ["Aumentar/Reduzir"]
+      truques: [{ id: "druidcraft", nome: "Druidcraft" }],
+      nivel1: [{ id: "faerie-fire", nome: "Faerie Fire" }],
+      nivel2: [{ id: "enlarge-reduce", nome: "Enlarge/Reduce" }]
     },
     tracos: [
       { 
@@ -692,7 +694,7 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: [],
     magiasBonus: {
-      nivel1: ["Detectar Magia", "Disfarce"]
+      nivel1: [{ id: "detect-magic", nome: "Detect Magic" }, { id: "disguise-self", nome: "Disguise Self" }]
     },
     tracos: [
       { 
@@ -717,9 +719,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Elétrico"],
     magiasBonus: {
-      truques: ["Toque Chocante"],
-      nivel1: ["Queda Suave"],
-      nivel2: ["Levitação"]
+      truques: [{ id: "shocking-grasp", nome: "Shocking Grasp" }],
+      nivel1: [{ id: "feather-fall", nome: "Feather Fall" }],
+      nivel2: [{ id: "levitate", nome: "Levitate" }]
     },
     tracos: [
       { 
@@ -740,8 +742,8 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
     magiasBonus: {
-      truques: ["Proteção contra Lâminas"],
-      nivel2: ["Passos sem Pegadas"]
+      truques: [{ id: "blade-ward", nome: "Blade Ward" }],
+      nivel2: [{ id: "pass-without-trace", nome: "Pass without Trace" }]
     },
     tracos: [
       { 
@@ -762,9 +764,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Fogo"],
     magiasBonus: {
-      truques: ["Criar Chama"],
-      nivel1: ["Mãos Flamejantes"],
-      nivel2: ["Lâmina Flamejante"]
+      truques: [{ id: "produce-flame", nome: "Produce Flame" }],
+      nivel1: [{ id: "burning-hands", nome: "Burning Hands" }],
+      nivel2: [{ id: "flame-blade", nome: "Flame Blade" }]
     },
     tracos: [
       { 
@@ -781,9 +783,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Ácido"],
     magiasBonus: {
-      truques: ["Espirro Ácido"],
-      nivel1: ["Criar ou Destruir Água"],
-      nivel3: ["Andar sobre as Águas"]
+      truques: [{ id: "acid-splash", nome: "Acid Splash" }],
+      nivel1: [{ id: "create-or-destroy-water", nome: "Create or Destroy Water" }],
+      nivel3: [{ id: "water-walk", nome: "Water Walk" }]
     },
     tracos: [
       { 
@@ -804,9 +806,9 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: ["Psíquico"],
     magiasBonus: {
-      truques: ["Mãos Mágicas"],
-      nivel1: ["Salto"],
-      nivel2: ["Passo Nebuloso"]
+      truques: [{ id: "mage-hand", nome: "Mage Hand" }],
+      nivel1: [{ id: "jump", nome: "Jump" }],
+      nivel2: [{ id: "misty-step", nome: "Misty Step" }]
     },
     tracos: [
       { 
@@ -827,9 +829,9 @@ export const RACAS = {
     visaoEscuro: null,
     resistenciasPadrao: ["Psíquico"],
     magiasBonus: {
-      truques: ["Mãos Mágicas"],
-      nivel1: ["Escudo Arcano"],
-      nivel2: ["Detectar Pensamentos"]
+      truques: [{ id: "mage-hand", nome: "Mage Hand" }],
+      nivel1: [{ id: "shield", nome: "Shield" }],
+      nivel2: [{ id: "detect-thoughts", nome: "Detect Thoughts" }]
     },
     tracos: [
       { 
@@ -1098,9 +1100,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Frio"],
     magiasBonus: {
-      nivel1: ["Névoa"],
-      nivel2: ["Lufada de Vento"],
-      nivel3: ["Andar sobre as Águas"]
+      nivel1: [{ id: "fog-cloud", nome: "Fog Cloud" }],
+      nivel2: [{ id: "gust-of-wind", nome: "Gust of Wind" }],
+      nivel3: [{ id: "water-walk", nome: "Water Walk" }]
     },
     tracos: [
       { 
@@ -1157,7 +1159,7 @@ export const RACAS = {
     tracos: [
       { 
         nome: "Ancestralidade Feérica", 
-        desc: "Vantagem em saves para evitar ou encerrar a condição Enfeitiçado." 
+        desc: "Vantagem em saves para evitar ou encerrar a condition Enfeitiçado." 
       },
       { 
         nome: "Membros Longos", 
@@ -1408,9 +1410,9 @@ export const RACAS = {
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Veneno"],
     magiasBonus: {
-      truques: ["Rajada de Veneno"],
-      nivel1: ["Amizade Animal"],
-      nivel2: ["Sugestão"]
+      truques: [{ id: "poison-spray", nome: "Poison Spray" }],
+      nivel1: [{ id: "animal-friendship", nome: "Animal Friendship" }],
+      nivel2: [{ id: "suggestion", nome: "Suggestion" }]
     },
     tracos: [
       { 

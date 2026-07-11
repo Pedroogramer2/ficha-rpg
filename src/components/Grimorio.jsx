@@ -1,4 +1,8 @@
 // src/components/Grimorio.jsx
+import { MAGIAS } from '../data/magias'; // 👈 Importa o banco!
+import { db } from '../firebase';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { CLASSES_DETALHADAS } from '../data/classesDetalhado';
 import { escalarDanoTruque } from '../regras';
@@ -16,13 +20,11 @@ function calcularDanoUpcast(danoBase, upcastInfo, niveisAcima) {
   const strUpcast = String(upcastInfo).trim();
 
   // CENÁRIO 1: Adição de Dados Padrão (Ex: 8d6 e upcast 1d6)
-  // 👇 AGORA O REGEX É FLEXÍVEL! Acha o dado mesmo se tiver texto junto (ex: "8d6 de Fogo") 👇
   const baseMatch = strBase.match(/(\d+)d(\d+)/i);
   const upcastMatch = strUpcast.match(/(\d+)d(\d+)/i);
 
   if (baseMatch && upcastMatch && baseMatch[2] === upcastMatch[2]) {
     const novaQtd = parseInt(baseMatch[1]) + (parseInt(upcastMatch[1]) * niveisAcima);
-    // Substitui SÓ o dado na string original, mantendo textos ao redor vivos!
     return strBase.replace(/(\d+)d(\d+)/i, `${novaQtd}d${baseMatch[2]}`);
   }
 
@@ -41,6 +43,12 @@ function calcularDanoUpcast(danoBase, upcastInfo, niveisAcima) {
 
 export function Grimorio(props) {
   const [expandida, setExpandida] = useState(null);
+  const [busca, setBusca] = useState("");
+
+  const [modalMagiaAberto, setModalMagiaAberto] = useState(false);
+  const [buscaCompendioMagia, setBuscaCompendioMagia] = useState("");
+  const { id } = useParams();
+
   const dados = props.dados || {};
 
   const classeMinúscula = dados.classe?.toLowerCase() || '';
@@ -58,6 +66,36 @@ export function Grimorio(props) {
 
   const cdMagia = 8 + profBonus + modAtributo;
   const ataqueMagico = profBonus + modAtributo;
+  const resultadosCompendioMagia = buscaCompendioMagia.trim() === "" 
+    ? [] 
+    : MAGIAS.filter(m => m.nome.toLowerCase().includes(buscaCompendioMagia.toLowerCase()));
+
+  async function adicionarMagiaDoCompendio(magiaDoBanco) {
+    if (!id) return;
+
+    const { classes, id: idBanco, ...restoMagia } = magiaDoBanco;
+    
+    const magiaFormatada = {
+      id: "magia_" + Date.now().toString(),
+      ...restoMagia
+    };
+
+    let chaveBanco = magiaDoBanco.nivel === 0 ? "magiasConhecidas.truques" : `magiasConhecidas.nivel${magiaDoBanco.nivel}`;
+
+    try {
+      await updateDoc(doc(db, "personagens", id), {
+        [chaveBanco]: arrayUnion(magiaFormatada)
+      });
+      
+      setModalMagiaAberto(false);
+      setBuscaCompendioMagia("");
+      if (props.aoAvisar) props.aoAvisar(`✨ A magia **${magiaDoBanco.nome}** foi transcrita para o Grimório!`);
+      
+    } catch (e) {
+      console.error("Erro ao salvar magia:", e);
+      alert("Erro ao adicionar magia ao grimório.");
+    }
+  }
   
   const infoClasse = CLASSES_DETALHADAS[dados.classe];
   const nivelPersonagem = dados.nivel || 1;
@@ -100,7 +138,17 @@ export function Grimorio(props) {
     }
   }
 
-  const magiasPorNivel = todasMagiasConhecidas.reduce((acc, magia) => {
+  todasMagiasConhecidas.forEach(magia => {
+    if (!magia.id) {
+      console.warn("🚨 ACHAMOS A INFILTRADA! Magia sem ID na ficha:", magia.nome, magia);
+    }
+  });
+  const magiasFiltradas = todasMagiasConhecidas.filter(magia => {
+    const nomeMagia = magia?.nome || "";
+    return nomeMagia.toLowerCase().includes(busca.toLowerCase());
+  });
+
+  const magiasPorNivel = magiasFiltradas.reduce((acc, magia) => {
     const n = magia.nivel;
     if (!acc[n]) acc[n] = [];
     acc[n].push(magia);
@@ -128,7 +176,108 @@ export function Grimorio(props) {
           <strong style={{ fontSize: '1.5rem', color: 'white' }}>+{ataqueMagico}</strong>
         </div>
       </div>
+
+      {/* --- BOTÃO DE ABRIR O COMPÊNDIO DE MAGIAS --- */}
+      <button 
+        onClick={() => setModalMagiaAberto(true)}
+        style={{ width: '100%', padding: '15px', borderRadius: '8px', background: 'linear-gradient(90deg, #6a1b9a 0%, #283593 100%)', border: 'none', color: '#fff', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', marginBottom: '20px', boxShadow: '0 4px 15px rgba(106, 27, 154, 0.4)' }}
+      >
+        🔮 Pesquisar Magia Arcana e Adicionar ao Grimório
+      </button>
+
+      {/* 👇 O MODAL DO COMPÊNDIO ARCANO 👇 */}
+      {modalMagiaAberto && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setModalMagiaAberto(false)}>
+          
+          <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '1px solid #444', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.9)' }} onClick={e => e.stopPropagation()}>
+            
+            {/* Header do Modal */}
+            <div style={{ padding: '15px 20px', background: '#111', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, color: '#e1bee7' }}>📜 Tomo de Feitiços Universais</h3>
+              <button onClick={() => setModalMagiaAberto(false)} style={{ background: 'transparent', border: 'none', color: '#ff4444', fontSize: '1.2rem', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
+            </div>
+
+            {/* Barra de Pesquisa do Modal */}
+            <div style={{ padding: '15px' }}>
+              <input 
+                type="text" 
+                placeholder="Pesquise por nome (Ex: Fireball, Cure Wounds)..." 
+                value={buscaCompendioMagia}
+                onChange={(e) => setBuscaCompendioMagia(e.target.value)}
+                autoFocus
+                style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #6a1b9a', background: '#0a0a0a', color: '#fff', fontSize: '1rem', outline: 'none' }}
+              />
+            </div>
+
+            {/* Resultados da Pesquisa */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 15px 15px 15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {buscaCompendioMagia.trim() === "" ? (
+                <p style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>Invoque uma palavra-chave para revelar os segredos cósmicos...</p>
+              ) : resultadosCompendioMagia.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#ffcc00', padding: '20px' }}>Nenhuma magia atende por este nome.</p>
+              ) : (
+                resultadosCompendioMagia.map(magia => {
+                  
+                  // Mostra um ícone de ✅ se o jogador já tiver essa magia!
+                  const jogadorJaTem = todasMagiasConhecidas.some(m => m.nome === magia.nome);
+
+                  return (
+                    <div 
+                      key={magia.id}
+                      onClick={() => !jogadorJaTem && adicionarMagiaDoCompendio(magia)}
+                      style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '12px', cursor: jogadorJaTem ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid #6a1b9a', opacity: jogadorJaTem ? 0.5 : 1 }}
+                      onMouseOver={(e) => { if (!jogadorJaTem) e.currentTarget.style.background = '#222' }}
+                      onMouseOut={(e) => e.currentTarget.style.background = '#111'}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <strong style={{ color: '#e1bee7' }}>{magia.nome} {jogadorJaTem && "✅"}</strong>
+                        <span style={{ fontSize: '0.7rem', color: '#fff', background: magia.nivel === 0 ? '#4caf50' : '#d35400', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold' }}>
+                          {magia.nivel === 0 ? "Truque" : `Círculo ${magia.nivel}`}
+                        </span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '8px', fontSize: '0.7rem', color: '#888', marginBottom: '8px', textTransform: 'uppercase' }}>
+                        <span>{magia.escola}</span>
+                        <span>•</span>
+                        <span>{magia.tempo}</span>
+                      </div>
+
+                      <div style={{ fontSize: '0.8rem', color: '#aaa', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {magia.descricao}
+                      </div>
+
+                      {magia.dano && (
+                        <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: 'bold', color: '#ffcc00' }}>
+                          🎲 Dano Base: {magia.dano} {magia.tipoDano && `(${magia.tipoDano})`}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
+      {/* 👇 BARRA DE PESQUISA DO GRIMÓRIO 👇 */}
+      <div className="barra-pesquisa-container">
+        <span className="icone-pesquisa">🔍</span>
+        <input
+          type="text"
+          className="input-pesquisa"
+          placeholder="Pesquisar magia no grimório..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+      </div>
+
+      {todasMagiasConhecidas.length > 0 && magiasFiltradas.length === 0 && (
+        <p className="vazio" style={{ textAlign: 'center', color: '#ffcc00', padding: '20px' }}>
+          Nenhuma magia encontrada com esse nome.
+        </p>
+      )}
+
       {/* --- NÍVEL 0 (TRUQUES) --- */}
       <div className="nivel-magia-container">
         <h4 className="titulo-nivel">Truques (Cantrips)</h4>
@@ -145,14 +294,16 @@ export function Grimorio(props) {
               aoAvisar={props.aoAvisar}
             />
           ))}
-          {(!magiasPorNivel[0] || magiasPorNivel[0].length === 0) && <p className="vazio-mini">Nenhum truque.</p>}
+          {(!magiasPorNivel[0] || magiasPorNivel[0].length === 0) && busca === "" && <p className="vazio-mini">Nenhum truque.</p>}
         </div>
       </div>
 
       {/* --- NÍVEIS 1 a 9 --- */}
       {slotsMaximosPorNivel.map((qtdSlots, indexArray) => {
         const nivelMagia = indexArray + 1;
-        if (qtdSlots === 0 && (!magiasPorNivel[nivelMagia])) return null;
+        
+        // Esconde a sessão se não tem slots e também não tem magia filtrada nela
+        if (qtdSlots === 0 && (!magiasPorNivel[nivelMagia] || magiasPorNivel[nivelMagia].length === 0)) return null;
 
         const gastos = slotsGastosObj[nivelMagia] || 0;
 
@@ -195,7 +346,7 @@ export function Grimorio(props) {
                   aoGastarSlot={(nivelUsado) => atualizarGastos(nivelUsado, (slotsGastosObj[nivelUsado] || 0) + 1)} 
                 />
               ))}
-              {(!magiasPorNivel[nivelMagia] || magiasPorNivel[nivelMagia].length === 0) && (
+              {(!magiasPorNivel[nivelMagia] || magiasPorNivel[nivelMagia].length === 0) && busca === "" && (
                 <p className="vazio-mini">Nenhuma magia preparada.</p>
               )}
             </div>

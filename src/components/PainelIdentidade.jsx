@@ -42,35 +42,38 @@ export function PainelIdentidade(props) {
     salvar("inspiracao", !dados.inspiracao);
   }
 
+  // 👇 MATEMÁTICA DO XP 👇
+  const TABELA_XP = {
+    1: 0, 2: 300, 3: 900, 4: 2700, 5: 6500, 
+    6: 14000, 7: 23000, 8: 34000, 9: 48000, 10: 64000, 
+    11: 85000, 12: 100000, 13: 120000, 14: 140000, 15: 165000, 
+    16: 195000, 17: 225000, 18: 265000, 19: 305000, 20: 355000
+  };
+
+  const xpAtual = dados.xp || 0;
+  const nivelAtual = dados.nivel || 1;
+  const xpProximo = nivelAtual < 20 ? TABELA_XP[nivelAtual + 1] : "MAX";
+  
+  // Calcula o preenchimento da barrinha
+  const porcentagemXP = nivelAtual < 20 
+    ? Math.min(100, Math.max(0, (xpAtual / xpProximo) * 100)) 
+    : 100;
+
   return (
     <div className="identity-card" style={{ position: 'relative' }}>
       
-      {/* 👇 A MOEDA DE INSPIRAÇÃO FLUTUANTE 👇 */}
-      <div 
-        onClick={alternarInspiracao}
-        title={dados.inspiracao ? "Gastar Inspiração" : "Dar Inspiração"}
-        style={{
-          position: 'absolute',
-          top: '25px',
-          right: '20px',
-          background: dados.inspiracao ? '#ffcc00' : '#333',
-          border: dados.inspiracao ? '3px solid #fff' : '3px solid #555',
-          borderRadius: '50%',
-          width: '45px',
-          height: '45px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: '1.5rem',
-          cursor: 'pointer',
-          boxShadow: dados.inspiracao ? '0 0 15px rgba(255, 204, 0, 0.8)' : '0 2px 5px rgba(0,0,0,0.5)',
-          transition: 'all 0.3s',
-          zIndex: 10,
-          filter: dados.inspiracao ? 'none' : 'grayscale(100%) opacity(0.5)',
-          transform: dados.inspiracao ? 'scale(1.1)' : 'scale(1)'
-        }}
-      >
-        {dados.inspiracao ? '✨' : '🪙'}
+      {/* 👇 NOVO BOTÃO DE INSPIRAÇÃO (Mais claro e visual) 👇 */}
+      <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10 }}>
+        <div className="inspiracao-box">
+          <span className="inspiracao-label">Inspiração</span>
+          <button 
+            className={`btn-inspiracao ${dados.inspiracao ? 'ativa' : ''}`}
+            onClick={alternarInspiracao}
+            title={dados.inspiracao ? "Você tem Inspiração! (Role com Vantagem)" : "Sem inspiração no momento."}
+          >
+            {dados.inspiracao ? "⭐" : "♢"}
+          </button>
+        </div>
       </div>
 
       <div className="identity-avatar">
@@ -80,7 +83,7 @@ export function PainelIdentidade(props) {
         </label>
       </div>
 
-      <div className="identity-info">
+      <div className="identity-info" style={{ paddingRight: '70px' }}> {/* Padding para não encostar na inspiração */}
         <input 
           type="text" 
           className="input-nome-hero" 
@@ -92,7 +95,7 @@ export function PainelIdentidade(props) {
         <div className="identity-sub">
           
           <span className="badge-nivel-display" style={{ background: '#333', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
-            Nível {dados.nivel || 1}
+            Nível {nivelAtual}
           </span>
           
           <span className="separador">•</span>
@@ -119,6 +122,27 @@ export function PainelIdentidade(props) {
             onChange={(e) => salvar("antecedente", e.target.value)}
           />
         </div>
+
+        {/* 👇 BARRA DE XP PROGRESSIVA 👇 */}
+        <div className="xp-wrapper">
+          <div className="xp-container" title={`${xpAtual} / ${xpProximo} XP`}>
+            <div className="xp-fill" style={{ width: `${porcentagemXP}%` }}></div>
+            <div className="xp-text">
+              XP: {xpAtual} / {xpProximo}
+            </div>
+          </div>
+          <div className="xp-input-area">
+            <span>Editar XP:</span>
+            <input
+              type="number"
+              className="xp-input"
+              value={xpAtual === 0 ? "" : xpAtual}
+              placeholder="0"
+              onChange={(e) => salvar("xp", parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   );
