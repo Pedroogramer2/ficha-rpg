@@ -1,11 +1,6 @@
 // src/data/classesDetalhado.js
 import { ARMAS, PROPRIEDADES_MAESTRIA } from './armas'; // <--- IMPORTAMOS O ARSENAL
-
-const opcoesDeArmas = ARMAS.map(arma => ({
-  nome: arma.nome,
-  desc: `${arma.dano} ${arma.tipo}. ✨ ${arma.maestria}: ${PROPRIEDADES_MAESTRIA[arma.maestria] || "Efeito especial."}`
-}));
-
+import { opcoesDeArmas } from './armas';
 
 export const CLASSES_DETALHADAS = {
   "Guerreiro": {
@@ -84,65 +79,68 @@ export const CLASSES_DETALHADAS = {
         opcoes: [
           // --- D&D 2024 ---
           { 
-            nome: "Campeão (Champion)", 
-            desc: "Crítico Aprimorado (rola 19 ou 20). Atleta Notável: Vantagem em Iniciativa e Atletismo. Ao critar, move metade do deslocamento.",
-            usos: 0 // Passivo
+            nome: "Mestre de Batalha (Battle Master)", 
+            desc: "Você ganha 4 Dados de Superioridade (d8). Aprende 3 Manobras (ex: Derrubar, Ripostar). Estudante da Guerra: ganha 1 ferramenta e 1 perícia."
           },
           { 
-            nome: "Mestre de Batalha (Battle Master)", 
-            desc: "Ganha 4 Dados de Superioridade (d8). Aprende 3 Manobras (ex: Derrubar, Ripostar). Estudante da Guerra: ganha 1 ferramenta e 1 perícia.",
-            usos: 4,
-            recuperacao: "Descanso Curto"
+            nome: "Campeão (Champion)", 
+            desc: "Crítico Aprimorado (rola 19 ou 20). Atleta Notável: Vantagem em Iniciativa e Atletismo. Ao critar, move metade do deslocamento."
           },
           { 
             nome: "Cavaleiro Arcano (Eldritch Knight)", 
-            desc: "Ganha Conjuração (Inteligência), Truques e Espaços de Magia. Vínculo com Arma: Pode invocar sua arma como ação bônus.",
-            usos: 0 // Slots de magia são geridos no grimório
+            desc: "Ganha Conjuração (Inteligência), Truques e Espaços de Magia. Vínculo com Arma: Pode invocar sua arma como ação bônus."
           },
           { 
             nome: "Guerreiro Psiônico (Psi Warrior)", 
-            desc: "Ganha Dados de Energia Psiônica (2x Proficiência). Usa para reduzir dano (Campo Protetor), aumentar dano (Golpe Psiônico) ou mover objetos.",
-            usos: 4, // Começa com 4 (2 * prof 2) aprox, ou tabela fixa
-            recuperacao: "Descanso Longo" // Recupera 1 em curto
+            desc: "Ganha Dados Psiônicos (d6). Usa para reduzir dano recebido, aumentar dano causado (Golpe Psiônico) ou mover objetos com telecinese."
           },
-
           // --- LEGADO & EXTRAS ---
           {
-            nome: "Arqueiro Arcano (Arcane Archer)",
-            desc: "Disparo Arcano: 2 vezes por descanso, imbuia flechas com magia (ex: Flecha Explosiva, Flecha de Sombras). Ganha Prestidigitação ou Druidismo.",
-            usos: 2,
-            recuperacao: "Descanso Curto"
+            nome: "Arqueiro Arcano (Arcane Archer - Legado)",
+            desc: "Disparo Arcano: Imbui flechas com magia (ex: Flecha Explosiva, Flecha de Sombras). Aprende Prestidigitação ou Druidismo."
           },
           {
-            nome: "Cavaleiro (Cavalier)",
-            desc: "Nascido para a Sela (não cai da montaria). Marca Inabalável: Marca inimigos atingidos; eles têm desvantagem contra outros. Ataque extra se eles baterem em aliados.",
-            usos: 3, // Baseado em Força, média 3
-            recuperacao: "Descanso Longo"
+            nome: "Cavaleiro (Cavalier - Legado)",
+            desc: "Nascido para a Sela (não cai da montaria). Marca Inabalável: Marca inimigos atingidos; eles têm desvantagem contra outros e tomam ataque extra."
           },
           {
-            nome: "Cavaleiro do Eco (Echo Knight)",
-            desc: "Manifestar Eco: Cria um clone de sombra. Pode atacar do lugar dele e trocar de lugar (teleporte). Liberar Encarnação: Ataque extra da posição do eco (Con vezes).",
-            usos: 3, // Baseado em Con, média 3
-            recuperacao: "Descanso Longo"
+            nome: "Cavaleiro Eco (Echo Knight - Legado)",
+            desc: "Manifestar Eco: Cria um clone sombrio. Pode atacar do lugar dele e trocar de lugar. Ganha ataques extras a partir do Eco."
           },
           {
-            nome: "Cavaleiro Rúnico (Rune Knight)",
-            desc: "Entalhador de Runas: Inscreve runas em equipamentos (Fogo, Nuvem, Pedra) para efeitos passivos e ativos. Poder do Gigante: Fica Grande, vantagem em Força e dano extra.",
-            usos: 2, // Proficiency Bonus
-            recuperacao: "Descanso Longo"
+            nome: "Cavaleiro Rúnico (Rune Knight - Legado)",
+            desc: "Inscreve runas em equipamentos para efeitos passivos e ativos. Poder do Gigante: Fica Grande, ganha vantagem em Força e dano extra."
           },
           {
-            nome: "Samurai",
-            desc: "Espírito de Lutador: Ação bônus para ganhar Vantagem em ataques e 5 PV temporários. Ganha proficiência em Persuasão, História ou Intuição.",
-            usos: 3,
-            recuperacao: "Descanso Longo"
+            nome: "Samurai (Legado)",
+            desc: "Espírito de Lutador: Ação Bônus para ganhar Vantagem em TODOS os ataques do turno e 5 PV temporários. Ganha bônus social em Persuasão."
           },
           {
-            nome: "Estandarte / Banneret (PDK)",
-            desc: "Enviado Real. Retomar o Fôlego em Grupo: Ao usar Second Wind, cura também 3 aliados próximos.",
-            usos: 0 // Passivo (melhora o Second Wind)
+            nome: "Cavaleiro Estandarte (Banneret - Legado)",
+            desc: "Enviado Real (perícias sociais). Recuperação em Grupo: Ao usar Retomar o Fôlego, você também cura 3 aliados próximos."
           }
         ]
+      }
+    ],
+
+    escolhasNivel4: [
+      {
+        titulo: "Maestria em Arma (Escolha 4)",
+        opcoes: opcoesDeArmas
+      }
+    ],
+
+    escolhasNivel10: [
+      {
+        titulo: "Maestria em Arma (Escolha 5)",
+        opcoes: opcoesDeArmas
+      }
+    ],
+
+    escolhasNivel16: [
+      {
+        titulo: "Maestria em Arma (Escolha 6)",
+        opcoes: opcoesDeArmas
       }
     ],
 
@@ -153,17 +151,20 @@ export const CLASSES_DETALHADAS = {
         habilidades: [
           { 
             nome: "Estilo de Luta", 
-            desc: "Você adota um estilo de combate particular que será sua especialidade (escolhido na criação)." 
+            tipoAcao: "passiva",
+            desc: "Você adota um estilo de combate particular que será sua especialidade (escolhido na criação). Toda vez que você sobe um nível de Guerreiro, você pode trocar esse estilo por outro." 
           },
           { 
             nome: "Retomar o Fôlego (Second Wind)", 
-            desc: "Ação Bônus: Recupere PV igual a 1d10 + Nível de Guerreiro.",
-            usos: 2, 
-            recuperacao: "Descanso Curto"
+            tipoAcao: "bonus", // ⚡ Ação Bônus Principal
+            usosMax: 2, 
+            recuperacao: "Descanso Longo", // Mas recupera 1 no curto!
+            desc: "**Ação Bônus:** Você puxa fôlego da sua reserva de estamina para recuperar Pontos de Vida iguais a 1d10 + seu Nível de Guerreiro.\n*(Sua reserva recupera 1 uso gasto ao final de um Descanso Curto, e TODOS os usos ao final de um Descanso Longo).* " 
           },
           {
-            nome: "Maestria em Armas (Weapon Mastery)",
-            desc: "Você pode utilizar as propriedades de maestria de 3 armas à sua escolha (ex: Cleave, Nick, Push, Topple). Pode trocar num Descanso Longo."
+            nome: "Maestria em Armas",
+            tipoAcao: "passiva",
+            desc: "Você domina e pode utilizar as propriedades de Maestria de 3 tipos de armas Marciais ou Simples à sua escolha. Você pode trocar uma dessas escolhas ao realizar um Descanso Longo."
           }
         ]
       },
@@ -173,13 +174,15 @@ export const CLASSES_DETALHADAS = {
         habilidades: [
           {
             nome: "Surto de Ação (Action Surge)",
-            desc: "Você pode realizar uma ação adicional no seu turno (exceto a ação de Magia).",
-            usos: 1,
-            recuperacao: "Descanso Curto"
+            tipoAcao: "livre", // 💨 Não gasta ação pra ativar!
+            usosMax: 1,
+            recuperacao: "Descanso Curto",
+            desc: "**Gatilho:** No seu turno.\n**Efeito:** Você leva seu corpo além do limite e ganha 1 Ação adicional neste turno. *(Restrição: Essa ação adicional não pode ser usada para a ação Mágica / Conjurar Magia).* "
           },
           {
-            nome: "Mente Tática (Tactical Mind)",
-            desc: "Quando falhar em um teste de habilidade, gaste um uso de Second Wind para adicionar 1d10 ao teste. Se falhar mesmo assim, o uso não é gasto."
+            nome: "Mente Tática",
+            tipoAcao: "livre", // 💨 Gatilho ao falhar em teste
+            desc: "**Gatilho:** Quando você falhar em um Teste de Atributo/Perícia.\n**Efeito:** Você pode gastar 1 uso do seu *Retomar o Fôlego* para adicionar 1d10 à rolagem, potencialmente transformando a falha em um sucesso. Se o teste falhar mesmo com o d10, o seu uso de Retomar o Fôlego NÃO é gasto!"
           }
         ]
       },
@@ -187,40 +190,40 @@ export const CLASSES_DETALHADAS = {
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Arquétipo Marcial (Subclasse)", desc: "Você escolhe um arquétipo que define seu estilo de combate (ex: Campeão, Mestre de Batalha)." }
+          { nome: "Arquétipo Marcial (Subclasse)", tipoAcao: "passiva", desc: "Você escolhe um arquétipo que define seu estilo de combate (ex: Campeão, Mestre de Batalha)." }
         ] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." },
-          { nome: "Retomar o Fôlego (Upgrade)", desc: "Seus usos de Second Wind aumentam para 3.", usos: 3, recuperacao: "Descanso Curto" } // Atualiza visualmente
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." },
+          { nome: "Retomar o Fôlego (Second Wind) (Upgrade Nv 4)", tipoAcao: "passiva", usosMax: 3, recuperacao: "Descanso Longo", desc: "Seus usos de Retomar o Fôlego aumentam para 3." } 
         ] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Ataque Extra", desc: "Você pode atacar duas vezes, em vez de uma, sempre que realizar a ação de Ataque no seu turno." },
-          { nome: "Deslocamento Tático (Tactical Shift)", desc: "Sempre que ativar Second Wind, você pode mover-se até metade do seu deslocamento sem provocar ataques de oportunidade." },
-          { nome: "Maestria em Armas (Upgrade)", desc: "Agora você domina 4 armas." }
+          { nome: "Ataque Extra", tipoAcao: "passiva", desc: "Sempre que você realizar a Ação de Ataque no seu turno, você pode atacar duas vezes em vez de uma." },
+          { nome: "Deslocamento Tático", tipoAcao: "passiva", desc: "Sempre que você ativar seu *Retomar o Fôlego* usando uma Ação Bônus, você pode se mover até metade do seu deslocamento imediatamente, sem provocar Ataques de Oportunidade." },
+          { nome: "Maestria em Armas (Upgrade Nv 5)", tipoAcao: "passiva", desc: "Você agora domina a propriedade de 4 armas." }
         ] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso de Arquétipo", desc: "Habilidade concedida pela sua subclasse." }] 
+        habilidades: [{ nome: "Recurso do Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 9, 
@@ -228,88 +231,99 @@ export const CLASSES_DETALHADAS = {
         habilidades: [
           { 
             nome: "Indomável (Indomitable)", 
-            desc: "Se falhar em uma salvaguarda, você pode rerolar com um bônus igual ao seu Nível de Guerreiro. Deve usar o novo valor.",
-            usos: 1,
-            recuperacao: "Descanso Longo"
+            tipoAcao: "livre", // 💨 Gatilho reativo (não gasta a Reação normal do turno)
+            usosMax: 1,
+            recuperacao: "Descanso Longo",
+            desc: "**Gatilho:** Você falha em um Teste de Resistência (Save).\n**Efeito:** Você pode rolar o dado novamente somando um bônus igual ao seu Nível de Guerreiro! Você deve usar o resultado da nova rolagem."
           },
-          { nome: "Mestre Tático (Tactical Master)", desc: "Ao atacar com uma arma que você tem maestria, pode trocar a propriedade dela por Push, Sap ou Slow naquele ataque." }
+          { 
+            nome: "Mestre Tático", 
+            tipoAcao: "livre", 
+            desc: "No momento em que você ataca com uma arma cuja propriedade de Maestria você domina, você pode substituir a propriedade original da arma por Empurrar (Push), Debilitar (Sap) ou Lentidão (Slow) especificamente para aquele ataque." 
+          }
         ] 
       },
       { 
         nivel: 10, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Recurso de Arquétipo", desc: "Habilidade concedida pela sua subclasse." },
-          { nome: "Retomar o Fôlego (Upgrade)", desc: "Seus usos de Second Wind aumentam para 4.", usos: 4, recuperacao: "Descanso Curto" },
-          { nome: "Maestria em Armas (Upgrade)", desc: "Agora você domina 5 armas." }
+          { nome: "Recurso do Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Retomar o Fôlego (Second Wind) (Upgrade Nv 10)", tipoAcao: "passiva", usosMax: 4, recuperacao: "Descanso Longo", desc: "Seus usos de Retomar o Fôlego aumentam para 4." },
+          { nome: "Maestria em Armas (Upgrade Nv 10)", tipoAcao: "passiva", desc: "Você agora domina a propriedade de 5 armas." }
         ] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Dois Ataques Extras", desc: "Você agora pode atacar três vezes sempre que realizar a ação de Ataque." }
+          { nome: "Dois Ataques Extras", tipoAcao: "passiva", desc: "Sempre que você realizar a Ação de Ataque no seu turno, você pode atacar três vezes em vez de uma." }
         ] 
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Indomável (Upgrade)", desc: "Seus usos de Indomável aumentam para 2.", usos: 2, recuperacao: "Descanso Longo" },
-          { nome: "Ataques Estudados", desc: "Se você errar um ataque contra uma criatura, você tem Vantagem no próximo ataque contra ela até o fim do seu próximo turno." }
+          { nome: "Indomável (Indomitable) (Upgrade Nv 13)", tipoAcao: "passiva", usosMax: 2, recuperacao: "Descanso Longo", desc: "Seus usos de Indomável aumentam para 2." },
+          { 
+            nome: "Ataques Estudados", 
+            tipoAcao: "passiva", // É um buff passivo ao errar
+            desc: "Se você fizer uma rolagem de ataque contra uma criatura e errar, você ganha Vantagem na próxima rolagem de ataque que fizer contra essa mesma criatura até o fim do seu próximo turno." 
+          }
         ] 
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso de Arquétipo", desc: "Habilidade concedida pela sua subclasse." }] 
+        habilidades: [{ nome: "Recurso do Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente um atributo ou escolha um Talento." },
-          { nome: "Maestria em Armas (Upgrade)", desc: "Agora você domina 6 armas." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." },
+          { nome: "Maestria em Armas (Upgrade Nv 16)", tipoAcao: "passiva", desc: "Você agora domina a propriedade de 6 armas." }
         ] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Surto de Ação (Upgrade)", desc: "Você pode usar Surto de Ação duas vezes antes de descansar (mas apenas uma vez por turno).", usos: 2, recuperacao: "Descanso Curto" },
-          { nome: "Indomável (Upgrade)", desc: "Seus usos de Indomável aumentam para 3.", usos: 3, recuperacao: "Descanso Longo" }
+          { nome: "Surto de Ação (Action Surge) (Upgrade Nv 17)", tipoAcao: "passiva", usosMax: 2, recuperacao: "Descanso Curto", desc: "Você agora pode usar o Surto de Ação 2 vezes antes de descansar (porém, continua limitado a 1 uso por turno)." },
+          { nome: "Indomável (Indomitable) (Upgrade Nv 17)", tipoAcao: "passiva", usosMax: 3, recuperacao: "Descanso Longo", desc: "Seus usos de Indomável aumentam para 3." }
         ] 
       },
       { 
         nivel: 18, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Recurso de Arquétipo", desc: "Habilidade concedida pela sua subclasse." }] 
+        habilidades: [{ nome: "Recurso do Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica (Epic Boon)", desc: "Escolha um talento de Dádiva Épica." }] 
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica." }] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Três Ataques Extras", desc: "Você agora pode atacar quatro vezes sempre que realizar a ação de Ataque." }] 
+        habilidades: [
+          { nome: "Três Ataques Extras", tipoAcao: "passiva", desc: "Sempre que você realizar a Ação de Ataque no seu turno, você pode atacar quatro vezes em vez de uma." }
+        ] 
       }
     ]
   },
   "Mago": {
     nome: "Mago",
-    descricao: "Um estudioso da magia arcana, capaz de manipular a realidade com feitiços aprendidos em seu grimório.",
+    descricao: "Um estudioso supremo da magia arcana. Capaz de manipular a realidade através de feitiços meticulosamente estudados e anotados em seu grimório.",
     dadoVida: 6,
     
     proficiencias: {
@@ -325,19 +339,21 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Kit de Estudioso",
-        itens: ["2 Adagas", "Foco Arcano (Bordão)", "Robe", "Grimório", "Pacote de Estudioso"],
+        titulo: "Kit de Estudioso (Opção A)",
+        itens: ["2 Adagas", "Foco Arcano (Bordão)", "Robe", "Grimório", "Pacote de Estudioso", "5 PO"],
         ouro: 5
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 55
       }
     },
 
     magiasInicial: {
       truquesConhecidos: 3,
-      magiasConhecidas: 6, 
+      // O Mago ESCREVE 6 no grimório, mas só PREPARA 4 (no nível 1)
+      magiasNoGrimorio: 6, 
+      magiasPreparadasIniciais: 4, 
       espacosMagia: 2 
     },
 
@@ -346,12 +362,12 @@ export const CLASSES_DETALHADAS = {
         titulo: "Erudito (Scholar)",
         tipo: "pericia_expertise",
         opcoes: [
-          { nome: "Arcanismo", desc: "Ganha Expertise (Dobro de Proficiência)." },
-          { nome: "História", desc: "Ganha Expertise." },
-          { nome: "Investigação", desc: "Ganha Expertise." },
-          { nome: "Medicina", desc: "Ganha Expertise." },
-          { nome: "Natureza", desc: "Ganha Expertise." },
-          { nome: "Religião", desc: "Ganha Expertise." }
+          { nome: "Arcanismo", desc: "Você ganha Especialização (Dobra a Proficiência)." },
+          { nome: "História", desc: "Você ganha Especialização (Dobra a Proficiência)." },
+          { nome: "Investigação", desc: "Você ganha Especialização (Dobra a Proficiência)." },
+          { nome: "Medicina", desc: "Você ganha Especialização (Dobra a Proficiência)." },
+          { nome: "Natureza", desc: "Você ganha Especialização (Dobra a Proficiência)." },
+          { nome: "Religião", desc: "Você ganha Especialização (Dobra a Proficiência)." }
         ]
       }
     ],
@@ -361,21 +377,21 @@ export const CLASSES_DETALHADAS = {
         titulo: "Tradição Arcana (Subclasse)",
         tipo: "subclasse",
         opcoes: [
-          // 2024 Core
-          { nome: "Abjurador (Abjurer)", desc: "Especialista em proteção e banimento. Cria uma Proteção Arcana (Ward) que absorve dano." },
-          { nome: "Adivinho (Diviner)", desc: "Vê o futuro. Usa 'Portent' para substituir rolagens de dados com valores pré-rolados." },
-          { nome: "Evocador (Evoker)", desc: "Mestre da destruição elemental. Pode esculpir magias para não ferir aliados." },
-          { nome: "Ilusionista (Illusionist)", desc: "Engana os sentidos. Pode criar ilusões com ação bônus e torná-las semi-reais." },
+          // D&D 2024 Core
+          { nome: "Abjurador (Abjurer)", desc: "Mestre da proteção e banimento. Cria um escudo de magia em si e nos aliados." },
+          { nome: "Adivinho (Diviner)", desc: "Vê o futuro. Altera o destino substituindo rolagens de dados por visões." },
+          { nome: "Evocador (Evoker)", desc: "Destruição elemental brutal. Consegue isolar aliados das próprias explosões." },
+          { nome: "Ilusionista (Illusionist)", desc: "Engana os sentidos. Lança ilusões furtivas e as transforma em realidade física." },
           
-          // Legado & Extras
-          { nome: "Lâmina Cantante (Bladesinger)", desc: "Combina espada e magia. Entra na 'Canção da Lâmina' para ganhar CA e Concentração." },
-          { nome: "Cronurgista (Chronurgy)", desc: "Manipula o tempo. Pode forçar rerolagens e congelar criaturas no tempo." },
-          { nome: "Graviturgista (Graviturgy)", desc: "Manipula a gravidade. Altera o peso de criaturas e move alvos ao acertar magias." },
-          { nome: "Necromante (Necromancy)", desc: "Mestre da vida e morte. Cura-se ao matar inimigos e cria mortos-vivos mais fortes." },
-          { nome: "Transmutador (Transmutation)", desc: "Altera a matéria. Cria uma Pedra do Transmutador com buffs passivos." },
-          { nome: "Mago de Guerra (War Magic)", desc: "Focado em combate tático. Ganha bônus na iniciativa e pode usar reação para aumentar CA/Save." },
-          { nome: "Ordem dos Escribas (Scribes)", desc: "O grimório desperta. Pode mudar o tipo de dano das magias e conjurar através de um 'Mente Manifestada'." },
-          { nome: "Encantador (Enchantment)", desc: "Mestre da mente. Pode hipnotizar criaturas com o olhar e desviar ataques." }
+          // Legado
+          { nome: "Lâmina Cantante (Bladesinger)", desc: "Combina espada e magia. Ganha grande CA e mobilidade na Canção da Lâmina." },
+          { nome: "Cronurgista (Chronurgy)", desc: "Manipula o tempo, forçando rerolagens e congelando inimigos temporais." },
+          { nome: "Graviturgista (Graviturgy)", desc: "Dobra a gravidade, alterando o peso de seres e empurrando inimigos com magia." },
+          { nome: "Necromante (Necromancy)", desc: "Magia de vida e morte. Cura-se ao matar e comanda hordas de zumbis buffados." },
+          { nome: "Transmutador (Transmutation)", desc: "Altera a matéria. Forja pedras mágicas com melhorias passivas contínuas." },
+          { nome: "Mago de Guerra (War Magic)", desc: "Focado em combate. Grande iniciativa e reações defensivas potentes." },
+          { nome: "Ordem dos Escribas (Scribes)", desc: "Grimório senciente. Muda o dano das magias e conjura através de avatares." },
+          { nome: "Encantador (Enchantment)", desc: "Dominação mental, olhares hipnóticos e desvio de ataques passivos." }
         ]
       }
     ],
@@ -385,9 +401,9 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conjuração", desc: "Você tem um Grimório com magias. Pode preparar magias após Long Rest. INT é seu atributo." },
-          { nome: "Adepto de Rituais", desc: "Você pode conjurar qualquer magia de ritual do seu grimório sem prepará-la." },
-          { nome: "Recuperação Arcana", desc: "1x por dia, em um Short Rest, recupera slots de magia (Nível/2).", usos: 1, recuperacao: "Descanso Longo" }
+          { nome: "Conjuração (Mago)", tipoAcao: "acao", desc: "A cada Descanso Longo, você estuda seu Grimório e prepara uma lista de magias para o dia. Inteligência é o seu atributo mágico. Você adiciona +2 magias gratuitas no seu livro sempre que sobe de nível de Mago." },
+          { nome: "Adepto de Rituais", tipoAcao: "passiva", desc: "Você pode conjurar qualquer magia que tenha a tag 'Ritual' contanto que ela esteja no seu grimório (mesmo que você NÃO a tenha preparado para o dia). Castar como ritual demora 10 minutos a mais, mas não gasta slot." },
+          { nome: "Recuperação Arcana", tipoAcao: "livre", desc: "Sempre que terminar um Descanso Curto, você pode recuperar Espaços de Magia gastos. O nível somado dos slots recuperados não pode ultrapassar METADE do seu nível de Mago (arredondado para cima). Slots nv 6+ não podem ser recuperados assim.\n*(Uso: 1 vez por Descanso Longo).* ", usosMax: 1, recuperacao: "Descanso Longo" }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -395,7 +411,7 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Erudito (Scholar)", desc: "Você ganha Expertise em uma perícia acadêmica (escolhida na criação)." }
+          { nome: "Erudito (Scholar)", tipoAcao: "passiva", desc: "Você ganha *Especialização* (Expertise) na perícia acadêmica que escolheu, dobrando o seu bônus nela." }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
@@ -403,28 +419,28 @@ export const CLASSES_DETALHADAS = {
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Tradição Arcana", desc: "Escolha sua escola de especialização mágica." }
+          { nome: "Tradição Arcana", tipoAcao: "passiva", desc: "Você escolhe em qual escola de magia avançada você vai focar seus estudos." }
         ],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Memorizar Magia", desc: "Ao terminar um Short Rest, você pode trocar uma magia preparada por outra do grimório." }
+          { nome: "Memorizar Magia", tipoAcao: "livre", desc: "Sempre que você terminar um Descanso Curto, você pode estudar seu grimório e trocar UMA magia que você havia preparado por qualquer outra magia contida no livro." }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
       { 
@@ -436,7 +452,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
       { 
@@ -448,7 +464,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 10, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,3,2,0,0,0,0] 
       },
       { 
@@ -460,7 +476,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,0,0,0] 
       },
       { 
@@ -472,7 +488,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,3,2,1,1,0,0] 
       },
       { 
@@ -484,7 +500,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
@@ -497,21 +513,21 @@ export const CLASSES_DETALHADAS = {
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Maestria em Magia", desc: "Escolha uma magia de nv 1 e uma de nv 2. Você pode lançá-las sem gastar slot (no nível base)." }
+          { nome: "Maestria em Magia", tipoAcao: "passiva", desc: "Escolha uma magia de Nv 1 e uma magia de Nv 2 do seu grimório. Elas estão sempre preparadas, não contam no seu limite, e você pode conjurá-las ao seu bel-prazer SEM GASTAR SLOTS (apenas no nível base da magia).\nVocê pode trocar as duas magias escolhidas estudando por 8 horas no Descanso Longo." }
         ],
         slots: [4,3,3,3,3,1,1,1,1] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva da Memória Arcana)." }],
         slots: [4,3,3,3,3,2,1,1,1] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Magias de Assinatura", desc: "Escolha duas magias de nv 3. Elas estão sempre preparadas e você pode lançar cada uma 1x por descanso curto sem gastar slot." }
+          { nome: "Magias de Assinatura", tipoAcao: "passiva", desc: "Escolha DUAS magias de Nv 3 do seu grimório. Elas estão sempre preparadas (não contam no limite) e você pode conjurar cada uma delas 1x de graça (Sem slot) por Descanso Curto ou Longo." }
         ],
         slots: [4,3,3,3,3,2,2,1,1] 
       }
@@ -524,26 +540,41 @@ export const CLASSES_DETALHADAS = {
     
     proficiencias: {
       armaduras: ["Leves"],
-      armas: ["Simples", "Marciais (Acuidade/Leve)"],
+      armas: ["Simples", "Marciais (com propriedade Acuidade ou Leve)"],
+      ferramentas: ["Ferramentas de Ladrão"],
       testes: ["Destreza", "Inteligência"]
     },
 
     escolhaPericias: {
       qtd: 4,
-      lista: ["Acrobacia", "Atletismo", "Enganação", "Furtividade", "Intimidação", "Intuição", "Investigação", "Percepção", "Performance", "Persuasão", "Prestidigitação", "Sobrevivência"]
+      lista: ["Acrobacia", "Atletismo", "Enganação", "Furtividade", "Intimidação", "Intuição", "Investigação", "Percepção", "Persuasão", "Prestidigitação"]
     },
 
     equipamentoInicial: {
       a: {
-        titulo: "Kit de Emboscada",
+        titulo: "Kit de Emboscada (Opção A)",
         itens: ["Armadura de Couro", "2 Adagas", "Espada Curta", "Arco Curto", "20 Flechas", "Aljava", "Ferramentas de Ladrão", "Pacote de Assaltante"],
         ouro: 8
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 100
       }
     },
+
+    // 👇 2 Escolhas de Maestria no Nível 1 (D&D 2024)
+    escolhasNivel1: [
+      {
+        titulo: "Maestria em Arma (Escolha 1)",
+        tipo: "maestria",
+        opcoes: opcoesDeArmas
+      },
+      {
+        titulo: "Maestria em Arma (Escolha 2)",
+        tipo: "maestria",
+        opcoes: opcoesDeArmas
+      }
+    ],
 
     escolhasNivel3: [
       {
@@ -555,7 +586,7 @@ export const CLASSES_DETALHADAS = {
           { nome: "Assassino (Assassin)", desc: "Mestre do disfarce, venenos e dano crítico em alvos surpresos." },
           { nome: "Trapaceiro Arcano (Arcane Trickster)", desc: "Combina furtividade com ilusões e encantamentos mágicos." },
           { nome: "Lâmina da Alma (Soulknife)", desc: "Manifesta lâminas psíquicas e usa telepatia." },
-          // Extras/Legado
+          // Extras / Legado
           { nome: "Herdeiro dos Três (Scion of the Three)", desc: "Agente de Bane, Bhaal ou Myrkul. Usa medo e dano necrótico." },
           { nome: "Investigativo (Inquisitive)", desc: "Mestre em descobrir mentiras e analisar táticas inimigas." },
           { nome: "Mentor (Mastermind)", desc: "Foca em intriga, disfarce e ajudar aliados à distância (Ação de Ajuda Bônus)." },
@@ -571,142 +602,141 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Ataque Furtivo (1d6)", desc: "1x por turno: +1d6 dano se tiver Vantagem ou aliado a 1,5m do alvo. (Arma Acuidade/Distância)." },
-          { nome: "Especialização (Expertise)", desc: "Dobre sua proficiência em 2 perícias (ou ferramentas)." },
-          { nome: "Gíria de Ladrão", desc: "Você conhece o dialeto secreto criminoso e mais um idioma." },
-          { nome: "Maestria em Armas", desc: "Você domina a propriedade de 2 armas (ex: Nick, Vex)." }
+          { nome: "Ataque Furtivo (1d6)", tipoAcao: "livre", desc: "1x por turno: +1d6 dano se tiver Vantagem ou aliado a 1,5m do alvo. (Requer arma de Acuidade ou à Distância)." },
+          { nome: "Especialização (Expertise)", tipoAcao: "passiva", desc: "Dobre seu bônus de proficiência em 2 perícias treinadas (ou em 1 perícia + Ferramentas de Ladrão)." },
+          { nome: "Gíria de Ladrão (Thieves' Cant)", tipoAcao: "passiva", desc: "Você conhece o dialeto secreto criminoso e aprende +1 idioma adicional à sua escolha." },
+          { nome: "Maestria em Armas", tipoAcao: "passiva", desc: "Você domina e pode utilizar as propriedades de Maestria de 2 tipos de armas à sua escolha." }
         ] 
       },
       { 
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Ação Astuta (Cunning Action)", desc: "Ação Bônus: Correr (Dash), Desengajar (Disengage) ou Esconder (Hide)." }
+          { nome: "Ação Astuta (Cunning Action)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você pode usar uma Ação Bônus em cada um dos seus turnos para realizar as ações de **Disparada (Dash)**, **Desengajar (Disengage)** ou **Esconder-se (Hide)**." }
         ] 
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Arquétipo Ladino (Subclasse)", desc: "Escolha seu caminho no crime ou aventura." },
-          { nome: "Ataque Furtivo (2d6)", desc: "Seu dano extra aumenta para 2d6." },
-          { nome: "Mira Firme (Steady Aim)", desc: "Ação Bônus: Se não mover, ganha Vantagem no próximo ataque." }
+          { nome: "Arquétipo Ladino (Subclasse)", tipoAcao: "passiva", desc: "Você escolhe seu arquétipo de especialização." },
+          { nome: "Ataque Furtivo (2d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 2d6." },
+          { nome: "Mira Firme (Steady Aim)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você ganha Vantagem na sua próxima jogada de ataque no turno atual. *(Restrição: Você só pode usar isso se NÃO tiver se movido neste turno, e seu deslocamento vira 0 até o final do turno).* " }
         ] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Esquiva Sobrenatural", desc: "Reação: Reduz à metade o dano de um ataque que você possa ver." },
-          { nome: "Ataque Furtivo (3d6)", desc: "Seu dano extra aumenta para 3d6." },
-          { nome: "Golpes Astutos (Cunning Strike)", desc: "Troque dados de Sneak Attack por efeitos (Desarmar, Derrubar, Recuar, Veneno)." }
+          { nome: "Esquiva Sobrenatural (Uncanny Dodge)", tipoAcao: "reacao", desc: "**Reação:** Quando um atacante que você possa ver te acertar com um ataque, reduza o dano desse ataque pela metade." },
+          { nome: "Ataque Furtivo (3d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 3d6." },
+          { nome: "Golpes Astutos (Cunning Strike)", tipoAcao: "livre", desc: "Ao causar Ataque Furtivo, você pode abdicar de dados de dano (ex: -1d6) para aplicar efeitos táticos:\n- **Veneno (-1d6):** Save CON ou fica Envenenado (1 min).\n- **Derrubar (-1d6):** Save DES ou cai Caído (Prone) [alvos Grandes ou menores].\n- **Recuar (-1d6):** Move-se até metade da velocidade sem gerar Ataques de Oportunidade." }
         ] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Especialização (Upgrade)", desc: "Escolha mais 2 perícias para dobrar a proficiência." }] 
+        habilidades: [{ nome: "Especialização (Upgrade Nv 6)", tipoAcao: "passiva", desc: "Escolha mais 2 perícias treinadas (ou 1 perícia + Ferramentas de Ladrão) para dobrar seu bônus de proficiência." }] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Evasão", desc: "Em saves de DES para meio dano, você não leva nada se passar e só metade se falhar." },
-          { nome: "Talento Confiável (Reliable Talent)", desc: "Em testes de perícia que você treinou, rolagens 9 ou menos viram 10." },
-          { nome: "Ataque Furtivo (4d6)", desc: "Seu dano extra aumenta para 4d6." }
+          { nome: "Evasão (Evasion)", tipoAcao: "passiva", desc: "Em efeitos que exigem Save de DES para metade do dano: você não sofre NENHUM dano se passar, e sofre apenas METADE do dano se falhar." },
+          { nome: "Talento Confiável (Reliable Talent)", tipoAcao: "passiva", desc: "Sempre que fizer um Teste de Atributo usando uma perícia ou ferramenta na qual seja proficiente, qualquer rolagem de 9 ou menos no d20 é tratada como um 10." },
+          { nome: "Ataque Furtivo (4d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 4d6." }
         ] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Recurso de Arquétipo", desc: "Habilidade de Subclasse." },
-          { nome: "Ataque Furtivo (5d6)", desc: "Seu dano extra aumenta para 5d6." }
+          { nome: "Recurso de Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Ataque Furtivo (5d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 5d6." }
         ] 
       },
       { 
         nivel: 10, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Golpes Astutos Aprimorados", desc: "Pode usar 2 efeitos de Cunning Strike ao mesmo tempo." },
-          { nome: "Ataque Furtivo (6d6)", desc: "Seu dano extra aumenta para 6d6." }
+          { nome: "Golpes Astutos Aprimorados", tipoAcao: "passiva", desc: "Você agora pode aplicar até DOIS efeitos de Golpes Astutos no mesmo Ataque Furtivo, pagando o custo em dados de cada um." },
+          { nome: "Ataque Furtivo (6d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 6d6." }
         ] 
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Recurso de Arquétipo", desc: "Habilidade de Subclasse." },
-          { nome: "Ataque Furtivo (7d6)", desc: "Seu dano extra aumenta para 7d6." }
+          { nome: "Recurso de Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Ataque Furtivo (7d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 7d6." }
         ] 
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Golpes Desonestos (Devious Strikes)", desc: "Novas opções de Cunning Strike: Atordoar (Daze), Nocautear (Knock Out), Obscurecer (Obscure)." },
-          { nome: "Sentido Cego (Blindsense)", desc: "Percebe criaturas escondidas/invisíveis a 3m." }
+          { nome: "Golpes Desonestos (Devious Strikes)", tipoAcao: "passiva", desc: "Sua lista de Golpes Astutos ganha opções de elite:\n- **Atordoar (-2d6):** Save CON ou só pode fazer Movimento, Ação OU Bônus no próximo turno.\n- **Obscurecer (-3d6):** Save DES ou fica Cego (Blinded) até o fim do próximo turno dele.\n- **Nocautear (-6d6):** Save CON ou fica Inconsciente por 1 min (ou até tomar dano)." }
         ] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Mente Escorregadia", desc: "Proficiência em Saves de Sabedoria e Carisma." },
-          { nome: "Ataque Furtivo (8d6)", desc: "Seu dano extra aumenta para 8d6." }
+          { nome: "Mente Escorregadia (Slippery Mind)", tipoAcao: "passiva", desc: "Sua mente se torna uma fortaleza. Você ganha proficiência em Testes de Resistência de **Sabedoria** e **Carisma**." },
+          { nome: "Ataque Furtivo (8d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 8d6." }
         ] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Recurso de Arquétipo", desc: "Habilidade de Subclasse." },
-          { nome: "Ataque Furtivo (9d6)", desc: "Seu dano extra aumenta para 9d6." }
+          { nome: "Recurso de Arquétipo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Ataque Furtivo (9d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 9d6." }
         ] 
       },
       { 
         nivel: 18, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Elusivo", desc: "Ninguém tem Vantagem contra você (se não estiver incapacitado)." }] 
+        habilidades: [{ nome: "Elusivo (Elusive)", tipoAcao: "passiva", desc: "Nenhuma rolagem de ataque pode ter Vantagem contra você, a menos que você esteja com a condição Incapacitado." }] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." },
-          { nome: "Ataque Furtivo (10d6)", desc: "Seu dano extra aumenta para 10d6." }
+          { nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva do Espírito Noturno)." },
+          { nome: "Ataque Furtivo (10d6)", tipoAcao: "passiva", desc: "Seu dano extra de Ataque Furtivo aumenta para 10d6." }
         ] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Golpe de Sorte", desc: "Uma vez por descanso curto, transforme uma falha em um 20 natural." }
+          { nome: "Golpe de Sorte (Stroke of Luck)", tipoAcao: "livre", desc: "**Gatilho:** Quando falhar em qualquer Teste de d20 (Ataque, Resistência ou Perícia).\n**Efeito:** Você transforma o resultado da rolagem do d20 em um 20 natural.\n*(Uso: 1x por Descanso Curto ou Longo).* " }
         ] 
       }
     ]
@@ -714,7 +744,7 @@ export const CLASSES_DETALHADAS = {
 
   "Clérigo": {
     nome: "Clérigo",
-    descricao: "Um campeão sacerdotal que empunha magia divina a serviço de um poder superior.",
+    descricao: "Um campeão sacerdotal que empunha magia divina a serviço de um poder superior. Consegue canalizar a energia dos planos exteriores para curar aliados e obliterar inimigos.",
     dadoVida: 8,
     
     proficiencias: {
@@ -730,34 +760,35 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Sacerdote Combatente",
-        itens: ["Cota de Malha (Chain Shirt)", "Escudo", "Maça", "Símbolo Sagrado", "Pacote de Sacerdote"],
+        titulo: "Sacerdote Combatente (Opção A)",
+        itens: ["Cota de Malha", "Escudo", "Maça", "Símbolo Sagrado", "Pacote de Sacerdote", "7 PO"],
         ouro: 7
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 110
       }
     },
 
     magiasInicial: {
       truquesConhecidos: 3,
-      magiasConhecidas: 4, // Inicial preparado (aproximado)
+      // O Clérigo tem acesso a toda a lista divina, mas só pode preparar um número X por dia.
+      magiasPreparadasIniciais: 4, 
       espacosMagia: 2
     },
 
     escolhasNivel1: [
       {
         titulo: "Ordem Divina",
-        tipo: "feature_base", // Lógica customizada (texto por enquanto)
+        tipo: "feature_base", 
         opcoes: [
           { 
             nome: "Protetor (Protector)", 
-            desc: "Ganhe proficiência em Armaduras Pesadas e Armas Marciais." 
+            desc: "Treinado para a batalha. Você ganha Proficiência com Armas Marciais e com Armaduras Pesadas." 
           },
           { 
             nome: "Taumaturgo (Thaumaturge)", 
-            desc: "Ganhe um Truque extra. Ganhe bônus em Arcanismo ou Religião igual ao mod de Sabedoria." 
+            desc: "Focado no oculto. Você aprende 1 Truque extra da lista do Clérigo. Além disso, ganha um bônus igual ao seu Modificador de Sabedoria (mín. +1) nos testes de Religião e Arcanismo." 
           }
         ]
       }
@@ -768,22 +799,23 @@ export const CLASSES_DETALHADAS = {
         titulo: "Domínio Divino (Subclasse)",
         tipo: "subclasse",
         opcoes: [
-          // 2024
-          { nome: "Domínio do Conhecimento (Knowledge)", desc: "Estudiosos e espiões mentais. Lê pensamentos e ganha expertises." },
-          { nome: "Domínio da Vida (Life)", desc: "O curandeiro supremo. Cura mais PV e se cura ao curar outros." },
-          { nome: "Domínio da Luz (Light)", desc: "Queima inimigos com fogo e luz. Impõe desvantagem em ataques." },
-          { nome: "Domínio da Trapaça (Trickery)", desc: "Cria ilusões duplicatas e melhora furtividade." },
-          { nome: "Domínio da Guerra (War)", desc: "Combate corpo a corpo. Ataque com ação bônus e bônus de acerto." },
+          // D&D 2024 Core
+          { nome: "Domínio da Vida (Life)", desc: "O curandeiro supremo. Cura mais PV, canaliza vida em área e se cura ao curar outros." },
+          { nome: "Domínio da Luz (Light)", desc: "Queima inimigos com fogo e luz. Impõe desvantagem em ataques como reação." },
+          { nome: "Domínio da Trapaça (Trickery)", desc: "Cria ilusões duplicatas, teleporta e melhora a furtividade do grupo." },
+          { nome: "Domínio da Guerra (War)", desc: "Combate linha de frente. Ataca com ação bônus e garante acertos certeiros." },
+          
           // Legado
+          { nome: "Domínio do Conhecimento (Knowledge)", desc: "Estudiosos e espiões. Lê pensamentos e ganha proficiências temporárias." },
           { nome: "Domínio Arcano (Arcana)", desc: "Mistura magia de Mago com Clérigo. Expulsa extraplanares." },
-          { nome: "Domínio da Morte (Death)", desc: "Foca em dano necrótico e matar inimigos. Ignora resistência a necrótico." },
-          { nome: "Domínio da Forja (Forge)", desc: "Cria itens mágicos temporários e resiste ao fogo." },
-          { nome: "Domínio da Sepultura (Grave)", desc: "Impede a morte e detecta mortos-vivos. Maximiza cura em quem está morrendo." },
-          { nome: "Domínio da Natureza (Nature)", desc: "Controla plantas e animais. Ganha armadura pesada e truque de druida." },
-          { nome: "Domínio da Ordem (Order)", desc: "Comanda aliados a atacar e encanta inimigos com autoridade." },
-          { nome: "Domínio da Paz (Peace)", desc: "Cria laços entre aliados para somar d4 em jogadas. Teleporta para proteger amigos." },
-          { nome: "Domínio da Tempestade (Tempest)", desc: "Usa trovão e relâmpago. Empurra inimigos e maximiza dano." },
-          { nome: "Domínio do Crepúsculo (Twilight)", desc: "Protege o grupo com aura de PV temporários e dissipa medo/charme." }
+          { nome: "Domínio da Morte (Death)", desc: "Foca em dano necrótico e ceifar a vida. Ignora resistência a necrótico." },
+          { nome: "Domínio da Forja (Forge)", desc: "Ferreiro divino. Cria itens mágicos temporários e resiste ao fogo." },
+          { nome: "Domínio da Sepultura (Grave)", desc: "Sentinela da morte. Maximiza a cura em aliados caídos e previne críticos." },
+          { nome: "Domínio da Natureza (Nature)", desc: "Protetor dos ermos. Controla plantas/animais e ganha armadura pesada." },
+          { nome: "Domínio da Ordem (Order)", desc: "Comanda o campo. Faz aliados atacarem fora do turno com magias de buff." },
+          { nome: "Domínio da Paz (Peace)", desc: "Cria laços protetores entre aliados para somar d4 em jogadas e dividir dano." },
+          { nome: "Domínio da Tempestade (Tempest)", desc: "Senhor dos raios. Empurra inimigos e maximiza o dano de trovão/relâmpago." },
+          { nome: "Domínio do Crepúsculo (Twilight)", desc: "Protetor noturno. Aura infinita de PV temporários e visão no escuro absurda." }
         ]
       }
     ],
@@ -793,8 +825,8 @@ export const CLASSES_DETALHADAS = {
         titulo: "Golpes Abençoados (Blessed Strikes)",
         tipo: "feature_base",
         opcoes: [
-          { nome: "Golpe Divino (Divine Strike)", desc: "1x por turno: +1d8 dano (Necrótico ou Radiante) com armas." },
-          { nome: "Conjuração Potente (Potent Spellcasting)", desc: "Some seu mod de SAB no dano dos seus truques." }
+          { nome: "Golpe Divino (Divine Strike)", desc: "Feito para armas: 1x por turno, ao acertar um ataque armado, cause +1d8 de dano extra (Necrótico ou Radiante)." },
+          { nome: "Conjuração Potente (Potent Spellcasting)", desc: "Feito para magia: Adicione seu Modificador de Sabedoria nas rolagens de dano de todos os seus truques de Clérigo." }
         ]
       }
     ],
@@ -804,8 +836,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conjuração", desc: "Você prepara magias divinas diariamente." },
-          { nome: "Ordem Divina", desc: "Escolha entre Protetor ou Taumaturgo." }
+          { nome: "Conjuração (Clérigo)", tipoAcao: "acao", desc: "Você prepara uma lista de magias divinas diariamente após um Descanso Longo. Sabedoria é o seu atributo de conjuração. Você pode usar um Símbolo Sagrado como foco." },
+          { nome: "Ordem Divina", tipoAcao: "passiva", desc: "Você se dedica ao papel de Protetor (Combate pesado) ou Taumaturgo (Focado em magias/truques)." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -813,48 +845,131 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          // NOME BASE IMPORTANTE PARA FUSÃO
-          { nome: "Canalizar Divindade", desc: "Use energia divina para efeitos mágicos.", usos: 2, recuperacao: "Descanso Curto" },
-          { nome: "CD: Centelha Divina", desc: "Cure ou cause dano (1d8+SAB)." },
-          { nome: "CD: Expulsar Mortos-Vivos", desc: "Mortos-vivos fogem." }
+          { nome: "Canalizar Divindade", tipoAcao: "acao", desc: "Você canaliza energia direto dos Planos Exteriores. Você possui 2 usos deste recurso. Você recupera UM uso gasto em um Descanso Curto, e TODOS os usos em um Descanso Longo.", usosMax: 2, recuperacao: "Descanso Curto/Longo" },
+          { nome: "CD: Centelha Divina", tipoAcao: "acao", desc: "**Ação Mágica (Gasta 1 uso de Canalizar):** Aponte para uma criatura a 30 pés. Role 1d8 + Mod. SAB.\n- **Aliado:** Você cura ele nesse valor.\n- **Inimigo:** Faz Save de CON. Falha: Toma Dano Necrótico ou Radiante nesse valor. Sucesso: Metade." },
+          { nome: "CD: Expulsar Mortos-Vivos", tipoAcao: "acao", desc: "**Ação Mágica (Gasta 1 uso de Canalizar):** Mortos-Vivos a 30 pés fazem Save de SAB. Falha: Ficam *Amedrontados* e *Incapacitados* por 1 minuto (Obrigados a fugir de você). O efeito quebra se eles tomarem qualquer dano." }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
-      { nivel: 3, proficiencia: 2, habilidades: [{ nome: "Domínio Divino", desc: "Subclasse." }], slots: [4,2,0,0,0,0,0,0,0] },
-      { nivel: 4, proficiencia: 2, habilidades: [{ nome: "ASI/Talento", desc: "Melhoria." }], slots: [4,3,0,0,0,0,0,0,0] },
-      { nivel: 5, proficiencia: 3, habilidades: [{ nome: "Queimar Mortos-Vivos", desc: "Turn Undead causa dano." }], slots: [4,3,2,0,0,0,0,0,0] },
+      { 
+        nivel: 3, 
+        proficiencia: 2, 
+        habilidades: [{ nome: "Domínio Divino", tipoAcao: "passiva", desc: "Você escolhe sua Subclasse de Clérigo (que lhe concederá habilidades e magias de domínio preparadas automaticamente)." }], 
+        slots: [4,2,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 4, 
+        proficiencia: 2, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }], 
+        slots: [4,3,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 5, 
+        proficiencia: 3, 
+        habilidades: [{ nome: "Chamuscar Mortos-Vivos", tipoAcao: "passiva", desc: "Quando você usar o *Expulsar Mortos-Vivos*, você rola uma quantidade de d8s igual ao seu Mod. de Sabedoria. Os mortos-vivos que falharem no Save sofrem Dano Radiante igual ao total rolado (e esse dano não anula a fuga deles)." }], 
+        slots: [4,3,2,0,0,0,0,0,0] 
+      },
       { 
         nivel: 6, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Recurso de Domínio", desc: "Subclasse." },
-          // AQUI ESTÁ O TRUQUE: O nome base "Canalizar Divindade" é igual ao do nível 2
-          // O sistema vai ver isso e atualizar os usos para 3 em vez de criar novo.
-          { nome: "Canalizar Divindade (Upgrade)", desc: "Seus usos aumentam para 3.", usos: 3, recuperacao: "Descanso Curto" }
+          { nome: "Recurso de Domínio", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Canalizar Divindade (Upgrade Nv 6)", tipoAcao: "passiva", desc: "Seus usos de Canalizar Divindade aumentam para 3.", usosMax: 3, recuperacao: "Descanso Curto/Longo" }
         ], 
         slots: [4,3,3,0,0,0,0,0,0] 
       },
-      { nivel: 7, proficiencia: 3, habilidades: [{ nome: "Golpes Abençoados", desc: "Golpe Divino ou Conjuração Potente." }], slots: [4,3,3,1,0,0,0,0,0] },
-      { nivel: 8, proficiencia: 3, habilidades: [{ nome: "ASI/Talento", desc: "Melhoria." }], slots: [4,3,3,2,0,0,0,0,0] },
-      { nivel: 9, proficiencia: 4, habilidades: [], slots: [4,3,3,3,1,0,0,0,0] },
-      { nivel: 10, proficiencia: 4, habilidades: [{ nome: "Intervenção Divina", desc: "Conjure magia nv 5 sem slot.", usos: 1 }], slots: [4,3,3,3,2,0,0,0,0] },
-      { nivel: 11, proficiencia: 4, habilidades: [], slots: [4,3,3,3,2,1,0,0,0] },
-      { nivel: 12, proficiencia: 4, habilidades: [{ nome: "ASI/Talento", desc: "Melhoria." }], slots: [4,3,3,3,2,1,0,0,0] },
-      { nivel: 13, proficiencia: 5, habilidades: [], slots: [4,3,3,3,2,1,1,0,0] },
-      { nivel: 14, proficiencia: 5, habilidades: [{ nome: "Golpes Abençoados Aprimorados", desc: "Melhoria de dano/efeito." }], slots: [4,3,3,3,2,1,1,0,0] },
-      { nivel: 15, proficiencia: 5, habilidades: [], slots: [4,3,3,3,2,1,1,1,0] },
-      { nivel: 16, proficiencia: 5, habilidades: [{ nome: "ASI/Talento", desc: "Melhoria." }], slots: [4,3,3,3,2,1,1,1,0] },
-      { nivel: 17, proficiencia: 6, habilidades: [{ nome: "Recurso de Domínio", desc: "Subclasse." }], slots: [4,3,3,3,2,1,1,1,1] },
+      { 
+        nivel: 7, 
+        proficiencia: 3, 
+        habilidades: [
+          { nome: "Golpes Abençoados", tipoAcao: "passiva", desc: "Você escolhe potencializar os seus ataques com armas (*Golpe Divino*) ou os seus truques mágicos (*Conjuração Potente*)." },
+          { nome: "Upgrade na Centelha Divina", tipoAcao: "passiva", desc: "O poder do seu *Canalizar Divindade: Centelha Divina* sobe para 2d8 + Mod. SAB." }
+        ], 
+        slots: [4,3,3,1,0,0,0,0,0] 
+      },
+      { 
+        nivel: 8, 
+        proficiencia: 3, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }], 
+        slots: [4,3,3,2,0,0,0,0,0] 
+      },
+      { 
+        nivel: 9, 
+        proficiencia: 4, 
+        habilidades: [], 
+        slots: [4,3,3,3,1,0,0,0,0] 
+      },
+      { 
+        nivel: 10, 
+        proficiencia: 4, 
+        habilidades: [{ nome: "Intervenção Divina", tipoAcao: "acao", desc: "**Ação Mágica:** Chame por seu deus! Escolha QUALQUER magia da lista de Clérigo de Nível 5 ou menor que não custe uma Reação. Você conjura essa magia instantaneamente, SEM gastar Slot de Magia e SEM precisar de nenhum Componente Material.\n*(Uso: 1 vez por Descanso Longo).* ", usosMax: 1, recuperacao: "Descanso Longo" }], 
+        slots: [4,3,3,3,2,0,0,0,0] 
+      },
+      { 
+        nivel: 11, 
+        proficiencia: 4, 
+        habilidades: [], 
+        slots: [4,3,3,3,2,1,0,0,0] 
+      },
+      { 
+        nivel: 12, 
+        proficiencia: 4, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }], 
+        slots: [4,3,3,3,2,1,0,0,0] 
+      },
+      { 
+        nivel: 13, 
+        proficiencia: 5, 
+        habilidades: [{ nome: "Upgrade na Centelha Divina", tipoAcao: "passiva", desc: "O poder do seu *Canalizar Divindade: Centelha Divina* sobe para 3d8 + Mod. SAB." }], 
+        slots: [4,3,3,3,2,1,1,0,0] 
+      },
+      { 
+        nivel: 14, 
+        proficiencia: 5, 
+        habilidades: [
+          { nome: "Golpes Abençoados Aprimorados", tipoAcao: "passiva", desc: "A opção que você escolheu no Nv 7 melhora:\n- *Golpe Divino:* O dano extra sobe para 2d8.\n- *Conjuração Potente:* Ao dar dano com truques, você pode curar (PV Temporários = 2x Mod. SAB) a você ou a um aliado a 60 pés." }
+        ], 
+        slots: [4,3,3,3,2,1,1,0,0] 
+      },
+      { 
+        nivel: 15, 
+        proficiencia: 5, 
+        habilidades: [], 
+        slots: [4,3,3,3,2,1,1,1,0] 
+      },
+      { 
+        nivel: 16, 
+        proficiencia: 5, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }], 
+        slots: [4,3,3,3,2,1,1,1,0] 
+      },
+      { 
+        nivel: 17, 
+        proficiencia: 6, 
+        habilidades: [{ nome: "Recurso de Domínio", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }], 
+        slots: [4,3,3,3,2,1,1,1,1] 
+      },
       { 
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Canalizar Divindade (Upgrade)", desc: "Seus usos aumentam para 4.", usos: 4, recuperacao: "Descanso Curto" }
+          { nome: "Canalizar Divindade (Upgrade Nv 18)", tipoAcao: "passiva", desc: "Seus usos de Canalizar Divindade aumentam para 4.", usosMax: 4, recuperacao: "Descanso Curto/Longo" },
+          { nome: "Upgrade na Centelha Divina", tipoAcao: "passiva", desc: "O poder do seu *Canalizar Divindade: Centelha Divina* sobe para 4d8 + Mod. SAB." }
         ],
         slots: [4,3,3,3,3,1,1,1,1] 
       },
-      { nivel: 19, proficiencia: 6, habilidades: [{ nome: "Dádiva Épica", desc: "Talento Épico." }], slots: [4,3,3,3,3,2,1,1,1] },
-      { nivel: 20, proficiencia: 6, habilidades: [{ nome: "Intervenção Divina Maior", desc: "Pode conjurar Desejo." }], slots: [4,3,3,3,3,2,2,1,1] }
+      { 
+        nivel: 19, 
+        proficiencia: 6, 
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva do Destino)." }], 
+        slots: [4,3,3,3,3,2,1,1,1] 
+      },
+      { 
+        nivel: 20, 
+        proficiencia: 6, 
+        habilidades: [{ nome: "Intervenção Divina Maior", tipoAcao: "acao", desc: "Ao usar a sua habilidade *Intervenção Divina*, em vez de escolher uma magia de Clérigo, você pode escolher conjurar a magia *DESEJO* (Wish). Se fizer isso, você não poderá usar a Intervenção Divina novamente até concluir 2d4 Descansos Longos." }], 
+        slots: [4,3,3,3,3,2,2,1,1] 
+      }
     ]
   },
   "Bárbaro": {
@@ -937,142 +1052,172 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Fúria (Rage)", desc: "Bônus: Entre em Fúria. Resistência a Concussão/Cortante/Perfurante, Vantagem em Força, +Dano (+2).", usos: 2, recuperacao: "Descanso Longo" },
-          { nome: "Defesa Sem Armadura", desc: "Se não usar armadura, sua CA é 10 + Des + Con (Pode usar escudo)." },
-          { nome: "Maestria em Armas", desc: "Domina propriedade de 2 armas." }
+          { 
+            nome: "Fúria (Rage)", 
+            tipoAcao: "bonus", // ⚡ Ação Bônus!
+            desc: "**Ação Bônus:** Você entra em Fúria (dura até o fim do seu próximo turno). Você ganha:\n- Vantagem em testes de Força e Saves de Força.\n- Bônus de Dano em ataques corpo-a-corpo usando Força.\n- Resistência a dano de Concussão, Cortante e Perfurante.\n- Não pode conjurar ou manter concentração em magias.\n*(Para manter a Fúria ativa no próximo turno, você precisa atacar um inimigo, forçar um inimigo a fazer um Save, ou usar uma Ação Bônus para estendê-la. Dura no máximo 10 min. Ela acaba antes se você vestir Armadura Pesada ou ficar Incapacitado. Você recupera 1 uso ao fim de um Descanso Curto e todos em um Longo).* ", 
+            usosMax: 2, 
+            recuperacao: "Descanso Longo" // Recupera todos no Longo, e 1 no Curto
+          },
+          { 
+            nome: "Defesa Sem Armadura", 
+            tipoAcao: "passiva",
+            desc: "Enquanto você não estiver vestindo nenhuma armadura, sua CA será 10 + seu Modificador de Destreza + seu Modificador de Constituição. Você pode usar um escudo e manter esse benefício." 
+          },
+          { 
+            nome: "Maestria em Armas", 
+            tipoAcao: "passiva",
+            desc: "Você domina a propriedade de Maestria de 2 tipos de armas Simples ou Marciais corpo-a-corpo. Você pode trocar uma dessas escolhas ao realizar um Descanso Longo." 
+          }
         ]
       },
       { 
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Senso de Perigo", desc: "Vantagem em Saves de Destreza (se não estiver cego/surdo/incapacitado)." },
-          { nome: "Ataque Descuidado (Reckless Attack)", desc: "Pode atacar com Vantagem (Força), mas inimigos têm Vantagem contra você." }
+          { 
+            nome: "Senso de Perigo", 
+            tipoAcao: "passiva",
+            desc: "Você tem Vantagem em Testes de Resistência de Destreza, a não ser que você esteja com a condição Incapacitado." 
+          },
+          { 
+            nome: "Ataque Descuidado (Reckless Attack)", 
+            tipoAcao: "livre", // 💨 Ações Livres!
+            desc: "**Gatilho:** Ao fazer sua primeira rolagem de ataque no seu turno.\n**Efeito:** Você pode decidir atacar de forma descuidada. Você ganha Vantagem em todas as rolagens de ataque usando Força até o início do seu próximo turno, mas os ataques contra você também têm Vantagem durante esse tempo." 
+          }
         ]
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Caminho Primitivo", desc: "Escolha sua Subclasse." },
-          { nome: "Conhecimento Primitivo", desc: "Ganha 1 perícia. Pode usar FORÇA para testes de Acrobacia, Intimidação, Percepção, Furtividade ou Sobrevivência enquanto em Fúria." },
-          { nome: "Fúria (Upgrade)", desc: "Você tem 3 usos de Fúria.", usos: 3, recuperacao: "Descanso Longo" }
+          { nome: "Caminho Primitivo (Subclasse)", tipoAcao: "passiva", desc: "Você escolhe o seu Caminho Primitivo que moldará a natureza da sua fúria." },
+          { nome: "Conhecimento Primitivo", tipoAcao: "passiva", desc: "Você ganha proficiência em mais uma perícia da classe. Enquanto estiver em Fúria, você pode usar Força em vez do atributo normal para rolar Acrobacia, Intimidação, Percepção, Furtividade ou Sobrevivência." },
+          { nome: "Fúria (Rage) (Upgrade Nv 3)", tipoAcao: "passiva", desc: "Seus usos de Fúria aumentam para 3.", usosMax: 3, recuperacao: "Descanso Longo" }
         ]
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente seus atributos ou escolha um Talento." }] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Ataque Extra", desc: "Você pode atacar duas vezes por ação de Ataque." },
-          { nome: "Movimento Rápido", desc: "+10 ft de deslocamento (se não usar armadura pesada)." }
+          { nome: "Ataque Extra", tipoAcao: "passiva", desc: "Você pode atacar duas vezes, em vez de uma, sempre que realizar a ação de Ataque no seu turno." },
+          { nome: "Movimento Rápido", tipoAcao: "passiva", desc: "Seu deslocamento aumenta em +10 pés (+3m) enquanto você não estiver vestindo armadura pesada." }
         ] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Recurso do Caminho", desc: "Habilidade de Subclasse." },
-          { nome: "Fúria (Upgrade)", desc: "Você tem 4 usos de Fúria.", usos: 4, recuperacao: "Descanso Longo" }
+          { nome: "Recurso do Caminho Primitivo", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." },
+          { nome: "Fúria (Rage) (Upgrade Nv 6)", tipoAcao: "passiva", desc: "Seus usos de Fúria aumentam para 4.", usosMax: 4, recuperacao: "Descanso Longo" }
         ] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Instinto Feral", desc: "Vantagem na Iniciativa." },
-          { nome: "Bote Instintivo", desc: "Ao entrar em Fúria, pode mover metade do deslocamento." }
+          { nome: "Instinto Feral", tipoAcao: "passiva", desc: "Seus instintos são tão aguçados que você tem Vantagem nas rolagens de Iniciativa." },
+          { nome: "Bote Instintivo", tipoAcao: "passiva", desc: "Como parte da Ação Bônus que você usa para entrar em Fúria, você pode se mover até a metade do seu deslocamento." }
         ] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }] 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente seus atributos ou escolha um Talento." }] 
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Golpe Brutal (Brutal Strike)", desc: "Troque a Vantagem do Reckless Attack por +1d10 dano e um efeito (Empurrar 15ft ou Reduzir Speed 15ft)." },
-          { nome: "Fúria (Dano +3)", desc: "Seu bônus de dano de fúria aumenta para +3." }
+          { 
+            nome: "Golpe Brutal (Brutal Strike)", 
+            tipoAcao: "livre", // 💨 Ação Livre
+            desc: "**Gatilho:** Ao usar seu Ataque Descuidado, você pode abdicar da Vantagem em UM ataque (esse ataque não pode ter Desvantagem).\n**Efeito:** Se acertar, causa +1d10 de dano e você aplica um efeito:\n- **Golpe Forçoso:** Empurra o alvo 15 pés p/ longe. Você pode então se mover metade do seu deslocamento em direção a ele sem provocar Ataques de Oportunidade.\n- **Golpe Incapacitante:** Reduz o deslocamento do alvo em 15 pés até o início do seu próximo turno." 
+          },
+          { nome: "Fúria (Rage) (Upgrade Nv 9: Dano +3)", tipoAcao: "passiva", desc: "O seu bônus de dano para ataques realizados em Fúria aumenta para +3." }
         ] 
       },
       { 
         nivel: 10, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Recurso do Caminho", desc: "Habilidade de Subclasse." }] 
+        habilidades: [{ nome: "Recurso do Caminho Primitivo", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." }] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Fúria Implacável", desc: "Se cair a 0 PV em fúria, faça Save CON (CD 10). Sucesso: Volta com PV = 2x Nível. CD aumenta a cada uso." }
+          { 
+            nome: "Fúria Implacável", 
+            tipoAcao: "livre", 
+            desc: "**Gatilho:** Se você cair a 0 PV com a Fúria ativa e não morrer na hora.\n**Efeito:** Você faz um Save de CON (CD 10). Se passar, você fica com PV igual a 2x seu Nível de Bárbaro.\n*(A CD aumenta em +5 a cada uso. Volta para 10 após um Descanso Curto ou Longo).* " 
+          }
         ] 
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Fúria (Upgrade)", desc: "Você tem 5 usos de Fúria.", usos: 5, recuperacao: "Descanso Longo" }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente seus atributos ou escolha um Talento." },
+          { nome: "Fúria (Rage) (Upgrade Nv 12)", tipoAcao: "passiva", desc: "Seus usos de Fúria aumentam para 5.", usosMax: 5, recuperacao: "Descanso Longo" }
         ] 
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Golpe Brutal Aprimorado", desc: "Novos efeitos: Desvantagem no próximo Save ou +5 no ataque de um aliado contra o alvo." }
+          { nome: "Golpe Brutal (Brutal Strike) (Upgrade Nv 13: Aprimorado)", tipoAcao: "passiva", desc: "Novas opções pro Golpe Brutal:\n- **Golpe Atordoante:** O alvo tem Desvantagem no próximo Save dele e não pode fazer Ataques de Oportunidade até o início do seu próximo turno.\n- **Golpe Fendido:** O próximo ataque feito por OUTRA criatura contra o alvo ganha +5 de bônus na rolagem." }
         ] 
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Caminho", desc: "Habilidade de Subclasse." }] 
+        habilidades: [{ nome: "Recurso do Caminho Primitivo", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." }] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Fúria Persistente", desc: "Fúria dura 10 min e só acaba se ficar Inconsciente. Recupera usos ao rolar Iniciativa." }
+          { nome: "Fúria (Rage) (Upgrade Nv 15: Persistente)", tipoAcao: "passiva", desc: "Sua fúria agora dura 10 minutos (não precisa estendê-la a cada turno). Ela só acaba antes se você ficar Inconsciente ou vestir Armadura Pesada. Além disso, ao rolar Iniciativa, você recupera TODOS os usos gastos de Fúria (1x por Descanso Longo)." }
         ] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Fúria (Dano +4)", desc: "Seu bônus de dano de fúria aumenta para +4." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente seus atributos ou escolha um Talento." },
+          { nome: "Fúria (Rage) (Upgrade Nv 16: Dano +4)", tipoAcao: "passiva", desc: "Seu bônus de dano de fúria aumenta para +4." }
         ] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Golpe Brutal (Upgrade)", desc: "Dano extra aumenta para 2d10. Pode aplicar 2 efeitos ao mesmo tempo." },
-          { nome: "Fúria (Upgrade)", desc: "Você tem 6 usos de Fúria.", usos: 6, recuperacao: "Descanso Longo" }
+          { nome: "Golpe Brutal (Brutal Strike) (Upgrade Nv 17)", tipoAcao: "passiva", desc: "O dano extra do seu Golpe Brutal aumenta para 2d10 e você pode usar DUAS opções de efeito diferentes simultaneamente." },
+          { nome: "Fúria (Rage) (Upgrade Nv 17)", tipoAcao: "passiva", desc: "Seus usos de Fúria aumentam para 6.", usosMax: 6, recuperacao: "Descanso Longo" }
         ] 
       },
       { 
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Força Indomável", desc: "Se o total de um teste de Força for menor que seu valor de Força, use o valor do atributo no lugar." }
+          { nome: "Força Indomável", tipoAcao: "passiva", desc: "Se o total de um Teste de Atributo de Força OU Teste de Resistência de Força seu for menor que o seu valor no atributo Força, você pode usar o seu valor no lugar daquele total." }
         ] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }] 
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Epic Boon)." }] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Campeão Primitivo", desc: "FOR e CON aumentam em +4 (Máximo 25)." }
+          { nome: "Campeão Primitivo", tipoAcao: "passiva", desc: "Sua Força e Constituição aumentam em +4, e o limite máximo para esses atributos se torna 25." }
         ] 
       }
     ]
@@ -1080,7 +1225,7 @@ export const CLASSES_DETALHADAS = {
 
   "Bardo": {
     nome: "Bardo",
-    descricao: "Um artista inspirador cujo poder ecoa a música da criação. Mestre em buffs, debuffs e versatilidade.",
+    descricao: "Um artista inspirador cujo poder ecoa a música da criação. Mestre em magias de suporte, ilusão, feitiçaria e uma versatilidade incomparável.",
     dadoVida: 8,
     
     proficiencias: {
@@ -1096,19 +1241,20 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Artista Viajante",
-        itens: ["Armadura de Couro", "2 Adagas", "Instrumento Musical", "Pacote de Artista"],
+        titulo: "Artista Viajante (Opção A)",
+        itens: ["Armadura de Couro", "2 Adagas", "Instrumento Musical (à escolha)", "Pacote de Artista", "19 PO"],
         ouro: 19
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 90
       }
     },
 
     magiasInicial: {
       truquesConhecidos: 2,
-      magiasConhecidas: 4, 
+      // Em 2024 o Bardo prepara magias como o Clérigo/Mago
+      magiasPreparadasIniciais: 4, 
       espacosMagia: 2 
     },
 
@@ -1117,27 +1263,24 @@ export const CLASSES_DETALHADAS = {
         titulo: "Especialização (Expertise)",
         tipo: "pericia_expertise",
         opcoes: [
-          // O Bardo pode escolher expertise em QUALQUER perícia que tenha proficiência
-          // O componente de criação deve listar as que ele já tem.
-          // Como placeholder, listamos todas, mas o ideal é filtrar visualmente na UI depois.
-          { nome: "Acrobacia", desc: "Expertise." },
-          { nome: "Adestrar Animais", desc: "Expertise." },
-          { nome: "Arcanismo", desc: "Expertise." },
-          { nome: "Atletismo", desc: "Expertise." },
-          { nome: "Enganação", desc: "Expertise." },
-          { nome: "Furtividade", desc: "Expertise." },
-          { nome: "História", desc: "Expertise." },
-          { nome: "Intimidação", desc: "Expertise." },
-          { nome: "Intuição", desc: "Expertise." },
-          { nome: "Investigação", desc: "Expertise." },
-          { nome: "Medicina", desc: "Expertise." },
-          { nome: "Natureza", desc: "Expertise." },
-          { nome: "Percepção", desc: "Expertise." },
-          { nome: "Performance", desc: "Expertise." },
-          { nome: "Persuasão", desc: "Expertise." },
-          { nome: "Prestidigitação", desc: "Expertise." },
-          { nome: "Religião", desc: "Expertise." },
-          { nome: "Sobrevivência", desc: "Expertise." }
+          { nome: "Acrobacia", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Adestrar Animais", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Arcanismo", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Atletismo", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Enganação", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Furtividade", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "História", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Intimidação", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Intuição", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Investigação", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Medicina", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Natureza", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Percepção", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Performance", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Persuasão", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Prestidigitação", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Religião", desc: "Dobra a Proficiência (se tiver)." },
+          { nome: "Sobrevivência", desc: "Dobra a Proficiência (se tiver)." }
         ]
       }
     ],
@@ -1147,18 +1290,29 @@ export const CLASSES_DETALHADAS = {
         titulo: "Colégio de Bardo (Subclasse)",
         tipo: "subclasse",
         opcoes: [
-          // 2024
+          // D&D 2024 Core
           { nome: "Colégio da Dança (Dance)", desc: "Bardo ágil e desarmado. Usa Inspiração para atacar e desviar. Compartilha evasão com aliados." },
-          { nome: "Colégio do Glamour (Glamour)", desc: "Encanta e amedronta com beleza feérica. Dá PV temporário e movimento tático aos aliados." },
-          { nome: "Colégio do Conhecimento (Lore)", desc: "O mago dos bardos. Aprende magias de outras classes cedo e usa palavras cortantes para atrapalhar inimigos." },
-          { nome: "Colégio da Lua (Moon)", desc: "Conexão druídica. Inspiração cura mais ou deixa invisível. Aprende magias de Druida." },
-          { nome: "Colégio da Bravura (Valor)", desc: "Bardo combatente. Ganha armadura média, escudo e ataque extra. Inspiração aumenta dano ou CA." },
+          { nome: "Colégio do Glamour (Glamour)", desc: "Encanta com beleza feérica. Dá PV temporário e movimento tático instantâneo ao grupo." },
+          { nome: "Colégio do Conhecimento (Lore)", desc: "O mago dos bardos. Pega magias extras cedo e corta a rolagem dos inimigos com palavras." },
+          { nome: "Colégio da Bravura (Valor)", desc: "Bardo combatente. Ganha armadura média/escudo, ataque extra e a Inspiração bufa dano ou CA." },
           // Legado
-          { nome: "Colégio da Criação (Creation)", desc: "Anima objetos para lutar e cria itens do nada. Inspiração gera efeitos adicionais." },
-          { nome: "Colégio da Eloquência (Eloquence)", desc: "Mestre da lábia. Não tira menos que 10 em Persuasão. Reduz saves inimigos." },
-          { nome: "Colégio dos Espíritos (Spirits)", desc: "Conta histórias de espíritos para gerar efeitos aleatórios poderosos." },
-          { nome: "Colégio das Espadas (Swords)", desc: "Duelista exibicionista. Usa floreios de lâmina para aumentar CA, dano ou empurrar." },
-          { nome: "Colégio dos Sussurros (Whispers)", desc: "Espião e assassino psíquico. Rouba sombras de mortos para se disfarçar." }
+          { nome: "Colégio da Criação (Creation)", desc: "Anima objetos para lutar e cria itens do nada. Inspiração gera efeitos adicionais cósmicos." },
+          { nome: "Colégio da Eloquência (Eloquence)", desc: "Mestre da lábia diplomática. Falhar em Persuasão é impossível. Quebra saves inimigos." },
+          { nome: "Colégio dos Espíritos (Spirits)", desc: "Conta histórias com auxílio de espíritos ancestrais gerando efeitos mágicos aleatórios." },
+          { nome: "Colégio das Espadas (Swords)", desc: "Duelista puro. Usa floreios de lâmina ao atacar para aumentar a própria CA ou empurrar." },
+          { nome: "Colégio dos Sussurros (Whispers)", desc: "Espião sombrio. Rouba sombras de inimigos mortos para se disfarçar e causa dano extra psíquico." }
+        ]
+      }
+    ],
+
+    escolhasNivel9: [
+      {
+        titulo: "Especialização Aprimorada (Upgrade Nv 9)",
+        tipo: "pericia_expertise",
+        opcoes: [
+          // Repete o menu de Expertise para o VTT pegar mais duas no nível 9
+          { nome: "Acrobacia", desc: "Dobra a Proficiência." }, { nome: "Enganação", desc: "Dobra a Proficiência." }, { nome: "Performance", desc: "Dobra a Proficiência." }, { nome: "Persuasão", desc: "Dobra a Proficiência." }, { nome: "Furtividade", desc: "Dobra a Proficiência." }, { nome: "Percepção", desc: "Dobra a Proficiência." }
+          // O VTT vai listar todas as proficiências que ele possui aqui
         ]
       }
     ],
@@ -1168,8 +1322,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Inspiração de Bardo (d6)", desc: "Bônus: Dê um dado (d6) a um aliado. Ele pode somar em Testes, Ataques ou Saves.", usos: "Carisma", recuperacao: "Descanso Longo" },
-          { nome: "Conjuração", desc: "Prepara magias arcanas usando Carisma e Instrumentos." }
+          { nome: "Inspiração de Bardo (d6)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você entrega um dado de Inspiração (d6) a um aliado a até 60 pés que possa te ouvir/ver. Nos próximos 60 minutos, se o aliado FALHAR num Teste de d20 (Ataque, Save ou Perícia), ele pode rolar a Inspiração e somar ao resultado, podendo transformar a falha num sucesso!\n*(Usos: Igual ao Mod. de Carisma por Descanso Longo).* ", usosMax: "Carisma", recuperacao: "Descanso Longo" },
+          { nome: "Conjuração (Bardo)", tipoAcao: "acao", desc: "Você conjura magias preparando-as após um Descanso Longo. Carisma é o seu atributo mágico. Você pode usar um Instrumento Musical como seu Foco Arcano." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -1177,57 +1331,57 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Especialização (Expertise)", desc: "Dobre a proficiência em 2 perícias." },
-          { nome: "Pau pra Toda Obra (Jack of All Trades)", desc: "Adiciona metade da proficiência em testes que você não é proficiente (iniciativa inclusa)." }
+          { nome: "Especialização (Expertise)", tipoAcao: "passiva", desc: "Você escolhe 2 Perícias que possui Proficiência para dobrar o seu bônus de proficiência nelas." },
+          { nome: "Faz-Tudo (Jack of All Trades)", tipoAcao: "passiva", desc: "Você adiciona metade do seu Bônus de Proficiência (arredondado para baixo) em QUALQUER Teste de Atributo ou Perícia que você já não tenha proficiência (Isso inclui a sua rolagem de Iniciativa e a magia Contramágica)." }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Colégio de Bardo", desc: "Escolha sua subclasse." }],
+        habilidades: [{ nome: "Colégio de Bardo", tipoAcao: "passiva", desc: "Escolha a sua subclasse (seu colégio de especialização musical ou retórica)." }],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Fonte de Inspiração", desc: "Recupera Inspiração de Bardo em Descanso Curto. Pode gastar slot para recuperar uso." },
-          { nome: "Inspiração de Bardo (d8)", desc: "Seu dado aumenta para d8." }
+          { nome: "Inspiração de Bardo (d8)", tipoAcao: "passiva", desc: "Sua Inspiração de Bardo fica mais poderosa. O dado vira um d8." },
+          { nome: "Fonte de Inspiração", tipoAcao: "livre", desc: "**Recuperação:** Você agora recupera TODOS os seus usos de Inspiração em Descansos Curtos ou Longos.\n**Combustão:** A qualquer momento (ação livre), você pode queimar 1 Slot de Magia para recuperar imediatamente 1 uso da sua Inspiração de Bardo." }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso do Colégio", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Colégio", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Contra-Encanto (Countercharm)", desc: "Reação: Se você ou aliado falhar em save contra Charme/Medo, rerole com Vantagem." }
+          { nome: "Contra-Encanto (Countercharm)", tipoAcao: "reacao", desc: "**Reação:** Se você ou uma criatura a 30 pés de você falhar num Teste de Resistência (Save) contra um efeito que deixe *Enfeitiçado* ou *Amedrontado*, você toca uma nota de poder para forçar a rolagem a ser refeita, e a nova rolagem ganha VANTAGEM." }
         ],
         slots: [4,3,3,1,0,0,0,0,0] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Especialização (Upgrade)", desc: "Escolha mais 2 perícias para dobrar a proficiência." }
+          { nome: "Especialização Aprimorada", tipoAcao: "passiva", desc: "Você escolhe mais 2 Perícias nas quais é proficiente para ganhar Expertise (Dobrar a proficiência)." }
         ],
         slots: [4,3,3,3,1,0,0,0,0] 
       },
@@ -1235,8 +1389,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 10, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Segredos Mágicos", desc: "Pode preparar magias das listas de Clérigo, Druida e Mago como se fossem de Bardo." },
-          { nome: "Inspiração de Bardo (d10)", desc: "Seu dado aumenta para d10." }
+          { nome: "Segredos Mágicos", tipoAcao: "passiva", desc: "O seu repertório foi quebrado! Daqui em diante, sempre que você for preparar as suas magias diárias ou aprender novas magias para o dia, você pode escolher magias das listas do Mago, Clérigo, Druida OU Bardo. Elas sempre contarão como Magias de Bardo para você." },
+          { nome: "Inspiração de Bardo (d10)", tipoAcao: "passiva", desc: "Sua Inspiração de Bardo fica ainda mais poderosa. O dado vira um d10." }
         ],
         slots: [4,3,3,3,2,0,0,0,0] 
       },
@@ -1249,7 +1403,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,0,0,0] 
       },
       { 
@@ -1261,21 +1415,21 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Colégio", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Colégio", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,3,2,1,1,0,0] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Inspiração de Bardo (d12)", desc: "Seu dado aumenta para d12." }
+          { nome: "Inspiração de Bardo (d12)", tipoAcao: "passiva", desc: "O auge da sua influência. O seu dado de Inspiração vira um d12." }
         ],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
@@ -1288,21 +1442,21 @@ export const CLASSES_DETALHADAS = {
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Inspiração Superior", desc: "Ao rolar iniciativa, se tiver menos de 2 inspirações, recupera até ter 2." }
+          { nome: "Inspiração Superior", tipoAcao: "passiva", desc: "Sempre que você rolar a sua Iniciativa no começo de um combate, se você estiver com menos de 2 usos da sua Inspiração de Bardo, você recupera usos imediatamente até ficar com 2." }
         ],
         slots: [4,3,3,3,3,1,1,1,1] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva da Memória Arcana)." }],
         slots: [4,3,3,3,3,2,1,1,1] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Palavras da Criação", desc: "Sempre tem Power Word: Heal e Kill preparados. Pode afetar 2 alvos com elas se estiverem próximos." }
+          { nome: "Palavras da Criação", tipoAcao: "passiva", desc: "Você domina o tecido do multiverso. Você sempre tem as magias *Palavra de Poder: Curar* e *Palavra de Poder: Matar* preparadas (elas não contam no seu limite). Sempre que você conjurar qualquer uma das duas, você pode atingir uma SEGUNDA criatura gratuitamente, contanto que ela esteja a até 10 pés da primeira." }
         ],
         slots: [4,3,3,3,3,2,2,1,1] 
       }
@@ -1311,7 +1465,7 @@ export const CLASSES_DETALHADAS = {
 
   "Druida": {
     nome: "Druida",
-    descricao: "Um sacerdote da Velha Fé, empunhando os poderes da natureza, do luar e do crescimento das plantas, capaz de assumir formas animais.",
+    descricao: "Um sacerdote da Velha Fé, empunhando os poderes da natureza, dos elementos e capaz de assumir formas de bestas ferozes em combate.",
     dadoVida: 8,
     
     proficiencias: {
@@ -1327,19 +1481,19 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Guardião da Natureza",
-        itens: ["Armadura de Couro", "Escudo", "Foice", "Foco Druídico (Bordão)", "Pacote de Explorador", "Kit de Herbalismo"],
+        titulo: "Guardião da Natureza (Opção A)",
+        itens: ["Armadura de Couro", "Escudo", "Foice", "Foco Druídico (Bordão)", "Pacote de Explorador", "Kit de Herbalismo", "9 PO"],
         ouro: 9
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 50
       }
     },
 
     magiasInicial: {
       truquesConhecidos: 2,
-      magiasConhecidas: 4, 
+      magiasPreparadasIniciais: 4, 
       espacosMagia: 2 
     },
 
@@ -1350,11 +1504,11 @@ export const CLASSES_DETALHADAS = {
         opcoes: [
           { 
             nome: "Mágico (Magician)", 
-            desc: "Ganhe um Truque extra. Ganhe bônus em Arcanismo ou Natureza igual ao mod de Sabedoria." 
+            desc: "Focado no oculto e na conjuração. Você aprende 1 Truque extra de Druida. Você também ganha um bônus numérico nos seus Testes de Arcanismo ou Natureza igual ao seu Modificador de Sabedoria." 
           },
           { 
             nome: "Guardião (Warden)", 
-            desc: "Ganhe proficiência em Armaduras Médias e Armas Marciais." 
+            desc: "Focado no combate físico. Você ganha Proficiência passiva em Armaduras Médias e Armas Marciais." 
           }
         ]
       }
@@ -1365,16 +1519,16 @@ export const CLASSES_DETALHADAS = {
         titulo: "Círculo Druídico (Subclasse)",
         tipo: "subclasse",
         opcoes: [
-          // 2024
-          { nome: "Círculo da Terra (Land)", desc: "Mestre da magia natural. Recupera slots de magia e ganha magias baseadas no terreno (Árido, Polar, Temperado, Tropical)." },
-          { nome: "Círculo da Lua (Moon)", desc: "Especialista em Forma Selvagem de combate. Transforma-se como Ação Bônus e ganha formas mais fortes." },
-          { nome: "Círculo do Mar (Sea)", desc: "Conexão com oceanos e tempestades. Cria aura de água, empurra inimigos e resiste a frio/raio." },
-          { nome: "Círculo das Estrelas (Stars)", desc: "Astrólogo. Assume Forma Estelar (Arqueiro, Cálice ou Dragão) para atacar, curar ou concentrar." },
+          // D&D 2024 Core
+          { nome: "Círculo da Terra (Land)", desc: "Mestre elemental e do terreno. Tem magias bônus e recupera slots de magia em descansos curtos." },
+          { nome: "Círculo da Lua (Moon)", desc: "O combatente bestial. Transforma-se como Ação Bônus, ganha formas muito mais fortes e ataca ferozmente." },
+          { nome: "Círculo do Mar (Sea)", desc: "Controlador de tempestades. Cria auras de oceano que empurram, causam dano de raio e dão mobilidade." },
+          { nome: "Círculo das Estrelas (Stars)", desc: "O astrólogo. Usa a Forma Selvagem para virar constelações (Arqueiro, Cálice ou Dragão) de buff e cura." },
           // Legado
-          { nome: "Círculo dos Sonhos (Dreams)", desc: "Cura com dados de fey energy e protege o descanso do grupo." },
-          { nome: "Círculo do Pastor (Shepherd)", desc: "Mestre das invocações. Totens espirituais buffam aliados e invocações." },
-          { nome: "Círculo dos Esporos (Spores)", desc: "Usa fungos e necrose. Ganha PV temporário e causa dano em quem chegar perto." },
-          { nome: "Círculo do Fogo Selvagem (Wildfire)", desc: "Invoca um espírito de fogo que cura, queima e teleporta." }
+          { nome: "Círculo dos Sonhos (Dreams)", desc: "Protetor das fadas. Cura aliados à distância com dados puros sem gastar magias e protege descansos." },
+          { nome: "Círculo do Pastor (Shepherd)", desc: "O mestre dos tótens espirituais que geram auras de buff massivo para as bestas que o grupo invoca." },
+          { nome: "Círculo dos Esporos (Spores)", desc: "O necromante vegetal. Usa a Forma para ganhar HP e parasitar inimigos próximos com dano de necrose." },
+          { nome: "Círculo do Fogo Selvagem (Wildfire)", desc: "Invocador. Cria um espírito de fogo constante no campo que atira, cura e teleporta o grupo inteiro." }
         ]
       }
     ],
@@ -1384,8 +1538,8 @@ export const CLASSES_DETALHADAS = {
         titulo: "Fúria Elemental (Elemental Fury)",
         tipo: "feature_base",
         opcoes: [
-          { nome: "Conjuração Potente (Potent Spellcasting)", desc: "Some seu mod de SAB no dano dos seus truques." },
-          { nome: "Golpe Primitivo (Primal Strike)", desc: "1x por turno: +1d8 dano (Fogo, Frio, Raio ou Trovão) com armas ou ataques de fera." }
+          { nome: "Conjuração Potente (Potent Spellcasting)", desc: "Para magos puros: Você adiciona o seu Mod. de Sabedoria nas rolagens de dano de todos os seus Truques." },
+          { nome: "Golpe Primitivo (Primal Strike)", desc: "Para combatentes: 1x por turno, ao acertar um ataque (Arma ou garra de Forma Selvagem), você causa +1d8 de Dano extra de Fogo, Frio, Raio ou Trovão." }
         ]
       }
     ],
@@ -1395,9 +1549,9 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conjuração", desc: "Prepara magias divinas (Sabedoria). Pode usar Foco Druídico." },
-          { nome: "Druídico", desc: "Fala Druídico e sempre prepara Speak with Animals." },
-          { nome: "Ordem Primitiva", desc: "Escolha: Mágico (Truques/Skill) ou Guardião (Armadura Média/Marcial)." }
+          { nome: "Conjuração (Druida)", tipoAcao: "acao", desc: "Você prepara uma lista de magias naturais diariamente após um Descanso Longo. Sabedoria é o seu atributo mágico. Você pode usar um Foco Druídico." },
+          { nome: "Idioma Druídico", tipoAcao: "passiva", desc: "Você entende o idioma sagrado dos druidas (usado para mensagens secretas). Por causa disso, você SEMPRE tem a magia *Falar com Animais* preparada gratuitamente." },
+          { nome: "Ordem Primitiva", tipoAcao: "passiva", desc: "Escolha se você é Mágico (Truques extras) ou Guardião (Armaduras médias/Armas Marciais)." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -1405,23 +1559,23 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Forma Selvagem (Wild Shape)", desc: "Bônus: Transforme-se em Besta (Max CR 1/4, sem voo). Dura horas = Nível/2.", usos: 2, recuperacao: "Descanso Curto" },
-          { nome: "Companheiro Selvagem", desc: "Gaste um uso de Forma Selvagem para conjurar Find Familiar (Fada)." }
+          { nome: "Forma Selvagem (Wild Shape)", tipoAcao: "bonus", desc: "**Ação Bônus:** Transforme-se em um Animal (Besta) conhecido por até (Nível/2) horas.\n- **Regras:** Você NÃO GANHA o HP da fera; em vez disso, você ganha Pontos de Vida Temporários iguais ao seu Nível de Druida (Se perder o Temp HP, a forma NÃO QUEBRA). Você substitui Força, Destreza e Ataques pelos do bicho.\n- **Limites:** No Nv 2, CR Máximo é 1/4 e NÃO PODE ter Deslocamento de Voo.\n*(Usos: 2 vezes por Descanso Curto/Longo).* ", usosMax: 2, recuperacao: "Descanso Curto" },
+          { nome: "Companheiro Selvagem", tipoAcao: "acao", desc: "Você pode queimar 1 uso da sua *Forma Selvagem* (ou gastar 1 Slot) para conjurar *Encontrar Familiar* (Find Familiar) na hora, sem gastar nenhum componente. O animal evocado é uma Fada e desaparece no Descanso Longo." }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Círculo Druídico", desc: "Escolha sua subclasse." }],
+        habilidades: [{ nome: "Círculo Druídico", tipoAcao: "passiva", desc: "Escolha sua subclasse druídica (seu círculo de especialização natural)." }],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Forma Selvagem (CR 1/2)", desc: "Pode se transformar em Bestas de CR 1/2 (sem voo)." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Evolução da Forma Selvagem", tipoAcao: "passiva", desc: "Sua Forma Selvagem evolui: Agora você pode se transformar em bestas de até **CR 1/2**." }
         ],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
@@ -1429,28 +1583,30 @@ export const CLASSES_DETALHADAS = {
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Ressurgimento Selvagem", desc: "Pode gastar slot para recuperar uso de Forma Selvagem (ou vice-versa 1x/dia)." }
+          { nome: "Ressurgimento Selvagem", tipoAcao: "livre", desc: "**Combustão:** 1x por turno, você pode gastar 1 Slot de Magia de qualquer nível para recuperar 1 uso da sua *Forma Selvagem* imediatamente.\n**Sacrifício:** 1x por Descanso Longo, você pode fazer o inverso: Gastar 1 uso de Forma Selvagem para recuperar 1 Slot de Magia Nível 1 gasto." }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso do Círculo", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Círculo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Fúria Elemental", desc: "Escolha: Conjuração Potente ou Golpe Primitivo." }],
+        habilidades: [
+          { nome: "Fúria Elemental", tipoAcao: "passiva", desc: "Sua conexão com o dano aumenta. Você escolhe entre aprimorar seus Truques de Dano ou seus Golpes Armados/Desarmados." }
+        ],
         slots: [4,3,3,1,0,0,0,0,0] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Forma Selvagem (CR 1 / Voo)", desc: "Pode se transformar em Bestas de CR 1 e com deslocamento de Voo." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Evolução da Forma Selvagem (Voo)", tipoAcao: "passiva", desc: "Sua Forma Selvagem chega ao limite base: Agora você pode virar bestas de até **CR 1** e a restrição de Voar acaba (Você PODE virar pássaros, morcegos, etc)." }
         ],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
@@ -1463,7 +1619,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 10, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Recurso do Círculo", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Círculo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,3,2,0,0,0,0] 
       },
       { 
@@ -1475,7 +1631,7 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,0,0,0] 
       },
       { 
@@ -1487,28 +1643,28 @@ export const CLASSES_DETALHADAS = {
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Círculo", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Círculo", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,3,2,1,1,0,0] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Fúria Elemental Aprimorada", desc: "Alcance de truques aumenta. Golpe Primitivo causa 2d8 extra." }
+          { nome: "Fúria Elemental Aprimorada", tipoAcao: "passiva", desc: "O bônus escolhido no Nv 7 melhora:\n- Se escolheu Truques: O alcance de todos os truques aumenta em absurdos 300 pés.\n- Se escolheu Golpes Primitivos: O dano extra elemental no ataque sobe para 2d8." }
         ],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Forma Selvagem (Upgrade)", desc: "Você tem 4 usos de Forma Selvagem.", usos: 4, recuperacao: "Descanso Curto" }
+          { nome: "Forma Selvagem (Upgrade Nv 17)", tipoAcao: "passiva", desc: "Seus usos de Forma Selvagem aumentam para 4.", usosMax: 4, recuperacao: "Descanso Curto/Longo" }
         ],
         slots: [4,3,3,3,2,1,1,1,1] 
       },
@@ -1516,21 +1672,21 @@ export const CLASSES_DETALHADAS = {
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Magias de Besta", desc: "Pode conjurar magias em Forma Selvagem (exceto se tiver componente material caro)." }
+          { nome: "Magias Bestiais (Beast Spells)", tipoAcao: "passiva", desc: "Você agora PODE conjurar magias normalmente enquanto estiver transformado na sua Forma Selvagem. (Exceção: Não pode conjurar magias que consumam o material ou que o material tenha custo em Ouro)." }
         ],
         slots: [4,3,3,3,3,1,1,1,1] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica." }],
         slots: [4,3,3,3,3,2,1,1,1] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Arquidruida", desc: "Recupera 1 uso de Forma Selvagem ao rolar Iniciativa. Envelhece 1 ano a cada 10. Pode converter usos em slot de magia." }
+          { nome: "Arquidruida", tipoAcao: "passiva", desc: "**Renovação:** Sempre que você rolar Iniciativa e não tiver usos de Forma Selvagem, você recupera 1 uso no ato.\n**Mago da Natureza:** 1x por Descanso Longo, converta usos de Forma Selvagem em 1 Slot de Magia puro (Cada Uso gasto te dá 2 Níveis de Slot. Ex: Gastou 2 Usos, gerou um Slot Nível 4).\n**Longevidade:** A cada 10 anos reais, seu corpo envelhece apenas 1." }
         ],
         slots: [4,3,3,3,3,2,2,1,1] 
       }
@@ -1593,173 +1749,245 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Artes Marciais (d6)", desc: "Ataque Desarmado como Bônus. Pode usar DES em vez de FOR. Dado de dano: 1d6." },
-          { nome: "Defesa Sem Armadura", desc: "Se não usar armadura/escudo, CA = 10 + Des + Sab." }
+          { 
+            nome: "Artes Marciais (d6)", 
+            tipoAcao: "passiva",
+            desc: "Sua maestria desarmada (que se aplica a Ataques Desarmados e armas de Monge) concede 3 benefícios:\n- **Ataque Bônus:** Imediatamente após usar a Ação de Ataque, você pode dar um Ataque Desarmado extra como Ação Bônus.\n- **Dano Marcial:** Você pode rolar 1d6 no lugar do dano normal.\n- **Ataques Destros:** Pode usar Destreza em vez de Força para rolagens de acerto e dano. Além disso, ao usar a opção de Agarrar (Grapple) ou Empurrar (Shove), você usa sua Destreza para definir a CD do Teste de Resistência do alvo." 
+          },
+          { 
+            nome: "Defesa Sem Armadura", 
+            tipoAcao: "passiva",
+            desc: "Enquanto não usar armadura ou escudo, sua CA é 10 + Modificador de Destreza + Modificador de Sabedoria." 
+          }
         ]
       },
       { 
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Foco do Monge (Ki)", desc: "Gaste pontos para Rajada de Golpes, Defesa Paciente ou Passo do Vento.", usos: 2, recuperacao: "Descanso Curto" },
-          { nome: "Movimento Sem Armadura (+10 ft)", desc: "Seu deslocamento aumenta." },
-          { nome: "Metabolismo Estranho", desc: "Ao rolar Iniciativa, recupera todo o Foco e cura PV (Nível + Dado Marciais). 1x/Long Rest." }
+          { 
+            nome: "Foco do Monge (Ki)", 
+            tipoAcao: "bonus", // ⚡ Gaveta de Ação Bônus
+            usosMax: 2, 
+            recuperacao: "Descanso Curto",
+            desc: "Você possui uma reserva de energia mística. A CD para seus efeitos de Foco é (8 + SAB + Proficiência).\n- **Rajada de Golpes:** Gaste 1 Ponto para realizar dois Ataques Desarmados como Ação Bônus.\n- **Defesa Paciente:** Pode usar a ação Desengajar como Ação Bônus de graça. Ou, gastar 1 Ponto para usar Desengajar E Esquivar juntos como Ação Bônus.\n- **Passo do Vento:** Pode usar a ação Disparada como Ação Bônus de graça. Ou, gastar 1 Ponto para usar Disparada E Desengajar juntos como Ação Bônus, e dobrar sua distância de salto no turno." 
+          },
+          { 
+            nome: "Movimento Sem Armadura (+10 ft)", 
+            tipoAcao: "passiva",
+            desc: "Seu deslocamento base aumenta em +10 ft (3 metros) enquanto você não estiver usando armaduras ou escudos." 
+          },
+          { 
+            nome: "Metabolismo Estranho", 
+            tipoAcao: "livre", // 💨 Ações Livres/Gatilhos
+            usosMax: 1,
+            recuperacao: "Descanso Longo",
+            desc: "**Gatilho (Rolar Iniciativa):** Ao rolar iniciativa, você pode escolher recuperar todos os seus pontos de Foco (Ki) gastos. Quando fizer isso, role seu Dado de Artes Marciais e recupere Pontos de Vida igual ao número rolado + seu Nível de Monge." 
+          }
         ]
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Tradição Monástica", desc: "Escolha sua subclasse." },
-          { nome: "Desviar Ataques", desc: "Reação: Reduz dano de concussão/cortante/perfurante. Se zerar, pode gastar 1 Foco para redirecionar." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 3 pontos de Foco.", usos: 3, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Tradição Monástica", 
+            tipoAcao: "passiva",
+            desc: "Você escolhe uma Tradição Monástica (Subclasse), moldando sua técnica." 
+          },
+          { 
+            nome: "Desviar Ataques", 
+            tipoAcao: "reacao", // 🛡️ Aba de Reações
+            desc: "**Reação:** Quando atingido por um ataque de Concussão, Cortante ou Perfurante, você reduz o dano sofrido em 1d10 + seu Mod. Destreza + seu Nível de Monge.\n**Redirecionar:** Se o dano for reduzido a 0, você pode gastar 1 Ponto de Foco para redirecionar o golpe. Escolha um alvo a até 5 pés (se melee) ou a 60 pés (se ranged e sem cobertura total). Ele faz um Save de DEX. Se falhar, sofre dano do mesmo tipo do ataque original igual a: 2x seu Dado de Artes Marciais + seu Mod. Destreza." 
+          },
+          { nome: "Foco do Monge (Upgrade Nv 3)", tipoAcao: "passiva", usosMax: 3, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco (Ki) aumenta para 3 pontos." }
         ]
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Queda Lenta", desc: "Reação: Reduz dano de queda em 5x Nível." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 4 pontos de Foco.", usos: 4, recuperacao: "Descanso Curto" }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo em +2, dois atributos em +1, ou escolha um Talento." },
+          { 
+            nome: "Queda Lenta", 
+            tipoAcao: "reacao", 
+            desc: "**Reação:** Ao cair, você pode reduzir o dano de queda sofrido em um valor igual a 5 vezes o seu Nível de Monge." 
+          },
+          { nome: "Foco do Monge (Upgrade Nv 4)", tipoAcao: "passiva", usosMax: 4, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco (Ki) aumenta para 4 pontos." }
         ]
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Ataque Extra", desc: "Ataca 2 vezes." },
-          { nome: "Ataque Atordoante (Stunning Strike)", desc: "1 Foco ao acertar: Inimigo faz Save CON ou fica Atordoado (Stunned) ou lento." },
-          { nome: "Artes Marciais (d8)", desc: "Seu dado aumenta para d8." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 5 pontos de Foco.", usos: 5, recuperacao: "Descanso Curto" }
+          { nome: "Ataque Extra", tipoAcao: "passiva", desc: "Sempre que usar a Ação de Ataque, você pode atacar duas vezes." },
+          { 
+            nome: "Ataque Atordoante (Stunning Strike)", 
+            tipoAcao: "livre", 
+            desc: "**Gatilho:** Uma vez por turno, ao acertar um ataque com arma de monge ou desarmado.\n**Efeito:** Você pode gastar 1 Ponto de Foco para forçar um Save de Constituição:\n- **Falha:** Alvo fica Atordoado (Stunned) até o início do seu próximo turno.\n- **Sucesso:** A velocidade do alvo cai pela metade e o próximo ataque contra ele tem Vantagem até o início do seu próximo turno." 
+          },
+          { nome: "Artes Marciais (d8)", tipoAcao: "passiva", desc: "Seu dado de Artes Marciais aumenta para 1d8." },
+          { nome: "Foco do Monge (Upgrade Nv 5)", tipoAcao: "passiva", usosMax: 5, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco (Ki) aumenta para 5 pontos." }
         ]
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Golpes Empoderados", desc: "Seus ataques desarmados podem causar dano de Força." },
-          { nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." },
-          { nome: "Movimento Sem Armadura (+15 ft)", desc: "Seu deslocamento aumenta." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 6 pontos de Foco.", usos: 6, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Golpes Empoderados", 
+            tipoAcao: "livre", 
+            desc: "Sempre que causar dano com um Ataque Desarmado, você pode escolher causar dano de Força (Force) ao invés do tipo normal." 
+          },
+          { nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." },
+          { nome: "Movimento Sem Armadura (+15 ft)", tipoAcao: "passiva", desc: "Seu deslocamento base aumenta em +15 ft (4,5 metros)." },
+          { nome: "Foco do Monge (Upgrade Nv 6)", tipoAcao: "passiva", usosMax: 6, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 6 pontos." }
         ]
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Evasão", desc: "Em saves de DES para meio dano, você não toma nada se passar e só metade se falhar." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 7 pontos de Foco.", usos: 7, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Evasão", 
+            tipoAcao: "passiva",
+            desc: "Quando for alvo de um efeito que permite um Save de Destreza para metade do dano, você não sofre dano se passar, e sofre só metade se falhar. Você não ganha esse benefício se estiver Incapacitado." 
+          },
+          { nome: "Foco do Monge (Upgrade Nv 7)", tipoAcao: "passiva", usosMax: 7, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 7 pontos." }
         ]
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 8 pontos de Foco.", usos: 8, recuperacao: "Descanso Curto" }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo em +2, dois atributos em +1, ou escolha um Talento." },
+          { nome: "Foco do Monge (Upgrade Nv 8)", tipoAcao: "passiva", usosMax: 8, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 8 pontos." }
         ]
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Movimento Acrobático", desc: "Pode andar em paredes e água durante seu turno." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 9 pontos de Foco.", usos: 9, recuperacao: "Descanso Curto" }
+          { nome: "Movimento Acrobático", tipoAcao: "passiva", desc: "Enquanto não estiver usando armaduras ou escudos, você pode mover-se ao longo de superfícies verticais (paredes) e sobre líquidos sem cair durante o seu turno." },
+          { nome: "Foco do Monge (Upgrade Nv 9)", tipoAcao: "passiva", usosMax: 9, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 9 pontos." }
         ]
       },
       { 
         nivel: 10, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Foco Elevado", desc: "Flurry dá 3 ataques. Patient Defense dá PV Temp. Step of Wind leva aliado junto." },
-          { nome: "Auto-Restauração", desc: "Fim do turno: Remove Charme, Medo ou Veneno. Não sofre exaustão por fome/sede." },
-          { nome: "Movimento Sem Armadura (+20 ft)", desc: "Seu deslocamento aumenta." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 10 pontos de Foco.", usos: 10, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Foco Elevado", 
+            tipoAcao: "passiva", 
+            desc: "Suas opções de Foco do Monge (Nível 2) são aprimoradas:\n- **Rajada de Golpes:** Agora realiza **3** Ataques Desarmados em vez de 2.\n- **Defesa Paciente:** Ao gastar Ponto de Foco nela, você ganha PV Temporários iguais a 2 rolagens do seu Dado de Artes Marciais.\n- **Passo do Vento:** Ao gastar Ponto de Foco nela, você pode arrastar uma criatura voluntária Grande ou menor a até 5 pés de você até o final do seu turno sem provocar Ataques de Oportunidade." 
+          },
+          { 
+            nome: "Auto-Restauração", 
+            tipoAcao: "passiva",
+            desc: "Ao final do seu turno, se estiver Enfeitiçado (Charmed), Amedrontado (Frightened) ou Envenenado (Poisoned), a condição termina em você imediatamente. Além disso, privação de comida/água não te dá Exaustão." 
+          },
+          { nome: "Movimento Sem Armadura (+20 ft)", tipoAcao: "passiva", desc: "Seu deslocamento base aumenta em +20 ft (6 metros)." },
+          { nome: "Foco do Monge (Upgrade Nv 10)", tipoAcao: "passiva", usosMax: 10, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 10 pontos." }
         ]
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." },
-          { nome: "Artes Marciais (d10)", desc: "Seu dado aumenta para d10." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 11 pontos de Foco.", usos: 11, recuperacao: "Descanso Curto" }
+          { nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." },
+          { nome: "Artes Marciais (d10)", tipoAcao: "passiva", desc: "Seu dado de Artes Marciais aumenta para 1d10." },
+          { nome: "Foco do Monge (Upgrade Nv 11)", tipoAcao: "passiva", usosMax: 11, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 11 pontos." }
         ]
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 12 pontos de Foco.", usos: 12, recuperacao: "Descanso Curto" }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo em +2, dois atributos em +1, ou escolha um Talento." },
+          { nome: "Foco do Monge (Upgrade Nv 12)", tipoAcao: "passiva", usosMax: 12, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 12 pontos." }
         ]
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Desviar Energia", desc: "Pode usar Desviar Ataques contra qualquer tipo de dano." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 13 pontos de Foco.", usos: 13, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Desviar Energia", 
+            tipoAcao: "passiva", 
+            desc: "Você agora pode usar sua Reação de **Desviar Ataques** contra ataques de **QUALQUER tipo de dano**." 
+          },
+          { nome: "Foco do Monge (Upgrade Nv 13)", tipoAcao: "passiva", usosMax: 13, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 13 pontos." }
         ]
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Sobrevivente Disciplinado", desc: "Proficiência em todos os Saves. Pode gastar 1 Foco para rerolar falha." },
-          { nome: "Movimento Sem Armadura (+25 ft)", desc: "Seu deslocamento aumenta." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 14 pontos de Foco.", usos: 14, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Sobrevivente Disciplinado", 
+            tipoAcao: "livre", 
+            desc: "**Passiva:** Você ganha proficiência em TODOS os Testes de Resistência.\n**Gatilho:** Quando você falhar em um Teste de Resistência, você pode gastar 1 Ponto de Foco para rolar novamente. Você deve usar o novo resultado." 
+          },
+          { nome: "Movimento Sem Armadura (+25 ft)", tipoAcao: "passiva", desc: "Seu deslocamento base aumenta em +25 ft (7,5 metros)." },
+          { nome: "Foco do Monge (Upgrade Nv 14)", tipoAcao: "passiva", usosMax: 14, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 14 pontos." }
         ]
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Foco Perfeito", desc: "Se rolar iniciativa com menos de 4 Foco, recupera até ter 4." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 15 pontos de Foco.", usos: 15, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Foco Perfeito", 
+            tipoAcao: "livre", 
+            desc: "**Gatilho (Rolar Iniciativa):** Se você rolar Iniciativa, tiver 3 Pontos de Foco ou menos, e NÃO usar sua habilidade de *Metabolismo Estranho*, você recupera Pontos de Foco até ficar com 4." 
+          },
+          { nome: "Foco do Monge (Upgrade Nv 15)", tipoAcao: "passiva", usosMax: 15, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 15 pontos." }
         ]
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 16 pontos de Foco.", usos: 16, recuperacao: "Descanso Curto" }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo em +2, dois atributos em +1, ou escolha um Talento." },
+          { nome: "Foco do Monge (Upgrade Nv 16)", tipoAcao: "passiva", usosMax: 16, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 16 pontos." }
         ]
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Recurso da Tradição", desc: "Habilidade de Subclasse." },
-          { nome: "Artes Marciais (d12)", desc: "Seu dado aumenta para d12." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 17 pontos de Foco.", usos: 17, recuperacao: "Descanso Curto" }
+          { nome: "Recurso da Tradição", tipoAcao: "passiva", desc: "Você ganha uma habilidade da sua Subclasse." },
+          { nome: "Artes Marciais (d12)", tipoAcao: "passiva", desc: "Seu dado de Artes Marciais aumenta para 1d12." },
+          { nome: "Foco do Monge (Upgrade Nv 17)", tipoAcao: "passiva", usosMax: 17, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 17 pontos." }
         ]
       },
       { 
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Defesa Superior", desc: "Gaste 3 Foco para ter Resistência a tudo (exceto Força) por 1 min." },
-          { nome: "Movimento Sem Armadura (+30 ft)", desc: "Seu deslocamento aumenta." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 18 pontos de Foco.", usos: 18, recuperacao: "Descanso Curto" }
+          { 
+            nome: "Defesa Superior", 
+            tipoAcao: "livre", // 💨 Ação Livre (No início do turno, sem custo de Ação!)
+            desc: "**Gatilho:** No início do seu turno.\n**Efeito:** Você pode gastar 3 Pontos de Foco para ganhar Resistência a TODOS os tipos de dano, exceto Força (Force). Esse efeito dura por 1 minuto ou até você ficar Incapacitado." 
+          },
+          { nome: "Movimento Sem Armadura (+30 ft)", tipoAcao: "passiva", desc: "Seu deslocamento base aumenta em +30 ft (9 metros)." },
+          { nome: "Foco do Monge (Upgrade Nv 18)", tipoAcao: "passiva", usosMax: 18, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 18 pontos." }
         ]
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 19 pontos de Foco.", usos: 19, recuperacao: "Descanso Curto" }
+          { nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Epic Boon)." },
+          { nome: "Foco do Monge (Upgrade Nv 19)", tipoAcao: "passiva", usosMax: 19, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco aumenta para 19 pontos." }
         ]
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Corpo e Mente", desc: "DES e SAB aumentam em +4 (Max 25)." },
-          { nome: "Foco (Upgrade)", desc: "Você tem 20 pontos de Foco.", usos: 20, recuperacao: "Descanso Curto" }
+          { nome: "Corpo e Mente", tipoAcao: "passiva", desc: "Sua Destreza e Sabedoria aumentam em +4 permanentemente (limite máximo sobe para 25)." },
+          { nome: "Foco do Monge (Upgrade Nv 20)", tipoAcao: "passiva", usosMax: 20, recuperacao: "Descanso Curto", desc: "Sua reserva de Foco atinge o máximo de 20 pontos." }
         ]
       }
     ]
@@ -1767,7 +1995,7 @@ export const CLASSES_DETALHADAS = {
 
   "Paladino": {
     nome: "Paladino",
-    descricao: "Um guerreiro santo preso a um juramento sagrado. Combina habilidade marcial com cura, defesa e dano radiante explosivo.",
+    descricao: "Um guerreiro santo preso a um juramento sagrado. Combina habilidade marcial com cura de ação bônus, defesas em aura impenetráveis e dano radiante avassalador.",
     dadoVida: 10,
     
     proficiencias: {
@@ -1783,254 +2011,20 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Cavaleiro Blindado",
-        itens: ["Cota de Malha (Heavy)", "Escudo", "Espada Longa", "6 Azagaias", "Símbolo Sagrado", "Pacote de Sacerdote", "9 PO"],
+        titulo: "Cavaleiro Blindado (Opção A)",
+        itens: ["Cota de Malha (Pesada)", "Escudo", "Espada Longa", "6 Azagaias", "Símbolo Sagrado", "Pacote de Sacerdote", "9 PO"],
         ouro: 9
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 150
       }
     },
 
     magiasInicial: {
-      // Paladino é meio-conjurador, começa com slots no nível 1 agora no 2024?
-      // Pela tabela: Nível 1 não tem slots. Nível 2 tem 2 slots.
-      // Vou configurar como 0 no nível 1 para a lógica do Grimório funcionar ao subir de nível.
       truquesConhecidos: 0,
-      magiasConhecidas: 0, 
+      magiasPreparadasIniciais: 2, 
       espacosMagia: 0
-    },
-
-    escolhasNivel1: [
-      {
-        titulo: "Maestria em Arma (Escolha 1)",
-        opcoes: opcoesDeArmas
-      },
-      {
-        titulo: "Maestria em Arma (Escolha 2)",
-        opcoes: opcoesDeArmas
-      }
-    ],
-
-    escolhasNivel2: [
-      {
-        titulo: "Estilo de Luta",
-        tipo: "talento_lutador", // Reusa a lógica se tiver, ou lista opções
-        opcoes: [
-          { nome: "Defesa", desc: "+1 na CA enquanto usar armadura." },
-          { nome: "Duelismo", desc: "+2 dano com uma mão." },
-          { nome: "Combate com Armas Grandes", desc: "Rerola 1 e 2 no dano." },
-          { nome: "Proteção", desc: "Reação para impor desvantagem em ataque contra aliado." },
-          { nome: "Guerreiro Abençoado", desc: "Aprende 2 truques de Clérigo (usam Carisma)." }
-        ]
-      }
-    ],
-
-    escolhasNivel3: [
-      {
-        titulo: "Juramento Sagrado (Subclasse)",
-        tipo: "subclasse",
-        opcoes: [
-          // 2024
-          { nome: "Juramento da Devoção (Devotion)", desc: "O paladino clássico. Aura protege contra charme, arma sagrada brilha e acerta mais." },
-          { nome: "Juramento da Glória (Glória)", desc: "Atleta divino. Smite dá PV temporário e aura aumenta velocidade." },
-          { nome: "Juramento dos Anciões (Ancients)", desc: "Cavaleiro verde. Aura dá resistência a dano de magias (Nec/Psi/Rad)." },
-          { nome: "Juramento dos Gênios Nobres (Noble Genies)", desc: "Elemental. Smite causa efeitos de terra, ar, fogo ou água." },
-          { nome: "Juramento da Vingança (Vengeance)", desc: "Caçador implacável. Ganha vantagem contra um inimigo e persegue quem foge." },
-          // Legado
-          { nome: "Juramento da Conquista (Conquest)", desc: "Tirano. Aura causa dano psíquico e imobiliza inimigos amedrontados." },
-          { nome: "Juramento da Coroa (Crown)", desc: "Guardião da lei. Obriga inimigos a duelarem e toma dano por aliados." },
-          { nome: "Juramento da Redenção (Redemption)", desc: "Pacifista violento. Retorna dano recebido para o atacante." },
-          { nome: "Juramento dos Vigias (Watchers)", desc: "Caçador de extraplanares. Aura dá bônus de iniciativa." },
-          { nome: "Quebrador de Juramento (Oathbreaker)", desc: "Paladino caído. Controla mortos-vivos e causa dano extra com aura de ódio." }
-        ]
-      }
-    ],
-
-    tabelaNiveis: [
-      { 
-        nivel: 1, 
-        proficiencia: 2, 
-        habilidades: [
-          { nome: "Mão Curativa (Lay on Hands)", desc: "Ação Bônus: Cure tocando. Pool = 5 x Nível. Gaste 5 pontos para curar Veneno.", usos: "Pool de Cura", recuperacao: "Descanso Longo" },
-          { nome: "Conjuração", desc: "Prepara magias divinas (Carisma). Usa Símbolo Sagrado." },
-          { nome: "Maestria em Armas", desc: "Domina propriedade de 2 armas." }
-        ],
-        slots: [0,0,0,0,0,0,0,0,0] // Paladino nv 1 não tem slot
-      },
-      { 
-        nivel: 2, 
-        proficiencia: 2, 
-        habilidades: [
-          { nome: "Estilo de Luta", desc: "Escolha um estilo ou Truques de Clérigo." },
-          { nome: "Destruição do Paladino (Smite)", desc: "Sempre prepara Divine Smite. Pode conjurar 1x por dia sem gastar slot." }
-        ],
-        slots: [2,0,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 3, 
-        proficiencia: 2, 
-        habilidades: [
-          { nome: "Juramento Sagrado", desc: "Escolha sua subclasse." },
-          { nome: "Canalizar Divindade", desc: "Efeitos mágicos do juramento ou Sentido Divino.", usos: 2, recuperacao: "Descanso Curto" },
-          { nome: "CD: Sentido Divino", desc: "Bônus: Detecta Celestial, Infernal ou Morto-vivo a 60ft por 10 min." }
-        ],
-        slots: [3,0,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 4, 
-        proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
-        slots: [3,0,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 5, 
-        proficiencia: 3, 
-        habilidades: [
-          { nome: "Ataque Extra", desc: "Ataca 2 vezes." },
-          { nome: "Montaria Fiel", desc: "Prepara Find Steed. Conjura 1x/dia sem slot." }
-        ],
-        slots: [4,2,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 6, 
-        proficiencia: 3, 
-        habilidades: [
-          { nome: "Aura de Proteção (10 ft)", desc: "Você e aliados na aura somam seu CARISMA em todos os testes de resistência." }
-        ],
-        slots: [4,2,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 7, 
-        proficiencia: 3, 
-        habilidades: [{ nome: "Recurso do Juramento", desc: "Habilidade de Subclasse." }],
-        slots: [4,3,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 8, 
-        proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
-        slots: [4,3,0,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 9, 
-        proficiencia: 4, 
-        habilidades: [
-          { nome: "Abjurar Inimigos", desc: "Ação Mágica (CD): Amedronta inimigos (Qtd = Mod CAR) a 60ft. Eles perdem ações." }
-        ],
-        slots: [4,3,2,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 10, 
-        proficiencia: 4, 
-        habilidades: [
-          { nome: "Aura de Coragem", desc: "Você e aliados na aura são imunes a Medo." }
-        ],
-        slots: [4,3,2,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 11, 
-        proficiencia: 4, 
-        habilidades: [
-          { nome: "Golpes Radiantes", desc: "Todos os seus ataques com arma causam +1d8 Radiante extra." },
-          { nome: "Canalizar Divindade (Upgrade)", desc: "Você tem 3 usos.", usos: 3, recuperacao: "Descanso Curto" }
-        ],
-        slots: [4,3,3,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 12, 
-        proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
-        slots: [4,3,3,0,0,0,0,0,0] 
-      },
-      { 
-        nivel: 13, 
-        proficiencia: 5, 
-        habilidades: [],
-        slots: [4,3,3,1,0,0,0,0,0] 
-      },
-      { 
-        nivel: 14, 
-        proficiencia: 5, 
-        habilidades: [
-          { nome: "Toque Restaurador", desc: "Mão Curativa remove Cego, Charme, Surdo, Medo, Paralisia ou Stun (Custo 5 PV)." }
-        ],
-        slots: [4,3,3,1,0,0,0,0,0] 
-      },
-      { 
-        nivel: 15, 
-        proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Juramento", desc: "Habilidade de Subclasse." }],
-        slots: [4,3,3,2,0,0,0,0,0] 
-      },
-      { 
-        nivel: 16, 
-        proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
-        slots: [4,3,3,2,0,0,0,0,0] 
-      },
-      { 
-        nivel: 17, 
-        proficiencia: 6, 
-        habilidades: [],
-        slots: [4,3,3,3,1,0,0,0,0] 
-      },
-      { 
-        nivel: 18, 
-        proficiencia: 6, 
-        habilidades: [
-          { nome: "Expansão de Aura", desc: "Suas auras aumentam para 30 ft." }
-        ],
-        slots: [4,3,3,3,1,0,0,0,0] 
-      },
-      { 
-        nivel: 19, 
-        proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
-        slots: [4,3,3,3,2,0,0,0,0] 
-      },
-      { 
-        nivel: 20, 
-        proficiencia: 6, 
-        habilidades: [{ nome: "Campeão do Juramento", desc: "Habilidade suprema da subclasse." }],
-        slots: [4,3,3,3,2,0,0,0,0] 
-      }
-    ]
-  },
-
-  "Patrulheiro": {
-    nome: "Patrulheiro",
-    descricao: "Um guerreiro que usa perícia marcial e magia natural para combater ameaças nos limites da civilização.",
-    dadoVida: 10,
-    
-    proficiencias: {
-      armaduras: ["Leves", "Médias", "Escudos"],
-      armas: ["Simples", "Marciais"],
-      testes: ["Força", "Destreza"]
-    },
-
-    escolhaPericias: {
-      qtd: 3,
-      lista: ["Adestrar Animais", "Atletismo", "Furtividade", "Intuição", "Investigação", "Natureza", "Percepção", "Sobrevivência"]
-    },
-
-    equipamentoInicial: {
-      a: {
-        titulo: "Caçador Furtivo",
-        itens: ["Corselete de Couro Batido", "Cimitarra", "Espada Curta", "Arco Longo", "20 Flechas", "Foco Druídico", "Pacote de Explorador", "7 PO"],
-        ouro: 7
-      },
-      b: {
-        titulo: "Riqueza Inicial",
-        ouro: 150
-      }
-    },
-
-    magiasInicial: {
-      truquesConhecidos: 0, // Ranger base não tem truques (exceto por Estilo de Luta)
-      magiasConhecidas: 2, 
-      espacosMagia: 2 
     },
 
     escolhasNivel1: [
@@ -2049,25 +2043,257 @@ export const CLASSES_DETALHADAS = {
         titulo: "Estilo de Luta",
         tipo: "talento_lutador", 
         opcoes: [
-          { nome: "Arquearia", desc: "+2 acerto com armas à distância." },
+          { nome: "Defesa", desc: "Você ganha +1 na CA passiva enquanto estiver vestindo qualquer armadura." },
+          { nome: "Duelo", desc: "Você ganha +2 nas rolagens de dano ao atacar com uma arma corpo a corpo em uma mão (e escudo na outra ou mão livre)." },
+          { nome: "Combate com Armas Grandes", desc: "Quando rolar 1 ou 2 no dano de uma arma que você segure com duas mãos, você rerola o dado e usa o novo resultado." },
+          { nome: "Proteção", desc: "Use sua Reação para impor Desvantagem no ataque de um inimigo contra um aliado a 5 pés (exige usar Escudo)." },
+          { nome: "Guerreiro Abençoado", desc: "Você aprende 2 Truques da lista do Clérigo. Eles contam como magias de Paladino para você (usa Carisma)." }
+        ]
+      }
+    ],
+
+    escolhasNivel3: [
+      {
+        titulo: "Juramento Sagrado (Subclasse)",
+        tipo: "subclasse",
+        opcoes: [
+          // D&D 2024 Core
+          { nome: "Juramento da Devoção (Devotion)", desc: "O cavaleiro de luz clássico. Arma sagrada brilha para acertos perfeitos, e a aura defende contra feitiços de charme." },
+          { nome: "Juramento da Glória (Glória)", desc: "O atleta divino. Smites geram PV temporário em área e a aura aumenta a velocidade passiva do grupo." },
+          { nome: "Juramento dos Anciões (Ancients)", desc: "O cavaleiro verde. Magia enraíza inimigos e a aura protege contra magias inimigas incrivelmente bem." },
+          { nome: "Juramento da Vingança (Vengeance)", desc: "Caçador implacável. Marca um inimigo para vantagem absoluta de ataque e persegue-o ao bater." },
+          // Legado
+          { nome: "Juramento da Coroa (Crown)", desc: "Guardião da lei e da realeza. Obriga inimigos a não fugirem de você e atrai o dano de aliados." },
+          { nome: "Juramento da Conquista (Conquest)", desc: "Tirano assustador. Sua aura dá dano passivo e congela no lugar os inimigos amedrontados por você." },
+          { nome: "Juramento da Redenção (Redemption)", desc: "O pacifista com limite. Reflete o dano recebido de volta no inimigo para proteger o grupo." },
+          { nome: "Juramento dos Vigias (Watchers)", desc: "Caçador de extraplanares. Bane criaturas de outras dimensões e a aura dá super iniciativa para a PT." },
+          { nome: "Quebrador de Juramento (Oathbreaker)", desc: "Paladino caído nas trevas. Controla mortos-vivos e fortalece o dano de monstros próximos (incluindo você)." }
+        ]
+      }
+    ],
+
+    tabelaNiveis: [
+      { 
+        nivel: 1, 
+        proficiencia: 2, 
+        habilidades: [
+          { nome: "Cura Pelas Mãos (Lay on Hands)", tipoAcao: "bonus", desc: "**Ação Bônus:** Toque uma criatura. Você tem uma reserva diária (Pool) de energia de cura igual a (5 x Nível de Paladino). Você gasta pontos dessa reserva para curar PV na mesma proporção. Alternativamente, você gasta 5 pontos da reserva apenas para remover a condição *Envenenado* do alvo.\n*(Reserva recarrega no Descanso Longo).* ", usosMax: "Pool de Cura", recuperacao: "Descanso Longo" },
+          { nome: "Conjuração (Paladino)", tipoAcao: "acao", desc: "Você prepara uma lista de magias divinas diariamente após um Descanso Longo. Carisma é o seu atributo de conjuração. Você pode usar um Símbolo Sagrado como foco." },
+          { nome: "Maestria em Armas", tipoAcao: "passiva", desc: "Você domina os segredos marciais e pode usar as Propriedades de Maestria de 2 tipos de armas à sua escolha (podendo trocar a escolha no Descanso Longo)." }
+        ],
+        slots: [2,0,0,0,0,0,0,0,0] // AGORA SIM! 2 Slots no Nível 1!
+      },
+      { 
+        nivel: 2, 
+        proficiencia: 2, 
+        habilidades: [
+          { nome: "Estilo de Luta", tipoAcao: "passiva", desc: "Você escolhe uma técnica passiva de combate avançado (ou Truques Divinos)." },
+          { nome: "Destruição do Paladino (Smite)", tipoAcao: "bonus", desc: "Você sempre tem a magia *Destruição Divina* (Divine Smite) preparada (Ela agora conta como Ação Bônus a ser castada LOGO APÓS você acertar o ataque com arma/desarmado).\nVocê também pode conjurar *Destruição Divina* 1 vez sem gastar nenhum Slot de Magia por Descanso Longo." }
+        ],
+        slots: [2,0,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 3, 
+        proficiencia: 2, 
+        habilidades: [
+          { nome: "Juramento Sagrado", tipoAcao: "passiva", desc: "Escolha sua subclasse, selando seus votos de vida." },
+          { nome: "Canalizar Divindade", tipoAcao: "acao", desc: "Você usa poder dos deuses para ativar habilidades do seu juramento ou detectar o mal. Você possui 2 Usos diários.", usosMax: 2, recuperacao: "Descanso Curto/Longo" },
+          { nome: "CD: Sentido Divino", tipoAcao: "bonus", desc: "**Ação Bônus:** Por 10 minutos, detecta Celestial, Corruptor ou Morto-Vivo a até 60 pés." }
+        ],
+        slots: [3,0,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 4, 
+        proficiencia: 2, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
+        slots: [3,0,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 5, 
+        proficiencia: 3, 
+        habilidades: [
+          { nome: "Ataque Extra", tipoAcao: "passiva", desc: "Você pode atacar DUAS vezes, em vez de uma, sempre que usar a Ação de Ataque no seu turno." },
+          { nome: "Montaria Fiel", tipoAcao: "acao", desc: "Sempre tem *Encontrar Montaria* (Find Steed) preparada. Conjura 1x de graça por Descanso Longo." }
+        ],
+        slots: [4,2,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 6, 
+        proficiencia: 3, 
+        habilidades: [
+          { nome: "Aura de Proteção (10 ft)", tipoAcao: "passiva", desc: "Você e aliados a 10 pés somam seu Modificador de Carisma em TODOS os Saves." }
+        ],
+        slots: [4,2,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 7, 
+        proficiencia: 3, 
+        habilidades: [{ nome: "Recurso do Juramento", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
+        slots: [4,3,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 8, 
+        proficiencia: 3, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
+        slots: [4,3,0,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 9, 
+        proficiencia: 4, 
+        habilidades: [
+          { nome: "Abjurar Inimigos", tipoAcao: "acao", desc: "**Ação Mágica (Gasta Canalizar Divindade):** Amedronta inimigos (Qtd = Mod CAR) a 60 pés. Eles perdem ações no turno." }
+        ],
+        slots: [4,3,2,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 10, 
+        proficiencia: 4, 
+        habilidades: [
+          { nome: "Aura de Coragem", tipoAcao: "passiva", desc: "Você e aliados na sua Aura são imunes a *Amedrontado*." }
+        ],
+        slots: [4,3,2,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 11, 
+        proficiencia: 4, 
+        habilidades: [
+          { nome: "Golpes Radiantes", tipoAcao: "passiva", desc: "Sempre que acertar um ataque Corpo a Corpo, causa +1d8 de Dano Radiante EXTRA." },
+          { nome: "Canalizar Divindade (Upgrade)", tipoAcao: "passiva", desc: "Seus usos diários sobem para 3.", usosMax: 3, recuperacao: "Descanso Curto/Longo" }
+        ],
+        slots: [4,3,3,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 12, 
+        proficiencia: 4, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
+        slots: [4,3,3,0,0,0,0,0,0] 
+      },
+      { 
+        nivel: 13, 
+        proficiencia: 5, 
+        habilidades: [],
+        slots: [4,3,3,1,0,0,0,0,0] 
+      },
+      { 
+        nivel: 14, 
+        proficiencia: 5, 
+        habilidades: [
+          { nome: "Toque Restaurador", tipoAcao: "passiva", desc: "Sua *Cura Pelas Mãos* pode gastar 5 PVs para remover: Cego, Enfeitiçado, Surdo, Amedrontado, Paralisado ou Atordoado." }
+        ],
+        slots: [4,3,3,1,0,0,0,0,0] 
+      },
+      { 
+        nivel: 15, 
+        proficiencia: 5, 
+        habilidades: [{ nome: "Recurso do Juramento", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
+        slots: [4,3,3,2,0,0,0,0,0] 
+      },
+      { 
+        nivel: 16, 
+        proficiencia: 5, 
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
+        slots: [4,3,3,2,0,0,0,0,0] 
+      },
+      { 
+        nivel: 17, 
+        proficiencia: 6, 
+        habilidades: [],
+        slots: [4,3,3,3,1,0,0,0,0] 
+      },
+      { 
+        nivel: 18, 
+        proficiencia: 6, 
+        habilidades: [
+          { nome: "Expansão de Aura", tipoAcao: "passiva", desc: "O alcance da sua *Aura de Proteção* aumenta para 30 pés (9m)." }
+        ],
+        slots: [4,3,3,3,1,0,0,0,0] 
+      },
+      { 
+        nivel: 19, 
+        proficiencia: 6, 
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva da Visão Verdadeira)." }],
+        slots: [4,3,3,3,2,0,0,0,0] 
+      },
+      { 
+        nivel: 20, 
+        proficiencia: 6, 
+        habilidades: [{ nome: "Campeão do Juramento", tipoAcao: "passiva", desc: "Habilidade de transformação suprema da sua subclasse." }],
+        slots: [4,3,3,3,2,0,0,0,0] 
+      }
+    ]
+  },
+
+"Patrulheiro": {
+    nome: "Patrulheiro",
+    descricao: "Um guerreiro que usa perícia marcial e magia natural para combater ameaças nos limites da civilização.",
+    dadoVida: 10,
+    
+    proficiencias: {
+      armaduras: ["Leves", "Médias", "Escudos"],
+      armas: ["Simples", "Marciais"],
+      testes: ["Força", "Destreza"]
+    },
+
+    escolhaPericias: {
+      qtd: 3,
+      lista: ["Adestrar Animais", "Atletismo", "Furtividade", "Intuição", "Investigação", "Natureza", "Percepção", "Sobrevivência"]
+    },
+
+    equipamentoInicial: {
+      a: {
+        titulo: "Caçador Furtivo (Opção A)",
+        itens: ["Corselete de Couro Batido", "Cimitarra", "Espada Curta", "Arco Longo", "20 Flechas", "Foco Druídico (ramo de visco)", "Pacote de Explorador", "7 PO"],
+        ouro: 7
+      },
+      b: {
+        titulo: "Riqueza Inicial (Opção B)",
+        ouro: 150
+      }
+    },
+
+    magiasInicial: {
+      truquesConhecidos: 0, // Ranger base não tem truques (exceto se pegar o Estilo Guerreiro Druídico)
+      magiasConhecidas: 2, 
+      espacosMagia: 2 
+    },
+
+    escolhasNivel1: [
+      {
+        titulo: "Maestria em Arma (Escolha 1)",
+        tipo: "maestria",
+        opcoes: opcoesDeArmas
+      },
+      {
+        titulo: "Maestria em Arma (Escolha 2)",
+        tipo: "maestria",
+        opcoes: opcoesDeArmas
+      }
+    ],
+
+    escolhasNivel2: [
+      {
+        titulo: "Estilo de Luta",
+        tipo: "talento_lutador", 
+        opcoes: [
+          { nome: "Arquearia", desc: "+2 em jogadas de ataque com armas à distância." },
           { nome: "Defesa", desc: "+1 na CA enquanto usar armadura." },
-          { nome: "Duelismo", desc: "+2 dano com uma mão." },
-          { nome: "Combate com Duas Armas", desc: "Adiciona atributo no dano da segunda arma." },
-          { nome: "Guerreiro Druídico", desc: "Aprende 2 truques de Druida (Guidance e Starry Wisp recomendados)." }
+          { nome: "Duelismo", desc: "+2 de dano com arma de uma mão (se a outra estiver vazia ou com escudo)." },
+          { nome: "Combate com Duas Armas", desc: "Adiciona seu modificador de atributo no dano do ataque da segunda arma." },
+          { nome: "Guerreiro Druídico", desc: "Aprende 2 truques da lista do Druida (Orientação e Brilho Estelar recomendados)." }
         ]
       },
       {
-        titulo: "Explorador Hábil (Perícia)",
-        tipo: "pericia_expertise", // O sistema deve permitir escolher 1 perícia para dobrar
+        titulo: "Explorador Hábil (Especialização 1)",
+        tipo: "pericia_expertise",
         opcoes: [
-          { nome: "Adestrar Animais", desc: "Expertise." },
-          { nome: "Atletismo", desc: "Expertise." },
-          { nome: "Furtividade", desc: "Expertise." },
-          { nome: "Intuição", desc: "Expertise." },
-          { nome: "Investigação", desc: "Expertise." },
-          { nome: "Natureza", desc: "Expertise." },
-          { nome: "Percepção", desc: "Expertise." },
-          { nome: "Sobrevivência", desc: "Expertise." }
+          { nome: "Adestrar Animais", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Atletismo", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Furtividade", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Intuição", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Investigação", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Natureza", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Percepção", desc: "Expertise: Dobra o bônus de proficiência." },
+          { nome: "Sobrevivência", desc: "Expertise: Dobra o bônus de proficiência." }
         ]
       }
     ],
@@ -2092,14 +2318,46 @@ export const CLASSES_DETALHADAS = {
       }
     ],
 
+    // 👇 O SISTEMA VAI PEDIR AS DUAS PERÍCIAS NOVAS AQUI 👇
+    escolhasNivel9: [
+      {
+        titulo: "Especialização Adicional (Escolha 1)",
+        tipo: "pericia_expertise",
+        opcoes: [
+          { nome: "Adestrar Animais", desc: "Expertise." },
+          { nome: "Atletismo", desc: "Expertise." },
+          { nome: "Furtividade", desc: "Expertise." },
+          { nome: "Intuição", desc: "Expertise." },
+          { nome: "Investigação", desc: "Expertise." },
+          { nome: "Natureza", desc: "Expertise." },
+          { nome: "Percepção", desc: "Expertise." },
+          { nome: "Sobrevivência", desc: "Expertise." }
+        ]
+      },
+      {
+        titulo: "Especialização Adicional (Escolha 2)",
+        tipo: "pericia_expertise",
+        opcoes: [
+          { nome: "Adestrar Animais", desc: "Expertise." },
+          { nome: "Atletismo", desc: "Expertise." },
+          { nome: "Furtividade", desc: "Expertise." },
+          { nome: "Intuição", desc: "Expertise." },
+          { nome: "Investigação", desc: "Expertise." },
+          { nome: "Natureza", desc: "Expertise." },
+          { nome: "Percepção", desc: "Expertise." },
+          { nome: "Sobrevivência", desc: "Expertise." }
+        ]
+      }
+    ],
+
     tabelaNiveis: [
       { 
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conjuração", desc: "Prepara magias divinas (Sabedoria)." },
-          { nome: "Inimigo Favorito", desc: "Sempre prepara Hunter's Mark. Pode conjurar 2x/dia sem gastar slot.", usos: 2, recuperacao: "Descanso Longo" },
-          { nome: "Maestria em Armas", desc: "Domina propriedade de 2 armas." }
+          { nome: "Conjuração (Patrulheiro)", tipoAcao: "acao", desc: "Você conjura magias da lista do Patrulheiro. Sabedoria é o seu atributo de conjuração. Você pode usar um Foco Druídico." },
+          { nome: "Inimigo Favorito (Hunter's Mark)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você tem a magia *Marca do Caçador* (Hunter's Mark) sempre preparada (não conta no limite). Você pode conjurá-la 2 vezes sem gastar espaço de magia. Dano extra: 1d6.", usosMax: 2, recuperacao: "Descanso Longo" },
+          { nome: "Maestria em Armas", tipoAcao: "passiva", desc: "Você domina e pode utilizar as propriedades de Maestria de 2 tipos de armas à sua escolha (pode trocar no Descanso Longo)." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -2107,8 +2365,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Explorador Hábil", desc: "Ganha Expertise em 1 perícia e aprende 2 idiomas." },
-          { nome: "Estilo de Luta", desc: "Escolha um estilo ou Truques de Druida." }
+          { nome: "Explorador Hábil (Deft Explorer)", tipoAcao: "passiva", desc: "Você ganha *Especialização* (Expertise) em uma perícia da sua classe, dobrando seu bônus. Além disso, você aprende 2 idiomas à sua escolha." },
+          { nome: "Estilo de Luta", tipoAcao: "passiva", desc: "Você adota um estilo de combate especializado ou aprende feitiços druídicos." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -2116,23 +2374,23 @@ export const CLASSES_DETALHADAS = {
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conclave de Patrulheiro", desc: "Escolha sua subclasse." },
-          { nome: "Inimigo Favorito (Upgrade)", desc: "Você tem 3 usos gratuitos.", usos: 3, recuperacao: "Descanso Longo" }
+          { nome: "Conclave de Patrulheiro (Subclasse)", tipoAcao: "passiva", desc: "Você escolhe sua especialização de Patrulheiro." },
+          { nome: "Inimigo Favorito (Upgrade Nv 3)", tipoAcao: "passiva", desc: "Seus usos gratuitos de *Marca do Caçador* aumentam para 3.", usosMax: 3, recuperacao: "Descanso Longo" }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Ataque Extra", desc: "Ataca 2 vezes." },
-          { nome: "Inimigo Favorito (Upgrade)", desc: "Você tem 4 usos gratuitos.", usos: 4, recuperacao: "Descanso Longo" }
+          { nome: "Ataque Extra", tipoAcao: "passiva", desc: "Você pode atacar duas vezes, em vez de uma, sempre que usar a Ação de Ataque no seu turno." },
+          { nome: "Inimigo Favorito (Upgrade Nv 5)", tipoAcao: "passiva", desc: "Seus usos gratuitos de *Marca do Caçador* aumentam para 4.", usosMax: 4, recuperacao: "Descanso Longo" }
         ],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
@@ -2140,28 +2398,28 @@ export const CLASSES_DETALHADAS = {
         nivel: 6, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Andarilho (Roving)", desc: "+10ft Deslocamento. Ganha Escalada e Natação iguais ao deslocamento." }
+          { nome: "Andarilho (Roving)", tipoAcao: "passiva", desc: "Seu deslocamento aumenta em +10 pés (3m) enquanto você NÃO estiver usando Armadura Pesada. Você também ganha Deslocamento de Escalada e de Natação iguais ao seu deslocamento terrestre." }
         ],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso do Conclave", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Conclave", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Expertise", desc: "Escolha mais 2 perícias para dobrar a proficiência." },
-          { nome: "Inimigo Favorito (Upgrade)", desc: "Você tem 5 usos gratuitos.", usos: 5, recuperacao: "Descanso Longo" }
+          { nome: "Especialização (Expertise)", tipoAcao: "passiva", desc: "Você escolhe mais 2 perícias treinadas para dobrar o seu bônus de proficiência." },
+          { nome: "Inimigo Favorito (Upgrade Nv 9)", tipoAcao: "passiva", desc: "Seus usos gratuitos de *Marca do Caçador* aumentam para 5.", usosMax: 5, recuperacao: "Descanso Longo" }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
@@ -2169,28 +2427,28 @@ export const CLASSES_DETALHADAS = {
         nivel: 10, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Incansável (Tireless)", desc: "Ação Mágica: Ganha 1d8+SAB PV Temporários (usos=SAB). Remove 1 Exaustão em Short Rest." }
+          { nome: "Incansável (Tireless)", tipoAcao: "acao", desc: "**Ação Mágica:** Você ganha PV Temporários iguais a 1d8 + seu Mod. de Sabedoria (Mín. 1). Você pode usar essa Ação um número de vezes igual ao seu Mod. de Sabedoria por Descanso Longo.\n**Passiva:** Sempre que você terminar um Descanso Curto, seu nível de Exaustão (se houver) diminui em 1." }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Recurso do Conclave", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Conclave", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Caçador Implacável", desc: "Dano não quebra sua concentração em Hunter's Mark." },
-          { nome: "Inimigo Favorito (Upgrade)", desc: "Você tem 6 usos gratuitos.", usos: 6, recuperacao: "Descanso Longo" }
+          { nome: "Caçador Implacável (Relentless Hunter)", tipoAcao: "passiva", desc: "Sofrer dano não pode mais quebrar a sua Concentração na magia *Marca do Caçador*." },
+          { nome: "Inimigo Favorito (Upgrade Nv 13)", tipoAcao: "passiva", desc: "Seus usos gratuitos de *Marca do Caçador* aumentam para 6.", usosMax: 6, recuperacao: "Descanso Longo" }
         ],
         slots: [4,3,3,1,0,0,0,0,0] 
       },
@@ -2198,27 +2456,28 @@ export const CLASSES_DETALHADAS = {
         nivel: 14, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Véu da Natureza", desc: "Bônus (Usos=SAB): Fica Invisível até o fim do próximo turno." }
+          { nome: "Véu da Natureza (Nature's Veil)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você invoca espíritos da natureza e ganha a condição Invisível até o final do seu próximo turno.\n*(Uso: Igual ao seu Modificador de Sabedoria por Descanso Longo).* " }
         ],
         slots: [4,3,3,1,0,0,0,0,0] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Conclave", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Conclave", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente um atributo ou escolha um Talento." }],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Caçador Preciso", desc: "Vantagem em ataques contra o alvo do seu Hunter's Mark." }
+          { nome: "Caçador Preciso (Precise Hunter)", tipoAcao: "passiva", desc: "Você tem Vantagem nas jogadas de ataque contra a criatura que estiver marcada pela sua *Marca do Caçador*." },
+          { nome: "Inimigo Favorito (Upgrade Nv 17)", tipoAcao: "passiva", desc: "Seus usos gratuitos de *Marca do Caçador* continuam sendo 6.", usosMax: 6, recuperacao: "Descanso Longo" }
         ],
         slots: [4,3,3,3,1,0,0,0,0] 
       },
@@ -2226,21 +2485,21 @@ export const CLASSES_DETALHADAS = {
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Sentidos Ferais", desc: "Blindsight 30ft." }
+          { nome: "Sentidos Ferais (Feral Senses)", tipoAcao: "passiva", desc: "Sua conexão com as forças da natureza lhe concede Percepção às Cegas (Blindsight) com um alcance de 30 pés (9m)." }
         ],
         slots: [4,3,3,3,1,0,0,0,0] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva da Viagem Dimensional)." }],
         slots: [4,3,3,3,2,0,0,0,0] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Matador de Inimigos", desc: "O dano do seu Hunter's Mark vira 1d10." }
+          { nome: "Matador de Inimigos (Foe Slayer)", tipoAcao: "passiva", desc: "O dado de dano extra da sua *Marca do Caçador* (Hunter's Mark) aumenta para 1d10 (em vez de 1d6)." }
         ],
         slots: [4,3,3,3,2,0,0,0,0] 
       }
@@ -2249,7 +2508,7 @@ export const CLASSES_DETALHADAS = {
 
   "Bruxo": {
     nome: "Bruxo",
-    descricao: "Um conjurador que ganha poderes através de um pacto com uma entidade extraplanar. Magia de Pacto recarrega em descanso curto.",
+    descricao: "Um conjurador que ganha poderes através de um pacto com uma entidade extraplanar. A Magia de Pacto recarrega em descanso curto.",
     dadoVida: 8,
     
     proficiencias: {
@@ -2265,12 +2524,12 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Estudioso do Oculto",
+        titulo: "Estudioso do Oculto (Opção A)",
         itens: ["Armadura de Couro", "Foice", "2 Adagas", "Foco Arcano (Orbe)", "Livro de Ocultismo", "Pacote de Estudioso", "15 PO"],
         ouro: 15
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 100
       }
     },
@@ -2278,16 +2537,12 @@ export const CLASSES_DETALHADAS = {
     magiasInicial: {
       truquesConhecidos: 2,
       magiasConhecidas: 2, 
-      espacosMagia: 1 // Começa com 1 slot de nível 1
+      espacosMagia: 1 
     },
 
-    // --- ESCOLHAS DE INVOCAÇÕES CONFIGURADAS ---
+    // --- ESCOLHAS DE INVOCAÇÕES (GATILHOS DO VTT) ---
     escolhasNivel1: [
-      {
-        titulo: "Invocação Mística (1ª - Pacto)",
-        tipo: "invocacao", // Isso ativa o menu do invocacoes.js
-        opcoes: [] // Deixe vazio, o PassoClasse vai buscar no arquivo
-      }
+      { titulo: "Invocação Mística (1ª)", tipo: "invocacao", opcoes: [] }
     ],
     escolhasNivel2: [
       { titulo: "Invocação Mística (2ª)", tipo: "invocacao", opcoes: [] },
@@ -2298,10 +2553,12 @@ export const CLASSES_DETALHADAS = {
         titulo: "Patrono Extraplanar (Subclasse)",
         tipo: "subclasse",
         opcoes: [
+          // D&D 2024
           { nome: "Arquifada (Archfey)", desc: "Pacto com fadas nobres. Ilusão e teleporte." },
           { nome: "Celestial (Celestial)", desc: "Pacto com anjos. Cura e luz." },
           { nome: "Corruptor (Fiend)", desc: "Pacto com demônios. Fogo e PV temporário." },
           { nome: "Grande Antigo (Great Old One)", desc: "Pacto com o desconhecido. Telepatia e psíquico." },
+          // Legado
           { nome: "Lâmina Maldita (Hexblade)", desc: "Pacto com armas das sombras. Combate corpo a corpo." },
           { nome: "O Gênio (Genie)", desc: "Pacto com Djinni/Efreet. Dano elemental e vaso mágico." },
           { nome: "O Insondável (Fathomless)", desc: "Pacto com o mar. Tentáculos e controle." },
@@ -2322,92 +2579,92 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Magia de Pacto", desc: "Seus slots são sempre do maior nível possível e recarregam em Descanso Curto." },
-          { nome: "Invocações Místicas (1)", desc: "Ganha 1 Invocação (ex: Pacto da Lâmina/Tomo/Corrente)." }
+          { nome: "Magia de Pacto", tipoAcao: "acao", desc: "Você conjura magias usando Carisma. Ao contrário das outras classes, os seus Espaços de Magia (Slots) são sempre nivelados automaticamente para o maior nível possível. Você recupera todos os seus Slots ao terminar um Descanso Curto ou Longo." },
+          { nome: "Invocações Místicas (1)", tipoAcao: "passiva", desc: "Você descobre uma Invocação Mística (como Pacto da Lâmina, Tomo ou Corrente). Sempre que você subir de nível nesta classe, você pode trocar uma invocação aprendida por uma nova." }
         ],
-        // Lógica de Warlock: Slots "sobem" de nível e não acumulam. 
-        // Array: [nv1, nv2, nv3, nv4, nv5, ...]
         slots: [1,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Astúcia Mágica", desc: "Ritual de 1 min: Recupera metade dos slots gastos (1x/Long Rest)." },
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 3 Invocações." } // No 2024 ganha +2 no nível 2? O texto diz "Total 3" na tabela? Não, tabela diz 3 invocações no nível 2.
+          { nome: "Astúcia Mágica (Magical Cunning)", tipoAcao: "acao", desc: "**Ritual de 1 Minuto:** Você realiza um rito esotérico. Ao final dele, você recupera um número de Espaços de Magia de Pacto gastos equivalente à metade do seu máximo atual (arredondado para cima).\n*(Uso: 1 vez por Descanso Longo).* ", usosMax: 1, recuperacao: "Descanso Longo" },
+          { nome: "Invocações Místicas (Upgrade Nv 2)", tipoAcao: "passiva", desc: "Você aprende mais duas invocações (Total: 3)." }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 3, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Patrono Extraplanar", desc: "Escolha sua Subclasse." }],
-        slots: [0,2,0,0,0,0,0,0,0] // 2 slots de Nível 2
+        habilidades: [
+          { nome: "Patrono Extraplanar", tipoAcao: "passiva", desc: "Escolha a entidade misteriosa com a qual você forjou o seu pacto." }
+        ],
+        slots: [0,2,0,0,0,0,0,0,0] // A mágica começa: Os slots evoluem pro Nv 2
       },
       { 
         nivel: 4, 
         proficiencia: 2, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [0,2,0,0,0,0,0,0,0] 
       },
       { 
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 5 Invocações." }, // Tabela diz 5 no nível 5
-          { nome: "Ataque Extra (se tiver Lâmina)", desc: "Se tiver Pacto da Lâmina, pegue a invocação Thirsting Blade agora." }
+          { nome: "Invocações Místicas (Upgrade Nv 5)", tipoAcao: "passiva", desc: "Você aprende mais duas invocações (Total: 5)." },
+          { nome: "Nota de Combate (Se tiver Lâmina)", tipoAcao: "passiva", desc: "Se você escolheu a invocação *Pacto da Lâmina*, este é o nível em que você DEVE pegar a invocação *Lâmina Sedenta (Thirsting Blade)* para ganhar a habilidade de Ataque Extra." }
         ],
-        slots: [0,0,2,0,0,0,0,0,0] // 2 slots de Nível 3
+        slots: [0,0,2,0,0,0,0,0,0] // Slots evoluem pro Nv 3
       },
       { 
         nivel: 6, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Recurso do Patrono", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Patrono", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [0,0,2,0,0,0,0,0,0] 
       },
       { 
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 6 Invocações." }
+          { nome: "Invocações Místicas (Upgrade Nv 7)", tipoAcao: "passiva", desc: "Você aprende mais uma invocação (Total: 6)." }
         ],
-        slots: [0,0,0,2,0,0,0,0,0] // 2 slots de Nível 4
+        slots: [0,0,0,2,0,0,0,0,0] // Slots evoluem pro Nv 4
       },
       { 
         nivel: 8, 
         proficiencia: 3, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [0,0,0,2,0,0,0,0,0] 
       },
       { 
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Contatar Patrono", desc: "Conjura Contact Other Plane sem slot e com sucesso automático (1x/dia)." },
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 7 Invocações." }
+          { nome: "Contatar Patrono", tipoAcao: "acao", desc: "**Ação (Ritual):** Você conjura *Contato Extraplanar* (Contact Other Plane) sem gastar slot de magia. Você falha no requisito de teste e passa na magia automaticamente para falar com seu Patrono.\n*(Uso: 1 vez por Descanso Longo).* ", usosMax: 1, recuperacao: "Descanso Longo" },
+          { nome: "Invocações Místicas (Upgrade Nv 9)", tipoAcao: "passiva", desc: "Você aprende mais uma invocação (Total: 7)." }
         ],
-        slots: [0,0,0,0,2,0,0,0,0] // 2 slots de Nível 5 (Máximo do Pact Magic)
+        slots: [0,0,0,0,2,0,0,0,0] // Slots evoluem pro Nv 5 (Teto do Pact Magic)
       },
       { 
         nivel: 10, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Recurso do Patrono", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Patrono", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [0,0,0,0,2,0,0,0,0] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Arcanum Místico (6º Círculo)", desc: "Escolha uma magia de nv 6. Conjure 1x por dia sem slot." }
+          { nome: "Arcanum Místico (6º Círculo)", tipoAcao: "acao", desc: "O Patrono te ensina um Segredo. Escolha UMA magia de Nv 6 de Bruxo. Você pode conjurar essa magia 1 vez sem gastar espaço de magia. (Recarrega em Descanso Longo).\nSempre que subir de nível de Bruxo, pode trocar essa magia por outra de Nv 6.", usosMax: 1, recuperacao: "Descanso Longo" }
         ],
-        slots: [0,0,0,0,3,0,0,0,0] // Sobe para 3 slots de Nível 5
+        slots: [0,0,0,0,3,0,0,0,0] // Sobe para 3 slots totais (Nv 5)
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 8 Invocações." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Invocações Místicas (Upgrade Nv 12)", tipoAcao: "passiva", desc: "Você aprende mais uma invocação (Total: 8)." }
         ],
         slots: [0,0,0,0,3,0,0,0,0] 
       },
@@ -2415,59 +2672,58 @@ export const CLASSES_DETALHADAS = {
         nivel: 13, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Arcanum Místico (7º Círculo)", desc: "Escolha uma magia de nv 7. Conjure 1x por dia sem slot." }
+          { nome: "Arcanum Místico (7º Círculo)", tipoAcao: "acao", desc: "Escolha UMA magia de Nv 7 de Bruxo. Você pode conjurá-la 1 vez sem gastar espaço de magia. (Recarrega em Descanso Longo).", usosMax: 1, recuperacao: "Descanso Longo" }
         ],
         slots: [0,0,0,0,3,0,0,0,0] 
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Recurso do Patrono", desc: "Habilidade de Subclasse." }],
+        habilidades: [{ nome: "Recurso do Patrono", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." }],
         slots: [0,0,0,0,3,0,0,0,0] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Arcanum Místico (8º Círculo)", desc: "Escolha uma magia de nv 8. Conjure 1x por dia sem slot." },
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 9 Invocações." }
+          { nome: "Arcanum Místico (8º Círculo)", tipoAcao: "acao", desc: "Escolha UMA magia de Nv 8 de Bruxo. Você pode conjurá-la 1 vez sem gastar espaço de magia. (Recarrega em Descanso Longo).", usosMax: 1, recuperacao: "Descanso Longo" },
+          { nome: "Invocações Místicas (Upgrade Nv 15)", tipoAcao: "passiva", desc: "Você aprende mais uma invocação (Total: 9)." }
         ],
         slots: [0,0,0,0,3,0,0,0,0] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." }],
+        habilidades: [{ nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." }],
         slots: [0,0,0,0,3,0,0,0,0] 
       },
       { 
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Arcanum Místico (9º Círculo)", desc: "Escolha uma magia de nv 9. Conjure 1x por dia sem slot." },
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 9 Invocações." }
+          { nome: "Arcanum Místico (9º Círculo)", tipoAcao: "acao", desc: "Escolha UMA magia de Nv 9 de Bruxo. Você pode conjurá-la 1 vez sem gastar espaço de magia. (Recarrega em Descanso Longo).", usosMax: 1, recuperacao: "Descanso Longo" }
         ],
-        slots: [0,0,0,0,4,0,0,0,0] // Sobe para 4 slots
+        slots: [0,0,0,0,4,0,0,0,0] // Sobe para 4 slots totais (Nv 5)
       },
       { 
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Invocações Místicas (Upgrade)", desc: "Total: 10 Invocações." }
+          { nome: "Invocações Místicas (Upgrade Nv 18)", tipoAcao: "passiva", desc: "Você aprende mais uma invocação (Total: 10)." }
         ],
         slots: [0,0,0,0,4,0,0,0,0] 
       },
       { 
         nivel: 19, 
         proficiencia: 6, 
-        habilidades: [{ nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." }],
+        habilidades: [{ nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva do Destino)." }],
         slots: [0,0,0,0,4,0,0,0,0] 
       },
       { 
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Mestre do Oculto", desc: "Magical Cunning agora recupera TODOS os slots gastos." }
+          { nome: "Mestre do Oculto (Eldritch Master)", tipoAcao: "passiva", desc: "Sempre que você utilizar a sua habilidade *Astúcia Mágica* (ritual de 1 min), em vez de recuperar apenas metade dos slots gastos, você recupera **TODOS** os seus slots de Magia de Pacto gastos." }
         ],
         slots: [0,0,0,0,4,0,0,0,0] 
       }
@@ -2476,7 +2732,7 @@ export const CLASSES_DETALHADAS = {
 
   "Feiticeiro": {
     nome: "Feiticeiro",
-    descricao: "Um conjurador que possui magia latente em sua linhagem ou alma. Usa Metamagia para alterar seus feitiços.",
+    descricao: "Um conjurador que possui magia latente em sua linhagem, alma ou por influência cósmica. Usa Pontos de Feitiçaria e Metamagia para dobrar as regras da magia à sua vontade.",
     dadoVida: 6,
     
     proficiencias: {
@@ -2492,12 +2748,12 @@ export const CLASSES_DETALHADAS = {
 
     equipamentoInicial: {
       a: {
-        titulo: "Conjurador Simples",
+        titulo: "Conjurador Inato (Opção A)",
         itens: ["Lança", "2 Adagas", "Foco Arcano (Cristal)", "Pacote de Masmorra", "28 PO"],
         ouro: 28
       },
       b: {
-        titulo: "Riqueza Inicial",
+        titulo: "Riqueza Inicial (Opção B)",
         ouro: 50
       }
     },
@@ -2508,9 +2764,7 @@ export const CLASSES_DETALHADAS = {
       espacosMagia: 2 
     },
 
-    // Feiticeiro 2024 não tem escolhas de sub-recurso no nível 1 ou 2 (Metamagia é aberta), então pulamos para Nível 3
-
-   // --- ESCOLHAS DE METAMAGIA CONFIGURADAS ---
+    // --- ESCOLHAS DE METAMAGIA CONFIGURADAS ---
     escolhasNivel2: [
       { titulo: "Metamagia (Opção 1)", tipo: "metamagia", opcoes: [] },
       { titulo: "Metamagia (Opção 2)", tipo: "metamagia", opcoes: [] }
@@ -2520,14 +2774,16 @@ export const CLASSES_DETALHADAS = {
         titulo: "Origem da Feitiçaria (Subclasse)",
         tipo: "subclasse",
         opcoes: [
-          { nome: "Feitiçaria Aberrante (Aberrant)", desc: "Psíquico e tentáculos." },
-          { nome: "Feitiçaria Mecânica (Clockwork)", desc: "Ordem e proteção." },
-          { nome: "Feitiçaria Dracônica (Draconic)", desc: "Escamas, dano elemental e voo." },
-          { nome: "Feitiçaria de Magia Selvagem (Wild Magic)", desc: "Caos e sorte." },
-          { nome: "Alma Divina (Divine Soul)", desc: "Cura e magia de clérigo." },
-          { nome: "Feitiçaria Lunar (Lunar)", desc: "Fases da lua." },
-          { nome: "Magia das Sombras (Shadow)", desc: "Trevas e cão sombrio." },
-          { nome: "Feitiçaria da Tempestade (Storm)", desc: "Voo e trovão." }
+          // D&D 2024
+          { nome: "Feitiçaria Aberrante (Aberrant)", desc: "Poder psíquico, tentáculos e telepatia." },
+          { nome: "Feitiçaria Mecânica (Clockwork)", desc: "Magia da ordem, relógios e proteção cósmica." },
+          { nome: "Feitiçaria Dracônica (Draconic)", desc: "Escamas, dano elemental, voo e sopro." },
+          { nome: "Magia Selvagem (Wild Magic)", desc: "Caos, surtos mágicos e manipulação de sorte." },
+          // Legado
+          { nome: "Alma Divina (Divine Soul)", desc: "Magia celestial, cura e acesso ao grimório de Clérigo." },
+          { nome: "Feitiçaria Lunar (Lunar)", desc: "Fases da lua, luz e escuridão." },
+          { nome: "Magia das Sombras (Shadow)", desc: "Trevas, resiliência sombria e cão do infortúnio." },
+          { nome: "Feitiçaria da Tempestade (Storm)", desc: "Voo com ventos, trovão e relâmpagos." }
         ]
       }
     ],
@@ -2545,8 +2801,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 1, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Conjuração", desc: "Prepara magias arcanas (Carisma)." },
-          { nome: "Feitiçaria Inata", desc: "Bônus (2/Descanso): Por 1 min, +1 na CD das magias e Vantagem em ataques mágicos." }
+          { nome: "Conjuração (Feiticeiro)", tipoAcao: "acao", desc: "Você conjura magias arcanas de forma inata. Carisma é o seu atributo de conjuração. Diferente de magos, você não precisa preparar magias; as que você conhece estão sempre prontas para uso." },
+          { nome: "Feitiçaria Inata (Innate Sorcery)", tipoAcao: "bonus", desc: "**Ação Bônus:** Você libera sua magia latente por 1 minuto. Durante esse estado:\n- A CD (Classe de Dificuldade) das suas magias de Feiticeiro aumenta em +1.\n- Você tem Vantagem nas jogadas de ataque de qualquer magia de Feiticeiro.\n*(Uso: 2 vezes por Descanso Longo).* ", usosMax: 2, recuperacao: "Descanso Longo" }
         ],
         slots: [2,0,0,0,0,0,0,0,0] 
       },
@@ -2554,8 +2810,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 2, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Fonte de Magia", desc: "Você tem Pontos de Feitiçaria (2). Pode converter Pontos <-> Slots." },
-          { nome: "Metamagia", desc: "Escolha 2 opções para alterar suas magias gastando pontos." }
+          { nome: "Fonte de Magia", tipoAcao: "bonus", desc: "Você ganha uma reserva de Pontos de Feitiçaria (Sorcery Points) igual ao seu nível de Feiticeiro (recupera todos no Descanso Longo).\n- **Criar Slot:** Como Ação Bônus, gaste pontos para criar um Slot de magia (Nv 1 custa 2 pts; Nv 2 custa 3 pts; Nv 3 custa 5 pts; Nv 4 custa 6 pts; Nv 5 custa 7 pts).\n- **Converter Slot:** Como Ação Livre, queime um Slot para ganhar pontos iguais ao nível do Slot." },
+          { nome: "Metamagia", tipoAcao: "passiva", desc: "Você escolhe 2 opções de Metamagia para alterar como seus feitiços funcionam (ex: Magia Duplicada, Acelerada, Cuidadosa), gastando Pontos de Feitiçaria." }
         ],
         slots: [3,0,0,0,0,0,0,0,0] 
       },
@@ -2563,8 +2819,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 3, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Origem da Feitiçaria", desc: "Escolha sua subclasse." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 3 Pontos." }
+          { nome: "Origem da Feitiçaria (Subclasse)", tipoAcao: "passiva", desc: "Você escolhe a origem do seu poder latente." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 3 Pontos de Feitiçaria." }
         ],
         slots: [4,2,0,0,0,0,0,0,0] 
       },
@@ -2572,8 +2828,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 4, 
         proficiencia: 2, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 4 Pontos." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 4 Pontos de Feitiçaria." }
         ],
         slots: [4,3,0,0,0,0,0,0,0] 
       },
@@ -2581,8 +2837,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 5, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Restauração Mística", desc: "Recupera pontos de feitiçaria em descanso curto (até Nível/2)." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 5 Pontos." }
+          { nome: "Restauração Mística (Sorcerous Restoration)", tipoAcao: "passiva", desc: "Sempre que você terminar um Descanso Curto, você pode recuperar Pontos de Feitiçaria gastos até um limite igual à metade do seu Nível de Feiticeiro (arredondado para baixo).\n*(Uso: 1 vez por Descanso Longo).* ", usosMax: 1, recuperacao: "Descanso Longo" },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 5 Pontos de Feitiçaria." }
         ],
         slots: [4,3,2,0,0,0,0,0,0] 
       },
@@ -2590,8 +2846,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 6, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Recurso da Origem", desc: "Habilidade de Subclasse." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 6 Pontos." }
+          { nome: "Recurso da Origem", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 6 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,0,0,0,0,0,0] 
       },
@@ -2599,8 +2855,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 7, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Feitiçaria Encarnada", desc: "Pode gastar 2 Pontos para ativar Feitiçaria Inata. Enquanto ativa, pode usar 2 Metamagias por magia." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 7 Pontos." }
+          { nome: "Feitiçaria Encarnada (Sorcery Incarnate)", tipoAcao: "livre", desc: "**Ativação Alternativa:** Se não tiver mais usos de *Feitiçaria Inata*, você pode ativá-la gastando 2 Pontos de Feitiçaria.\n**Dupla Metamagia:** Enquanto sua *Feitiçaria Inata* estiver ativa, você pode aplicar até DUAS opções de Metamagia em uma única magia conjurada (pagando o custo de ambas)." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 7 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,1,0,0,0,0,0] 
       },
@@ -2608,8 +2864,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 8, 
         proficiencia: 3, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 8 Pontos." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 8 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,2,0,0,0,0,0] 
       },
@@ -2617,7 +2873,7 @@ export const CLASSES_DETALHADAS = {
         nivel: 9, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 9 Pontos." }
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 9 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,1,0,0,0,0] 
       },
@@ -2625,53 +2881,53 @@ export const CLASSES_DETALHADAS = {
         nivel: 10, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Metamagia (Upgrade)", desc: "Aprenda +2 opções de Metamagia." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 10 Pontos." }
+          { nome: "Metamagia (Upgrade Nv 10)", tipoAcao: "passiva", desc: "Você escolhe mais 2 opções de Metamagia." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 10 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,2,0,0,0,0] 
       },
       { 
         nivel: 11, 
         proficiencia: 4, 
-        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 11 Pontos." }],
+        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 11 Pontos de Feitiçaria." }],
         slots: [4,3,3,3,2,1,0,0,0] 
       },
       { 
         nivel: 12, 
         proficiencia: 4, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 12 Pontos." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 12 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,2,1,0,0,0] 
       },
       { 
         nivel: 13, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 13 Pontos." }],
+        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 13 Pontos de Feitiçaria." }],
         slots: [4,3,3,3,2,1,1,0,0] 
       },
       { 
         nivel: 14, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Recurso da Origem", desc: "Habilidade de Subclasse." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 14 Pontos." }
+          { nome: "Recurso da Origem", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 14 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,2,1,1,0,0] 
       },
       { 
         nivel: 15, 
         proficiencia: 5, 
-        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 15 Pontos." }],
+        habilidades: [{ nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 15 Pontos de Feitiçaria." }],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
       { 
         nivel: 16, 
         proficiencia: 5, 
         habilidades: [
-          { nome: "Melhoria de Atributo ou Talento", desc: "Aumente atributos ou escolha um Talento." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 16 Pontos." }
+          { nome: "Melhoria de Atributo ou Talento", tipoAcao: "", desc: "Aumente atributos ou escolha um Talento." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 16 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,2,1,1,1,0] 
       },
@@ -2679,8 +2935,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 17, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Metamagia (Upgrade)", desc: "Aprenda +2 opções de Metamagia." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 17 Pontos." }
+          { nome: "Metamagia (Upgrade Nv 17)", tipoAcao: "passiva", desc: "Você escolhe mais 2 opções de Metamagia." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 17 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,2,1,1,1,1] 
       },
@@ -2688,8 +2944,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 18, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Recurso da Origem", desc: "Habilidade de Subclasse." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 18 Pontos." }
+          { nome: "Recurso da Origem", tipoAcao: "passiva", desc: "Habilidade concedida pela sua subclasse." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 18 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,3,1,1,1,1] 
       },
@@ -2697,8 +2953,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 19, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Dádiva Épica", desc: "Escolha um talento de Dádiva Épica." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 19 Pontos." }
+          { nome: "Dádiva Épica", tipoAcao: "", desc: "Escolha um talento de Dádiva Épica (Recomendado: Dádiva da Viagem Dimensional)." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 19 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,3,2,1,1,1] 
       },
@@ -2706,8 +2962,8 @@ export const CLASSES_DETALHADAS = {
         nivel: 20, 
         proficiencia: 6, 
         habilidades: [
-          { nome: "Apoteose Arcana", desc: "Enquanto estiver em Feitiçaria Inata, pode usar 1 Metamagia por turno GRÁTIS." },
-          { nome: "Pontos de Feitiçaria (Upgrade)", desc: "Total: 20 Pontos." }
+          { nome: "Apoteose Arcana", tipoAcao: "passiva", desc: "Sempre que a sua *Feitiçaria Inata* estiver ativa, 1 vez em CADA um dos seus turnos, você pode usar UMA Metamagia sem gastar nenhum Ponto de Feitiçaria." },
+          { nome: "Pontos de Feitiçaria (Upgrade)", tipoAcao: "passiva", desc: "Seu total máximo agora é 20 Pontos de Feitiçaria." }
         ],
         slots: [4,3,3,3,3,2,2,1,1] 
       }

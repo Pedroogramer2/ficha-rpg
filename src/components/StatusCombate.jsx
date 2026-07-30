@@ -1,18 +1,70 @@
 // src/components/StatusCombate.jsx
 import { useState, useEffect } from 'react';
 import { ARMADURAS } from '../data/armaduras';
+import { TALENTOS } from '../data/talentos';
 
 export function StatusCombate(props) {
   const dados = props.dados || {};
   
   const [armaduraNome, setArmaduraNome] = useState(dados.armaduraEquipada || "");
   const [escudoCA, setEscudoCA] = useState(dados.escudoCA || 0); 
-  const deslocamento = dados.deslocamento || 30;
+let bonusSpeedTalentos = 0;
+  if (dados.talentos) {
+    dados.talentos.forEach(t => {
+      const infoTalento = Object.values(TALENTOS).find(talentoDB => talentoDB.nome === t.nome);
+      if (infoTalento && infoTalento.efeitosPassivos && infoTalento.efeitosPassivos.bonusDeslocamento) {
+        bonusSpeedTalentos += infoTalento.efeitosPassivos.bonusDeslocamento;
+      }
+    });
+  }
+
+  // 👇 RADAR DE PASSIVAS: Classes (Monge e Bárbaro) 👇
+  let bonusSpeedClasse = 0;
+  const nivelPersonagem = dados.nivel || 1;
+  const semArmadura = !dados.armaduraEquipada || dados.armaduraEquipada === "";
+  const semEscudo = escudoCA === 0;
+
+  // Monge: Ganha bônus se estiver sem armadura e sem escudo (Regra Oficial D&D 2024)
+  if (dados.classe === "Monge" && semArmadura && semEscudo) {
+    if (nivelPersonagem >= 18) bonusSpeedClasse = 30;
+    else if (nivelPersonagem >= 14) bonusSpeedClasse = 25;
+    else if (nivelPersonagem >= 10) bonusSpeedClasse = 20;
+    else if (nivelPersonagem >= 6) bonusSpeedClasse = 15;
+    else if (nivelPersonagem >= 2) bonusSpeedClasse = 10;
+  }
+  
+  // Bárbaro: Ganha +10ft no Nível 5 (Desde que não use Armadura Pesada. Como não temos a tipagem exata da armadura neste ponto do código, vamos assumir o bônus padrão se ele for lvl 5+)
+  if (dados.classe === "Bárbaro" && nivelPersonagem >= 5) {
+    // Pra ficar 100% cravado, checamos se a armadura NÃO se chama Cota de Malha, Talas ou Placas
+    const isArmaduraPesada = ["cota de malha", "cota de talas", "placas"].some(pesada => (dados.armaduraEquipada || "").toLowerCase().includes(pesada));
+    if (!isArmaduraPesada) {
+      bonusSpeedClasse = 10;
+    }
+  }
+
+  // A MATEMÁTICA FINAL DA VELOCIDADE:
+  const baseSpeed = dados.deslocamento || 30; 
+  const deslocamento = baseSpeed + bonusSpeedTalentos + bonusSpeedClasse;
+  useEffect(() => {
+    if (props.aoSalvar && dados.deslocamentoAtualizado !== deslocamento) {
+      props.aoSalvar("deslocamentoAtualizado", deslocamento);
+    }
+  }, [deslocamento, dados.deslocamentoAtualizado, props.aoSalvar]);
   const [bonusManual, setBonusManual] = useState(dados.bonusCA_Manual || 0);
   const bonusPassivo = dados.bonusCA_Passivo || 0;
   const totalExtra = bonusManual + bonusPassivo;
+  const [modalLevelUp, setModalLevelUp] = useState(false);  
 
-  const [modalLevelUp, setModalLevelUp] = useState(false);
+  useEffect(() => {
+    // Só faz isso se o cara ainda não selecionou nenhuma armadura (pra não sobrescrever escolhas futuras dele)
+    if (!dados.armaduraEquipada && dados.inventario) {
+      const armaduraDoInventario = dados.inventario.find(i => i.isArmadura);
+      if (armaduraDoInventario && props.aoSalvar) {
+        props.aoSalvar("armaduraEquipada", armaduraDoInventario.nome);
+        setArmaduraNome(armaduraDoInventario.nome);
+      }
+    }
+  }, [dados.inventario, dados.armaduraEquipada, props.aoSalvar]);
 
   const dex = dados.destreza || 10;
   const modDex = Math.floor((dex - 10) / 2);
@@ -27,6 +79,8 @@ export function StatusCombate(props) {
   let caFinal = 0;
   let componenteArmadura = 10; 
   let componenteDex = modDex; 
+  let componenteClasse = 0; 
+  let labelClasse = "";
 
   // 🛡️ A BUSCA INTELIGENTE (Ignora parênteses e nomes parciais) 🛡️
   const nomeParaBuscar = (armaduraNome || "").toLowerCase().trim();
@@ -67,9 +121,22 @@ export function StatusCombate(props) {
   } else {
     componenteArmadura = 10;
     componenteDex = modDex;
+    
+    // 👇 AGORA SALVA SEPARADO EM VEZ DE FUNDIR NA BASE 👇
+    if (dados.classe === "Monge" && escudoCA === 0) {
+      const wis = dados.sabedoria || 10;
+      componenteClasse = Math.floor((wis - 10) / 2);
+      labelClasse = "Sab";
+    } 
+    else if (dados.classe === "Bárbaro") {
+      const con = dados.constituicao || 10;
+      componenteClasse = Math.floor((con - 10) / 2);
+      labelClasse = "Con";
+    }
   }
 
-  caFinal = componenteArmadura + componenteDex + escudoCA + totalExtra;
+  // Não esqueça de somar o componenteClasse no caFinal!
+  caFinal = componenteArmadura + componenteDex + componenteClasse + escudoCA + totalExtra;
 
   useEffect(() => {
     if (props.aoSalvar) {
@@ -184,6 +251,7 @@ export function StatusCombate(props) {
           <div className="calculo-resumo">
             <span>Base {componenteArmadura}</span>
             <span style={{color: componenteDex === 0 ? '#555' : 'inherit'}}> + Des {componenteDex}</span>
+            {componenteClasse !== 0 && <span style={{color: '#9b59b6'}}> + {labelClasse} {componenteClasse}</span>}
             {escudoCA > 0 && <span style={{color:'#44ff44'}}> + Esc {escudoCA}</span>}
             {totalExtra > 0 && <span style={{color:'#ffcc00'}}> + Ext {totalExtra}</span>}
           </div>

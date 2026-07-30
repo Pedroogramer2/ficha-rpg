@@ -4,7 +4,6 @@ import { useNavigate, Link, useParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, addDoc, updateDoc, collection } from 'firebase/firestore';
 
-// 👇 ADICIONAMOS A BASE DE MAGIAS AQUI PRA ELE LER AS DESCRIÇÕES 👇
 import { MAGIAS } from '../data/magias'; 
 import { CLASSES_DETALHADAS } from '../data/classesDetalhado'; 
 import { RACAS } from '../data/racas';
@@ -27,10 +26,15 @@ function CriadorPersonagemInterno() {
   const navigate = useNavigate();
   const { id } = useParams(); 
   
-  const { rascunho, setRascunho, passoAtual, setPassoAtual } = useCriador();
+  // 👇 Puxamos a função inteligente do Contexto! 👇
+  const { rascunho, setRascunho, atualizarRascunho, passoAtual, setPassoAtual } = useCriador();
   
   const [salvando, setSalvando] = useState(false); 
   const [carregandoEdicao, setCarregandoEdicao] = useState(!!id);
+
+  // 👇 Radares para calcular a vida perfeitamente no Level Up 👇
+  const [nivelOriginal, setNivelOriginal] = useState(1);
+  const [vidaMaximaOriginal, setVidaMaximaOriginal] = useState(0);
 
   const idProcessadoRef = useRef(null);
 
@@ -59,7 +63,11 @@ function CriadorPersonagemInterno() {
       try {
         const snap = await getDoc(doc(db, "personagens", id));
         if (snap.exists()) {
-          setRascunho(snap.data()); 
+          const data = snap.data();
+          setRascunho(data); 
+          // Salva como o personagem chegou aqui para a matemática do Level Up
+          setNivelOriginal(data.nivel || 1);
+          setVidaMaximaOriginal(data.vidaMaxima || 0);
         } else {
           alert("Ficha não encontrada!");
         }
@@ -85,6 +93,7 @@ function CriadorPersonagemInterno() {
     });
     setPassoAtual(0);
     localStorage.removeItem('rascunhoCriador'); 
+    localStorage.removeItem('passoCriador'); 
   }
 
   async function finalizarCriacao() {
@@ -114,10 +123,29 @@ function CriadorPersonagemInterno() {
         infoRaca.periciasGratis.forEach(p => { if (!periciasFinais[p]) periciasFinais[p] = "proficiente"; });
       }
 
-      let tracosClasseFinais = [];
+      let tracosClasseFinais = rascunho.tracosClasse ? JSON.parse(JSON.stringify(rascunho.tracosClasse)) : [];
 
       function adicionarOuAtualizarTraco(novoTraco) {
         const nomeBaseNovo = novoTraco.nome.split('(')[0].trim();
+        const nomeLower = nomeBaseNovo.toLowerCase();
+        
+        if (nomeLower === "fúria" || nomeLower === "rage") {
+           if (rascunho.nivel >= 17) novoTraco.usosMax = 6;
+           else if (rascunho.nivel >= 12) novoTraco.usosMax = 5;
+           else if (rascunho.nivel >= 6) novoTraco.usosMax = 4;
+           else if (rascunho.nivel >= 3) novoTraco.usosMax = 3;
+           else novoTraco.usosMax = 2;
+           novoTraco.recuperacao = "Descanso Longo";
+        }
+        else if (nomeLower.includes("foco do monge") || nomeLower.includes("ki") || nomeLower.includes("pontos de feitiçaria") || nomeLower.includes("sorcery points")) {
+           novoTraco.usosMax = rascunho.nivel; 
+           if (nomeLower.includes("foco") || nomeLower.includes("ki")) {
+                novoTraco.recuperacao = "Descanso Curto"; 
+           } else {
+                novoTraco.recuperacao = "Descanso Longo"; 
+           }
+        }
+
         const talentoOficial = TALENTOS[nomeBaseNovo] || TALENTOS[novoTraco.nome];
         if (talentoOficial) novoTraco.descricao = talentoOficial.descricao;
 
@@ -125,9 +153,28 @@ function CriadorPersonagemInterno() {
 
         if (indexExistente >= 0) {
           const existente = tracosClasseFinais[indexExistente];
-          if (novoTraco.usosMax > existente.usosMax) existente.usosMax = novoTraco.usosMax;
-          if (novoTraco.descricao) existente.descricao = novoTraco.descricao;
-          existente.nome = novoTraco.nome; 
+          
+          if (novoTraco.usosMax > existente.usosMax) {
+            existente.usosMax = novoTraco.usosMax;
+          }
+          if (novoTraco.recuperacao) {
+            existente.recuperacao = novoTraco.recuperacao;
+          }
+          
+          const ehUpgrade = novoTraco.nome.toLowerCase().includes("upgrade");
+          
+          if (ehUpgrade) {
+            const isSpam = novoTraco.descricao.includes("Sua reserva de Foco") || novoTraco.descricao.includes("usos de Fúria aumentam");
+            if (novoTraco.descricao && !existente.descricao.includes(novoTraco.descricao) && !isSpam) {
+              existente.descricao += `\n\n**Evolução (Nv ${rascunho.nivel}):**\n${novoTraco.descricao}`;
+            }
+          } else {
+            if (!existente.descricao || existente.descricao.trim() === "") {
+              existente.descricao = novoTraco.descricao;
+            }
+            existente.nome = novoTraco.nome; 
+          }
+          
         } else {
           tracosClasseFinais.push(novoTraco);
         }
@@ -140,7 +187,14 @@ function CriadorPersonagemInterno() {
               const isObj = typeof hab === 'object';
               const nome = isObj ? hab.nome : hab;
               if (nome !== "Recurso de Arquétipo" && nome !== "Arquétipo Marcial (Subclasse)" && nome !== "Domínio Divino" && nome !== "Tradição Arcana") {
-                adicionarOuAtualizarTraco({ id: Date.now() + Math.random(), nome: nome, descricao: isObj ? hab.desc : "", usosMax: isObj && hab.usos ? hab.usos : 0, usosGastos: [] });
+                adicionarOuAtualizarTraco({ 
+                  id: Date.now() + Math.random(), 
+                  nome: nome, 
+                  descricao: isObj ? hab.desc : "", 
+                  usosMax: isObj && (hab.usosMax || hab.usos) ? (hab.usosMax || hab.usos) : 0, 
+                  usosGastos: [],
+                  tipoAcao: (isObj && hab.tipoAcao) ? hab.tipoAcao : ""
+                });
               }
             });
           }
@@ -154,7 +208,14 @@ function CriadorPersonagemInterno() {
         Object.keys(dadosSub.features).forEach(nivelStr => {
           if (parseInt(nivelStr) <= rascunho.nivel) {
             dadosSub.features[nivelStr].forEach(feat => {
-              tracosClasseFinais.push({ id: Date.now() + Math.random(), nome: `${feat.nome} (${nomeSubclasse})`, descricao: feat.desc, usosMax: feat.usos || 0, usosGastos: [] });
+              adicionarOuAtualizarTraco({ 
+                id: Date.now() + Math.random(), 
+                nome: `${feat.nome} (${nomeSubclasse})`, 
+                descricao: feat.desc, 
+                usosMax: feat.usos || 0, 
+                usosGastos: [],
+                tipoAcao: feat.tipoAcao || ""
+              });
             });
           }
         });
@@ -163,30 +224,40 @@ function CriadorPersonagemInterno() {
       if (rascunho.escolhasClasse) {
         Object.entries(rascunho.escolhasClasse).forEach(([titulo, obj]) => {
           if (obj.nome !== nomeSubclasse) {
-             tracosClasseFinais.push({ id: Date.now() + Math.random(), nome: `${titulo}: ${obj.nome}`, descricao: obj.desc, usosMax: 0 });
+            const nomeDaEscolha = `${titulo}: ${obj.nome}`;
+            const indexExistente = tracosClasseFinais.findIndex(t => t.nome && t.nome.startsWith(`${titulo}:`));
+
+            if (indexExistente >= 0) {
+              tracosClasseFinais[indexExistente].nome = nomeDaEscolha;
+              tracosClasseFinais[indexExistente].descricao = obj.desc;
+            } else {
+              tracosClasseFinais.push({ 
+                id: Date.now() + Math.random(), 
+                nome: nomeDaEscolha, 
+                descricao: obj.desc, 
+                usosMax: 0,
+                tipoAcao: obj.tipoAcao || ""
+              });
+            }
           }
         });
       }
 
-      // 👇 EXTERMINADOR E HIDRATADOR DE MAGIAS (O LAVA JATO) 👇
       function purgarEHidratar(listaMagias) {
         if (!listaMagias) return [];
         const unicas = [];
         
         listaMagias.forEach(mag => {
-          // 1. PURIFICAÇÃO: Se for texto puro (bug antigo) ou fantasma desmembrado, DELETA!
           if (typeof mag === 'string') return; 
           if (!mag.id && !mag.nome) return;
           if (mag.id && mag.id.startsWith('bug-')) return; 
 
-          // 2. HIDRATAÇÃO: Busca a magia oficial completa no magias.js
           let magiaCompleta = { ...mag };
           if (mag.id) {
             const magiaOficial = MAGIAS.find(m => m.id === mag.id);
-            if (magiaOficial) magiaCompleta = { ...magiaOficial }; // Enche a magia de dados!
+            if (magiaOficial) magiaCompleta = { ...magiaOficial }; 
           }
 
-          // 3. ANTI-CLONE: Só adiciona se não tiver repetida
           if (!unicas.some(u => u.id === magiaCompleta.id || u.nome === magiaCompleta.nome)) {
             unicas.push(magiaCompleta);
           }
@@ -195,7 +266,6 @@ function CriadorPersonagemInterno() {
         return unicas;
       }
 
-      // Limpa TODAS as magias que já estavam na ficha do Ragnar
       const magiasFinais = { 
         truques: purgarEHidratar(rascunho.magiasConhecidas?.truques), 
         nivel1: purgarEHidratar(rascunho.magiasConhecidas?.nivel1),
@@ -205,7 +275,6 @@ function CriadorPersonagemInterno() {
         nivel5: purgarEHidratar(rascunho.magiasConhecidas?.nivel5)
       };
 
-      // 👇 MESCLADOR INTELIGENTE (Busca os dados oficiais e não duplica) 👇
       function mesclarMagiasBonus(pacoteDeMagias) {
         if (!pacoteDeMagias) return;
         Object.keys(pacoteDeMagias).forEach(nivelChave => {
@@ -233,7 +302,6 @@ function CriadorPersonagemInterno() {
       mesclarMagiasBonus(infoRaca?.magiasBonus);
       mesclarMagiasBonus(rascunho.escolhaRacialDetalhes?.magiasBonus);
       mesclarMagiasBonus(dadosSub?.magiasBonus);
-      // 👆 FIM DO LAVA JATO 👆
 
       const estiloEscolhidoObj = rascunho.escolhasClasse?.["Estilo de Luta (Fighting Style)"];
       const estiloNome = estiloEscolhidoObj ? estiloEscolhidoObj.nome : "";
@@ -248,13 +316,28 @@ function CriadorPersonagemInterno() {
         bonusManual_CA = Math.max(0, rascunho.bonusCA - bonusPassivo_CA);
       }
 
+      // 👇 CÁLCULO DE HP BLINDADO PARA LEVEL UP 👇
       const conMod = Math.floor(((rascunho.atributos?.constituicao || 10) - 10) / 2);
       const dv = infoClasse.dadoVida || 8;
       const mediaDv = (dv / 2) + 1;
       
-      let vidaFinal = rascunho.vidaMaxima;
-      if (rascunho.nivel > 1 && vidaFinal === (dv + conMod)) {
-         vidaFinal = (dv + conMod) + ((mediaDv + conMod) * (rascunho.nivel - 1));
+      let vidaFinal = rascunho.vidaMaxima || (dv + conMod);
+      
+      if (id) {
+        const niveisGanhos = rascunho.nivel - nivelOriginal;
+        if (niveisGanhos > 0) {
+          const hpGanho = niveisGanhos * Math.max(1, mediaDv + conMod);
+          vidaFinal = vidaMaximaOriginal + hpGanho;
+        } else if (niveisGanhos < 0) {
+          const hpPerdido = Math.abs(niveisGanhos) * Math.max(1, mediaDv + conMod);
+          vidaFinal = Math.max(dv + conMod, vidaMaximaOriginal - hpPerdido);
+        } else {
+          vidaFinal = vidaMaximaOriginal;
+        }
+      } else {
+        if (rascunho.nivel > 1 && vidaFinal === (dv + conMod)) {
+           vidaFinal = (dv + conMod) + ((mediaDv + conMod) * (rascunho.nivel - 1));
+        }
       }
 
       const dadosVidaInicial = { total: rascunho.nivel || 1, gastos: rascunho.dadosVida?.gastos || 0, tipo: dv };
@@ -371,11 +454,31 @@ function CriadorPersonagemInterno() {
       case 0: return <PassoClasse />;
       case 1: return <PassoEspecie />;
       case 2: return <PassoAntecedente />;
-      case 3: return <PassoAtributos />;
+      case 3: 
+        if (id) { 
+          return (
+            <div className="fade-in" style={{ textAlign: 'center', padding: '50px 20px', background: '#111', borderRadius: '8px', border: '1px solid #ffcc00', marginTop: '20px' }}>
+              <h3 style={{ color: '#ffcc00', fontSize: '1.5rem', marginBottom: '15px' }}>🧬 Atributos Protegidos!</h3>
+              <p style={{ color: '#ccc', fontSize: '1rem', lineHeight: '1.6' }}>Como você está <strong>Editando / Subindo de Nível</strong>, a tela de sorteio/alocação base de atributos foi trancada.</p>
+              <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '20px' }}>Seu Força, Destreza, Inteligência, etc. estão a salvo. <br/>Para aumentar os seus atributos, use as Melhorias de Atributo na aba <strong>"Talentos"</strong>.</p>
+            </div>
+          );
+        }
+        return <PassoAtributos />;
       case 4: return <PassoTalentos />;
       case 5: return <PassoPericias />;
       case 6: return <PassoMagias />;    
-      case 7: return <PassoEquipamento />;
+      case 7: 
+        if (id) {
+          return (
+            <div className="fade-in" style={{ textAlign: 'center', padding: '50px 20px', background: '#111', borderRadius: '8px', border: '1px solid #ffcc00', marginTop: '20px' }}>
+              <h3 style={{ color: '#ffcc00', fontSize: '1.5rem', marginBottom: '15px' }}>🎒 Inventário Protegido!</h3>
+              <p style={{ color: '#ccc', fontSize: '1rem', lineHeight: '1.6' }}>Como você está apenas <strong>Editando / Subindo de Nível</strong>, a geração de equipamento inicial foi desativada para não apagar o seu progresso.</p>
+              <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '20px' }}>Suas espadas, poções e itens mágicos estão a salvo. <br/>Gerencie seu inventário direto na aba "Inventário" da sua Ficha.</p>
+            </div>
+          );
+        }
+        return <PassoEquipamento />;
       case 8: return <PassoRevisao />;
       default: return <PassoClasse />;
     }

@@ -9,6 +9,7 @@ import { BESTIARIO } from '../data/bestiario';
 import { ARMAS } from '../data/armas'; 
 import itensMagicos from '../data/itensMagicos';
 import { aplicarEfeitos } from '../utils/motorDeEfeitos';
+import { TALENTOS } from '../data/talentos'; // 👈 IMPORTANTE: Puxando o banco de Talentos!
 
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
@@ -62,10 +63,32 @@ export function Mesa() {
   const [buscaLoot, setBuscaLoot] = useState("");
   const [itemSelecionadoLoot, setItemSelecionadoLoot] = useState(null);
 
+  // 👇 ESTADOS DA NOVA DÁDIVA 👇
+  const [modalTalentoMesaAberto, setModalTalentoMesaAberto] = useState(false);
+  const [buscaTalentoMesa, setBuscaTalentoMesa] = useState("");
+  const [talentoSelecionadoMesa, setTalentoSelecionadoMesa] = useState(null);
+
   const [mostrarRolador, setMostrarRolador] = useState(false);
   const [avulsoQtd, setAvulsoQtd] = useState(1);
   const [avulsoFaces, setAvulsoFaces] = useState(20);
   const [avulsoMod, setAvulsoMod] = useState(0);
+
+  const [modalCustomNpc, setModalCustomNpc] = useState(false);
+  const [formNpc, setFormNpc] = useState({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
+
+  const [dialogo, setDialogo] = useState({ ativo: false, tipo: '', titulo: '', mensagem: '', acaoConfirmar: null });
+
+  function abrirAlert(titulo, mensagem, acaoConfirmar = null) {
+    setDialogo({ ativo: true, tipo: 'alert', titulo, mensagem, acaoConfirmar });
+  }
+
+  function abrirConfirm(titulo, mensagem, acaoConfirmar) {
+    setDialogo({ ativo: true, tipo: 'confirm', titulo, mensagem, acaoConfirmar });
+  }
+
+  function fecharDialogo() {
+    setDialogo({ ativo: false, tipo: '', titulo: '', mensagem: '', acaoConfirmar: null });
+  }
 
   useEffect(() => {
     const mesaRef = doc(db, "mesas", codigoSala);
@@ -173,41 +196,30 @@ export function Mesa() {
 
   const listaNpcs = mesaDados?.npcs || [];
 
-  // ==========================================
-  // 👹 ADICIONAR MONSTRO COM RETRATO E FACÇÃO
-  // ==========================================
-  async function adicionarCapanga() {
-    if (!isMestre) return;
-    const nome = prompt("Nome do Inimigo/NPC (Ex: Orc Chefe):");
-    if (!nome) return;
-    const hp = parseInt(prompt(`Vida Máxima de ${nome}:`), 10);
-    if (!hp || hp <= 0) return;
-    const ca = parseInt(prompt(`Classe de Armadura (CA) de ${nome}:`) || "10", 10);
-    const ini = parseInt(prompt(`Bônus de Iniciativa de ${nome} (Ex: +2):`) || "0", 10);
+  async function salvarCapangaFormulario(e) {
+    e.preventDefault();
+    if (!isMestre || !formNpc.nome) return;
     
-    const urlFoto = prompt("Cole a URL da imagem do token (ou deixe em branco):") || "";
-    const faccaoOpcao = prompt("Qual a aliança desse NPC?\n1 = 🔴 Hostil (Inimigo)\n2 = 🟡 Neutro (Povo local)\n3 = 🟢 Aliado (Amigo)", "1");
-    
-    let faccao = "hostil";
-    if (faccaoOpcao === "2") faccao = "neutro";
-    if (faccaoOpcao === "3") faccao = "aliado";
-
     const novoNPC = {
       id: Date.now().toString() + Math.random().toString(16).slice(2),
-      nome: nome,
-      vidaMaxima: hp,
-      vidaAtual: hp,
-      foto: urlFoto.trim(),
-      faccao: faccao,
-      ca: ca,
-      iniciativa: ini,
-      ataques: [], // NPC customizado nasce sem botão de arma rápida
-      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } // Atributos padrão pra não quebrar a tela
+      nome: formNpc.nome,
+      vidaMaxima: parseInt(formNpc.hp) || 1,
+      vidaAtual: parseInt(formNpc.hp) || 1,
+      foto: formNpc.foto.trim(),
+      faccao: formNpc.faccao,
+      ca: parseInt(formNpc.ca) || 10,
+      iniciativa: parseInt(formNpc.ini) || 0,
+      ataques: [], 
+      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } 
     };
 
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
-    } catch (e) { console.error("Erro ao adicionar NPC:", e); }
+      setModalCustomNpc(false);
+      setModalNpcAberto(false);
+      
+      setFormNpc({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
+    } catch (err) { console.error("Erro ao adicionar NPC:", err); }
   }
 
   async function adicionarNpcDoBestiario(nomeBase, dadosNpc) {
@@ -216,7 +228,6 @@ export function Mesa() {
     const qtdExistente = listaNpcs.filter(n => n.nome.startsWith(nomeBase)).length;
     const nomeFinal = qtdExistente > 0 ? `${nomeBase} ${qtdExistente + 1}` : nomeBase;
 
-    // 👇 O pacote agora leva os atributos e as armas do monstro pro Firebase! 👇
     const novoNPC = {
       id: Date.now().toString() + Math.random().toString(16).slice(2),
       nome: nomeFinal,
@@ -227,12 +238,18 @@ export function Mesa() {
       ca: dadosNpc.ca || 10,
       iniciativa: dadosNpc.iniciativa || 0,
       ataques: dadosNpc.ataques || [],
-      atributos: dadosNpc.atributos || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } // 👈 ISSO AQUI
+      atributos: dadosNpc.atributos || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } 
     };
 
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
       setModalNpcAberto(false); 
+
+      const r = Math.floor(Math.random() * 20) + 1;
+      const mod = novoNPC.iniciativa;
+      const sinal = mod >= 0 ? `+${mod}` : mod;
+      enviarMensagemOuDado(nomeFinal, `entrou na batalha e rolou **Iniciativa**: d20(${r}) ${sinal} = **[ ${r + mod} ]**`, "sistema");
+
     } catch (e) { console.error("Erro ao adicionar NPC do bestiário:", e); }
   }
 
@@ -256,11 +273,23 @@ export function Mesa() {
     if (acao === 'dano') novaVida = Math.max(0, npcAlvo.vidaAtual - valor);
     if (acao === 'cura') novaVida = Math.min(npcAlvo.vidaMaxima, npcAlvo.vidaAtual + valor);
 
-    const novaLista = listaNpcs.map(n => n.id === modalHpNpc ? { ...n, vidaAtual: novaVida } : n);
+    let novasCondicoes = npcAlvo.condicoes || [];
+    let msgMorte = "";
+
+    if (novaVida === 0 && npcAlvo.vidaAtual > 0) {
+      novasCondicoes = [...new Set([...novasCondicoes, "Inconsciente", "Caído"])];
+      msgMorte = `\n💀 **${npcAlvo.nome}** foi abatido e caiu inconsciente!`;
+    } 
+    else if (novaVida > 0 && novasCondicoes.includes("Inconsciente")) {
+      novasCondicoes = novasCondicoes.filter(c => c !== "Inconsciente");
+      msgMorte = `\n💖 **${npcAlvo.nome}** se recuperou!`;
+    }
+
+    const novaLista = listaNpcs.map(n => n.id === modalHpNpc ? { ...n, vidaAtual: novaVida, condicoes: novasCondicoes } : n);
 
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: novaLista });
-      enviarMensagemOuDado("👑 Mestre", `${acao === 'dano' ? 'causou' : 'curou'} **${valor} PV** em *${npcAlvo.nome}*`, "sistema");
+      enviarMensagemOuDado("👑 Mestre", `${acao === 'dano' ? 'causou' : 'curou'} **${valor} PV** em *${npcAlvo.nome}*${msgMorte}`, "sistema");
       setModalHpNpc(null);
       setValorHpInput("");
     } catch (error) { console.error("Erro ao alterar vida NPC:", error); }
@@ -310,9 +339,24 @@ export function Mesa() {
     if (acao === 'dano') novaVida = Math.max(0, vidaAtual - valor);
     if (acao === 'cura') novaVida = Math.min(vidaMax, vidaAtual + valor);
 
+    let novasCondicoes = fichaAfetada.condicoes || [];
+    let msgMorte = "";
+
+    if (novaVida === 0 && vidaAtual > 0) {
+      novasCondicoes = [...new Set([...novasCondicoes, "Inconsciente", "Caído"])];
+      msgMorte = `\n💀 **${fichaAfetada.nome}** caiu a 0 PVs e desmaiou!`;
+    } 
+    else if (novaVida > 0 && novasCondicoes.includes("Inconsciente")) {
+      novasCondicoes = novasCondicoes.filter(c => c !== "Inconsciente");
+      msgMorte = `\n💖 **${fichaAfetada.nome}** recuperou a consciência!`;
+    }
+
     try {
-      await updateDoc(doc(db, "personagens", modalHp), { vidaAtual: novaVida });
-      enviarMensagemOuDado("👑 Mestre", `${acao === 'dano' ? 'causou' : 'curou'} **${valor} PV** em *${fichaAfetada.nome}*`, "sistema");
+      await updateDoc(doc(db, "personagens", modalHp), { 
+        vidaAtual: novaVida,
+        condicoes: novasCondicoes
+      });
+      enviarMensagemOuDado("👑 Mestre", `${acao === 'dano' ? 'causou' : 'curou'} **${valor} PV** em *${fichaAfetada.nome}*${msgMorte}`, "sistema");
       setModalHp(null);
       setValorHpInput("");
     } catch (error) { console.error(error); }
@@ -365,24 +409,26 @@ export function Mesa() {
     }
   }
 
-  // 👇 VERSÃO ADAPTADA PARA A MESA: ROLAGEM RÁPIDA DO MESTRE 👇
   function finalizarRolagem3D(total) {
-    // Se o mestre tinha um dado rápido esperando para cair (ex: "d20", "d6")
     if (dadoPendenteNome) {
       enviarMensagemOuDado(
         nomeRemetente, 
         `rolou um ${dadoPendenteNome} 3D 🎲 Resultado: **[ ${total} ]**`, 
         "dado"
       );
-      setDadoPendenteNome(null); // Limpa a trava
+      setDadoPendenteNome(null);
     }
   }
 
-  async function limparChat() {
+  function limparChat() {
     if (!isMestre) return;
-    if (window.confirm("Tem certeza que deseja apagar todo o histórico da mesa?")) {
-      await updateDoc(doc(db, "mesas", codigoSala), { historico: [] });
-    }
+    abrirConfirm(
+      "⚠️ Limpar Chat e Iniciativa",
+      "ATENÇÃO: Limpar o chat também apagará a ORDEM DE INICIATIVA do combate atual!\n\nTem certeza que deseja apagar todo o histórico da mesa?",
+      async () => {
+        await updateDoc(doc(db, "mesas", codigoSala), { historico: [] });
+      }
+    );
   }
 
   function rolarDadosAvulsos(e) {
@@ -418,14 +464,17 @@ export function Mesa() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Aviso visual pro mestre/jogador saber que a foto tá subindo
+    if (!isMestre && !minhaFichaNaMesaID) {
+      abrirAlert("Acesso Negado", "🔒 Espectadores não podem enviar imagens no chat.");
+      return;
+    }
+
     enviarMensagemOuDado(nomeRemetente, "⏳ Enviando imagem para a mesa...", "sistema");
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
-      // 🛡️ Manda pro "Guarda-Costas" (A sua rota /api/upload na Vercel)
       const resposta = await fetch('/api/upload', {
         method: 'POST',
         body: formData
@@ -434,22 +483,20 @@ export function Mesa() {
       const dados = await resposta.json();
 
       if (dados.success) {
-        // Sucesso! Envia a URL limpa pro chat!
         enviarMensagemOuDado(nomeRemetente, dados.url, "imagem");
       } else {
-        alert("Erro ao subir a imagem.");
+        abrirAlert("Erro", "Erro ao subir a imagem.");
         enviarMensagemOuDado(nomeRemetente, "❌ Falha no envio da imagem.", "sistema");
       }
     } catch (error) {
       console.error("Erro no Upload do Chat:", error);
-      alert("Ocorreu um erro na conexão. Verifique sua internet.");
+      abrirAlert("Erro Crítico", "Ocorreu um erro na conexão. Verifique sua internet.");
     }
   }
 
   if (erro) return <div style={{color:'white', textAlign:'center', marginTop:'50px'}}>Mesa não encontrada! O código {codigoSala} está correto?</div>;
   if (!mesaDados) return <div style={{color:'white', textAlign:'center', marginTop:'50px'}}>Carregando a Taverna...</div>;
 
-  // 👇 JUNTA TODOS OS ITENS DO JOGO NUMA LISTA SÓ PARA O MESTRE 👇
   const todosOsItensDoBanco = [
     ...ARMAS.map(a => ({ ...a, isMagico: false, tipoItem: "Arma" })),
     ...Object.values(itensMagicos).flatMap(arr => arr).map(i => ({ ...i, isMagico: true }))
@@ -459,11 +506,14 @@ export function Mesa() {
     ? [] 
     : todosOsItensDoBanco.filter(i => i.nome.toLowerCase().includes(buscaLoot.toLowerCase()));
 
-  // 👇 FUNÇÃO SUPREMA: MESTRE DÁ O ITEM PRO JOGADOR 👇
+  // 👇 FILTRO DE TALENTOS 👇
+  const resultadosTalentosMesa = buscaTalentoMesa.trim() === "" 
+    ? [] 
+    : Object.values(TALENTOS).filter(t => t.nome.toLowerCase().includes(buscaTalentoMesa.toLowerCase()));
+
   async function entregarLoot(itemDoBanco, jogadorId) {
     if (!isMestre) return;
 
-    // A mesma lógica ninja de cargas que usamos no jogador
     let cargasMaximas = 0;
     if (itemDoBanco.descricao) {
       const matchCargas = itemDoBanco.descricao.match(/(\d+)\s+cargas/i);
@@ -488,31 +538,90 @@ export function Mesa() {
     const nomeJogador = jogadores[jogadorId]?.nome || "Jogador";
 
     try {
-      // 1. Salva o item na ficha do cara (lá no banco)
       await updateDoc(doc(db, "personagens", jogadorId), {
         inventario: arrayUnion(itemFormatado)
       });
 
-      // 2. Anuncia no chat geral da mesa que fulano achou loot!
       enviarMensagemOuDado(
         "👑 Mestre", 
         `✨ O Mestre concedeu o item **${itemDoBanco.nome}** para *${nomeJogador}*!`, 
         "sistema"
       );
 
-      // 3. Reseta os painéis
       setItemSelecionadoLoot(null);
       setModalLootAberto(false);
       setBuscaLoot("");
 
     } catch (e) {
       console.error("Erro ao enviar Loot:", e);
-      alert("Erro ao entregar o item.");
+      abrirAlert("Erro", "Erro ao entregar o item pro jogador.");
+    }
+  }
+
+  // 👇 A GLORIOSA FUNÇÃO DE DAR DÁDIVA / MALDIÇÃO 👇
+  async function entregarTalentoMesa(talentoDoBanco, jogadorId) {
+    if (!isMestre) return;
+    const fichaAlvo = jogadores[jogadorId];
+    if (!fichaAlvo) return;
+
+    const qtdExtras = fichaAlvo.qtdTalentosExtras || 0;
+    const novoIdSlot = `extra_${qtdExtras}`;
+    
+    try {
+      await updateDoc(doc(db, "personagens", jogadorId), {
+        qtdTalentosExtras: qtdExtras + 1, // Prepara o terreno pra ficha não apagar
+        [`escolhasTalentos.${novoIdSlot}`]: { nome: talentoDoBanco.nome, bonusAtributos: [] }, // Salva a escolha
+        talentos: arrayUnion({ // Injeta na mesma hora pra aparecer na aba de Características!
+          id: `${novoIdSlot}-${talentoDoBanco.nome}`,
+          nome: talentoDoBanco.nome,
+          bonusAtributos: [],
+          descricao: talentoDoBanco.descricao
+        })
+      });
+
+      enviarMensagemOuDado(
+        "👑 Mestre", 
+        `🔮 O destino interveio! *${fichaAlvo.nome}* recebeu a dádiva/maldição: **${talentoDoBanco.nome}**!`, 
+        "sistema"
+      );
+
+      setTalentoSelecionadoMesa(null);
+      setModalTalentoMesaAberto(false);
+      setBuscaTalentoMesa("");
+
+    } catch (e) {
+      console.error("Erro ao dar talento:", e);
+      abrirAlert("Erro", "Erro ao entregar o talento.");
     }
   }
 
   return (
     <div className="mesa-layout-global" onClick={() => setMenuCondicoesFicha(null)}>
+
+      {dialogo.ativo && (
+        <div className="overlay-dialogo">
+          <div className="caixa-dialogo">
+            <h3>{dialogo.titulo}</h3>
+            <p>{dialogo.mensagem}</p>
+            
+            <div className="botoes-dialogo">
+              {(dialogo.tipo === 'confirm' || dialogo.tipo === 'prompt') && (
+                <button className="btn-dialogo-cancelar" onClick={fecharDialogo}>Cancelar</button>
+              )}
+              
+              <button 
+                className="btn-dialogo-confirmar" 
+                onClick={() => {
+                  fecharDialogo();
+                  if (dialogo.acaoConfirmar) dialogo.acaoConfirmar();
+                }}
+              >
+                {dialogo.tipo === 'alert' ? 'Entendido' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CaixaDeDados aoTerminarDeRolar={finalizarRolagem3D} />
       
@@ -559,12 +668,41 @@ export function Mesa() {
         </div>
       )}
 
-      {/* 👇 MODAL DO DESPACHANTE DE LOOT (MESTRE) 👇 */}
+      {modalCustomNpc && isMestre && (
+        <div className="overlay-modal" onClick={() => setModalCustomNpc(false)}>
+          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ffcc00' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0, color: '#ffcc00' }}>Criar Ameaça Manual</h3>
+              <button onClick={() => setModalCustomNpc(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+            </div>
+            
+            <form onSubmit={salvarCapangaFormulario} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <input type="text" placeholder="Nome do NPC/Monstro *" required value={formNpc.nome} onChange={e => setFormNpc({...formNpc, nome: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
+              
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input type="number" placeholder="Vida (HP) *" required value={formNpc.hp} onChange={e => setFormNpc({...formNpc, hp: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Pontos de Vida" />
+                <input type="number" placeholder="CA *" required value={formNpc.ca} onChange={e => setFormNpc({...formNpc, ca: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Classe de Armadura" />
+                <input type="number" placeholder="Ini *" required value={formNpc.ini} onChange={e => setFormNpc({...formNpc, ini: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Iniciativa" />
+              </div>
+
+              <input type="url" placeholder="URL da Imagem (Opcional)" value={formNpc.foto} onChange={e => setFormNpc({...formNpc, foto: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
+              
+              <select value={formNpc.faccao} onChange={e => setFormNpc({...formNpc, faccao: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }}>
+                <option value="hostil">🔴 Hostil (Inimigo)</option>
+                <option value="neutro">🟡 Neutro (Povo Local)</option>
+                <option value="aliado">🟢 Aliado (Amigo)</option>
+              </select>
+
+              <button type="submit" style={{ marginTop: '10px', background: '#ffcc00', color: 'black', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Gerar no Mapa</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 👇 MODAL DE LOOT (INTACTO) 👇 */}
       {modalLootAberto && isMestre && (
         <div className="overlay-modal" onClick={() => { setModalLootAberto(false); setItemSelecionadoLoot(null); }}>
-          
           <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '2px solid #8e44ad', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(142,68,173,0.3)' }} onClick={e => e.stopPropagation()}>
-            
             <div style={{ padding: '15px 20px', background: '#111', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, color: '#9b59b6' }}>🎁 Distribuição de Loot</h3>
               <button onClick={() => { setModalLootAberto(false); setItemSelecionadoLoot(null); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', fontSize: '1.2rem', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
@@ -649,44 +787,90 @@ export function Mesa() {
         </div>
       )}
 
-      {modalNpcAberto && isMestre && (
-        <div className="overlay-modal" onClick={() => setModalNpcAberto(false)}>
-          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ff4444' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0, color: '#ff4444' }}>Adicionar Ameaça</h3>
-              <button onClick={() => setModalNpcAberto(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+      {/* 👇 NOVO MODAL DE DÁDIVAS / TALENTOS 👇 */}
+      {modalTalentoMesaAberto && isMestre && (
+        <div className="overlay-modal" onClick={() => { setModalTalentoMesaAberto(false); setTalentoSelecionadoMesa(null); }}>
+          <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '2px solid #d35400', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(211,84,0,0.3)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '15px 20px', background: '#111', borderBottom: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, color: '#e67e22' }}>✨ Conceder Dádiva (Regra do Legal)</h3>
+              <button onClick={() => { setModalTalentoMesaAberto(false); setTalentoSelecionadoMesa(null); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', fontSize: '1.2rem', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
             </div>
-            
-            <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '15px' }}>Escolha um NPC do Bestiário para adicionar rapidamente à mesa:</p>
 
-            <div className="lista-fichas-modal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {Object.entries(BESTIARIO).map(([nome, info]) => (
-                <div
-                  key={nome}
-                  onClick={() => adicionarNpcDoBestiario(nome, info)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#252525', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}
-                  onMouseOver={(e) => e.currentTarget.style.borderColor = '#ff4444'}
-                  onMouseOut={(e) => e.currentTarget.style.borderColor = '#444'}
-                >
-                  <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                    {info.foto ? <img src={info.foto} alt={nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👹'}
-                  </div>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.9rem', color: 'white' }}>{nome}</strong>
-                    <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{info.hp} HP | {info.faccao}</span>
-                  </div>
+            {!talentoSelecionadoMesa ? (
+              <>
+                <div style={{ padding: '15px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Pesquise o talento, dádiva ou maldição..." 
+                    value={buscaTalentoMesa}
+                    onChange={(e) => setBuscaTalentoMesa(e.target.value)}
+                    autoFocus
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d35400', background: '#0a0a0a', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
                 </div>
-              ))}
-            </div>
 
-            <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px', textAlign: 'center' }}>
-              <button 
-                onClick={() => { setModalNpcAberto(false); adicionarCapanga(); }} 
-                style={{ background: 'transparent', color: '#ffcc00', border: '1px dashed #ffcc00', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
-              >
-                + Criar NPC Customizado (Prompt)
-              </button>
-            </div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 15px 15px 15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {buscaTalentoMesa.trim() === "" ? (
+                    <p style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>Qual poder você concederá aos mortais?</p>
+                  ) : resultadosTalentosMesa.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: '#ffcc00' }}>Talento não encontrado no banco.</p>
+                  ) : (
+                    resultadosTalentosMesa.map(talento => (
+                      <div 
+                        key={talento.nome}
+                        onClick={() => setTalentoSelecionadoMesa(talento)}
+                        style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: '4px solid #e67e22' }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#222'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#111'}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                          <strong style={{ color: '#e67e22' }}>{talento.nome}</strong>
+                          <span style={{ fontSize: '0.7rem', color: '#888', background: '#000', padding: '2px 6px', borderRadius: '10px' }}>{talento.categoria}</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#aaa', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {talento.descricao}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              
+              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                
+                <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>Dádiva Selecionada</span>
+                  <h3 style={{ margin: '5px 0', color: '#e67e22' }}>{talentoSelecionadoMesa.nome}</h3>
+                  <button onClick={() => setTalentoSelecionadoMesa(null)} style={{ background: 'transparent', border: '1px dashed #555', color: '#aaa', padding: '4px 10px', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>⬅ Trocar Talento</button>
+                </div>
+
+                <h4 style={{ color: '#fff', textAlign: 'center', marginBottom: '15px' }}>Amaldiçoar / Abençoar qual Herói?</h4>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', overflowY: 'auto' }}>
+                  {(!mesaDados.jogadores || mesaDados.jogadores.length === 0) ? (
+                    <p style={{ color: '#ff4444' }}>Não há jogadores na mesa.</p>
+                  ) : (
+                    Object.values(jogadores).map(ficha => (
+                      <div 
+                        key={ficha.id} 
+                        onClick={() => entregarTalentoMesa(talentoSelecionadoMesa, ficha.id)}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: '#222', border: '1px solid #444', borderRadius: '10px', width: '100px', transition: '0.2s' }}
+                        onMouseOver={(e) => e.currentTarget.style.borderColor = '#e67e22'}
+                        onMouseOut={(e) => e.currentTarget.style.borderColor = '#444'}
+                      >
+                        <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', background: '#111', border: '2px solid #555' }}>
+                          {ficha.foto ? <img src={ficha.foto} alt={ficha.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{ficha.nome?.charAt(0) || "?"}</span>}
+                        </div>
+                        <span style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90%' }}>{ficha.nome}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+              </div>
+            )}
+            
           </div>
         </div>
       )}
@@ -737,17 +921,26 @@ export function Mesa() {
 
            <button className="btn-entrar-ficha" onClick={abrirModalDeFichas} style={{marginLeft: '10px'}}>➕ Entrar com Ficha</button>
            {isMestre && (
-             <button 
-               onClick={() => setModalLootAberto(true)} 
-               style={{ background: 'linear-gradient(90deg, #8e44ad 0%, #3498db 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(142,68,173,0.5)' }}
-             >
-               🎁 Dar Loot
-             </button>
+             <>
+               <button 
+                 onClick={() => setModalLootAberto(true)} 
+                 style={{ background: 'linear-gradient(90deg, #8e44ad 0%, #3498db 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(142,68,173,0.5)' }}
+               >
+                 🎁 Dar Loot
+               </button>
+               {/* 👇 O NOVO BOTÃO DA DÁDIVA / MALDIÇÃO 👇 */}
+               <button 
+                 onClick={() => setModalTalentoMesaAberto(true)} 
+                 style={{ background: 'linear-gradient(90deg, #d35400 0%, #c0392b 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(192,57,43,0.5)' }}
+               >
+                 ✨ Dar Dádiva
+               </button>
+             </>
            )}
         </div>
       </div>
 
-      <div className="grid-mesa-com-chat" style={{ gridTemplateColumns: mostrarChat ? '1fr 350px' : '1fr' }}>
+      <div className="grid-mesa-com-chat" style={{ gridTemplateColumns: mostrarChat ? '1fr 400px' : '1fr' }}>
         
         {abaAtiva === 'mapa' ? (
           <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#111', borderRadius: '10px', overflow: 'hidden', border: '1px solid #333' }}>
@@ -776,14 +969,14 @@ export function Mesa() {
 
                   const modDes = Math.floor(((ficha.destreza || 10) - 10) / 2);
                   const valorCA = ficha.ca || ficha.classeArmadura || (10 + modDes + (ficha.bonusCA || 0));
-                  const valorDeslocamento = ficha.deslocamento || 30;
+                  const valorDeslocamento = ficha.deslocamentoAtualizado || ficha.deslocamento || 30;
 
                   const profBonus = Math.ceil((ficha.nivel || 1) / 4) + 1;
                   const modSab = Math.floor(((ficha.sabedoria || 10) - 10) / 2);
                   let bonusTreinoPerc = 0;
                   if (ficha.periciasTreinadas?.["Percepção"] === "proficiente") bonusTreinoPerc = profBonus;
                   if (ficha.periciasTreinadas?.["Percepção"] === "expertise") bonusTreinoPerc = profBonus * 2;
-                  const valorPercPassiva = 10 + modSab + bonusTreinoPerc;
+                  const valorPercPassiva = ficha.percepcaoPassiva || (10 + modSab + bonusTreinoPerc + (ficha.bonusPercepcaoPassiva || 0));
 
                   const possoRemover = isMestre || minhasFichasIDs.includes(ficha.id);
                   const exibindoConfirmacao = fichaParaRemover === ficha.id;
@@ -820,7 +1013,6 @@ export function Mesa() {
                       </div>
 
                       <div className="area-condicoes" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '-5px' }}>
-                        {estaMorto && <span className="badge-condicao" style={{borderColor:'#ff4444', color:'#ff4444fixed'}} title="Inconsciente">😴 Inconsciente</span>}
                         {condicoesAtivas.map(c => {
                            const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
                            return (
@@ -874,7 +1066,6 @@ export function Mesa() {
               )}
             </div>
 
-            {/* 👇 EXIBIÇÃO DE RETRATOS NOS CARDS DE MONSTROS 👇 */}
             <div className="area-cards-npcs" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px', flexShrink: 0, minHeight: 'min-content', paddingBottom: '30px' }}>
               {listaNpcs.length === 0 ? (
                 <p style={{ color: '#666', gridColumn: '1 / -1' }}>Nenhuma ameaça na mesa no momento.</p>
@@ -937,7 +1128,6 @@ export function Mesa() {
                         </div>
                       </div>
 
-                      {/* 👇 FITA DE ATRIBUTOS PARA O MESTRE OLHAR RÁPIDO 👇 */}
                       {isMestre && !isMorto && npc.atributos && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', background: '#111', padding: '4px 6px', borderRadius: '4px', marginTop: '6px', fontSize: '0.68rem', color: '#ccc', border: '1px solid #333', marginBottom: '8px' }}>
                           <span title="Força">FOR <strong>{npc.atributos.for}</strong></span>
@@ -959,7 +1149,6 @@ export function Mesa() {
                         </div>
                       </div>
 
-                      {/* 👇 ÁREA DE CONDIÇÕES / BUFFS DO NPC 👇 */}
                       <div className="area-condicoes" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
                         {(npc.condicoes || []).map(c => {
                            const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
@@ -985,7 +1174,6 @@ export function Mesa() {
                         )}
                       </div>
 
-                      {/* 👇 ARSENAL COM O NOVO MOTOR PLUGADO 👇 */}
                       {isMestre && !isMorto && npc.ataques && npc.ataques.length > 0 && (
                         <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                           {npc.ataques.map((atk, i) => (
@@ -994,7 +1182,6 @@ export function Mesa() {
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // CHAMA O MOTOR PRA ATAQUE!
                                   const buffs = aplicarEfeitos("ataque", npc.condicoes);
                                   const r = Math.floor(Math.random() * 20) + 1;
                                   
@@ -1012,7 +1199,6 @@ export function Mesa() {
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // CHAMA O MOTOR PRA DANO!
                                   const buffs = aplicarEfeitos("dano", npc.condicoes);
 
                                   let expressaoLimpa = atk.dano.toLowerCase().replace(/\s/g, ''); 
@@ -1040,7 +1226,6 @@ export function Mesa() {
                                      logDados = `${totalDano}`;
                                   }
                                   
-                                  // SOMA O VALOR DO MOTOR NO DANO FINAL!
                                   totalDano += buffs.totalExtra;
                                   
                                   enviarMensagemOuDado(npc.nome, `causou dano com **${atk.nome}**: 🎲 ${logDados} = **[ ${totalDano} ]** <br/><small>${atk.tipo}</small> ${buffs.logs}`, "dado");
@@ -1066,7 +1251,7 @@ export function Mesa() {
             {ordemIniciativa.length > 0 && (
               <div className="painel-iniciativa" style={{ background: '#181818', borderBottom: '2px solid #ffcc00', padding: '12px' }}>
                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
-                    
+                   
                     <span style={{color: '#ffcc00', fontWeight: 'bold', fontSize: '0.85rem', textTransform: 'uppercase'}}>
                       ⚔️ Combate <span style={{color: '#fff', background: '#333', padding: '2px 6px', borderRadius: '4px', marginLeft: '5px'}}>Rodada {rodadaAtual}</span>
                     </span>
@@ -1159,7 +1344,6 @@ export function Mesa() {
               })}
             </div>
 
-            {/* 👇 GAVETA DO ROLADOR AVULSO 👇 */}
             {mostrarRolador && (
               <form onSubmit={rolarDadosAvulsos} style={{ padding: '10px', background: '#1a1a1a', borderTop: '2px solid #ffcc00', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s' }}>
                 <input type="number" min="1" max="50" value={avulsoQtd} onChange={e => setAvulsoQtd(e.target.value)} style={{ width: '45px', padding: '6px', background: '#000', color: 'white', border: '1px solid #555', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold' }} title="Quantidade de Dados" />
@@ -1191,7 +1375,6 @@ export function Mesa() {
                 <input type="file" accept="image/*" onChange={handleEnviarImagem} hidden />
               </label>
 
-              {/* 👇 NOVO BOTÃO DE ABRIR O ROLADOR AVULSO 👇 */}
               <button 
                 type="button" 
                 onClick={() => setMostrarRolador(!mostrarRolador)} 
@@ -1206,20 +1389,40 @@ export function Mesa() {
                   fontSize: '1.2rem', 
                   transition: '0.2s',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  flexShrink: 0
                 }}
               >
                 🎲
               </button>
 
-              <input type="text" placeholder={`Falar como ${nomeRemetente}...`} value={textoChat} onChange={e => setTextoChat(e.target.value)} />
-              <button type="submit">Enviar</button>
+              <input 
+                type="text" 
+                placeholder={`Falar como ${nomeRemetente}...`} 
+                value={textoChat} 
+                onChange={e => setTextoChat(e.target.value)} 
+                style={{ minWidth: 0 }}
+              />
+              
+              <button type="submit" className="btn-enviar-chat">Enviar</button>
             </form>
           </div>
         )}
       </div>
       
       <style>{`
+        /* CSS MANTIDO INTACTO */
+        .overlay-dialogo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 99999; animation: fadeIn 0.2s; }
+        .caixa-dialogo { background: #1a1a1a; border: 2px solid #ffcc00; border-radius: 12px; padding: 30px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); animation: popIn 0.3s; }
+        .caixa-dialogo h3 { color: #ffcc00; margin: 0 0 15px 0; font-size: 1.5rem; }
+        .caixa-dialogo p { color: #ddd; margin: 0 0 20px 0; font-size: 1rem; line-height: 1.4; white-space: pre-wrap; }
+        .botoes-dialogo { display: flex; gap: 10px; justify-content: center; }
+        .btn-dialogo-cancelar { flex: 1; padding: 10px; border-radius: 6px; border: none; background: #333; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-dialogo-cancelar:hover { background: #555; }
+        .btn-dialogo-confirmar { flex: 1; padding: 10px; border-radius: 6px; border: none; background: #4caf50; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 10px rgba(76,175,80,0.4); }
+        .btn-dialogo-confirmar:hover { background: #45a049; transform: scale(1.05); }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+
         .overlay-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-fichas { background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid #444; width: 450px; max-width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: fadeIn 0.2s ease-out; }
         .lista-fichas-modal { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
@@ -1229,11 +1432,12 @@ export function Mesa() {
         .modal-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
 
         .mesa-layout-global { padding: 25px; max-width: 1400px; margin: 0 auto; color: white; display: flex; flex-direction: column; height: 95vh; box-sizing: border-box; }
-        .mesa-header { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px 25px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; flex-shrink: 0; }
+        .mesa-header { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px 25px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; flex-shrink: 0; gap: 25px; flex-wrap: wrap; }
         .mesa-header h1 { margin: 0; font-size: 1.6rem; }
         .mesa-header p { margin: 2px 0 0 0; color: #888; font-size: 0.9rem; }
+        .mesa-header > div:first-of-type { flex: 1; min-width: 200px; }
         
-        .btn-voltar-lobby { background: #333; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .btn-voltar-lobby { background: #333; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
         .btn-voltar-lobby:hover { background: #555; }
         .btn-entrar-ficha { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
         .btn-entrar-ficha:hover { background: #45a049; }
@@ -1300,17 +1504,13 @@ export function Mesa() {
         .input-chat-container { display: flex; padding: 10px; background: #222; border-top: 1px solid #333; gap: 8px; align-items: stretch; }
         .btn-upload-imagem-chat { background: #333; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0 15px; cursor: pointer; transition: 0.2s; font-size: 1.2rem; }
         .btn-upload-imagem-chat:hover { background: #444; border-color: #ffcc00; }
-        .input-chat-container input[type="text"] { flex: 1; padding: 10px; background: #111; border: 1px solid #444; color: white; border-radius: 4px; font-size: 0.9rem; }
-        .input-chat-container button { padding: 0 15px; background: #4caf50; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .input-chat-container button:hover { background: #45a049; }
+        .input-chat-container input[type="text"] { flex: 1; min-width: 0; padding: 10px; background: #111; border: 1px solid #444; color: white; border-radius: 4px; font-size: 0.9rem; }
+        
+        .btn-enviar-chat { padding: 0 15px; background: #4caf50; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .btn-enviar-chat:hover { background: #45a049; }
 
-        .area-principal-cards::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Edge */
-        }
-        .area-principal-cards {
-          -ms-overflow-style: none;  /* IE e Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
+        .area-principal-cards::-webkit-scrollbar { display: none; }
+        .area-principal-cards { -ms-overflow-style: none; scrollbar-width: none; }
         
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
       `}</style>

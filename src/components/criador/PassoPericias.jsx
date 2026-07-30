@@ -11,128 +11,215 @@ export function PassoPericias() {
   const classeInfo = CLASSES_DETALHADAS[dados.classe];
   const bgInfo = ANTECEDENTES[dados.antecedente];
 
-  const qtdEscolhas = classeInfo?.escolhaPericias?.qtd || 2;
-  const listaPermitida = classeInfo?.escolhaPericias?.lista || [];
+  let qtdEscolhasClasse = classeInfo?.escolhaPericias?.qtd || 2;
+  if (dados.classe === "Bárbaro" && (dados.nivel || 1) >= 3) {
+    qtdEscolhasClasse += 1;
+  }
+
+  const listaPermitidaClasse = classeInfo?.escolhaPericias?.lista || [];
   const periciasBG = bgInfo?.pericias || [];
   const periciaEspecie = dados.periciaRacial; 
 
+  // 👇 AUTOMAÇÃO DOS TALENTOS 👇
+  let qtdExtraTalentos = 0;
+  let ganhouExpertiseTalento = false;
+
+  if (dados.talentos) {
+    dados.talentos.forEach(t => {
+      if (t.nome.includes("Habilidoso")) qtdExtraTalentos += 3;
+      if (t.nome.includes("Especialista em Perícia")) {
+        qtdExtraTalentos += 1;
+        ganhouExpertiseTalento = true;
+      }
+      // Aqui a gente pode adicionar Observador, Mente Aguçada no futuro!
+    });
+  }
+
+  // Verifica se pode usar a 👑 (Expertise)
   const classesComExpertise = ["Ladino", "Bardo", "Patrulheiro"];
-  const podeTerExpertise = classesComExpertise.includes(dados.classe);
+  const podeTerExpertise = classesComExpertise.includes(dados.classe) || ganhouExpertiseTalento;
 
-  const [escolhas, setEscolhas] = useState([]);
+  const [escolhasClasse, setEscolhasClasse] = useState([]);
+  const [escolhasTalentos, setEscolhasTalentos] = useState([]); // 👈 Novo estado pros talentos!
 
-  // 👇 RETENÇÃO DE MEMÓRIA: Inicializa o array de perícias buscando o que já estava salvo 👇
+  // --- MEMÓRIA DA CLASSE ---
   useEffect(() => {
-    setEscolhas(prev => {
-      if (prev.length === qtdEscolhas) return prev;
+    setEscolhasClasse(prev => {
+      if (prev.length === qtdEscolhasClasse) return prev;
       
-      // Filtra do rascunho global quais perícias vieram das escolhas livres da classe
-      const salvasNaClasse = Object.entries(dados.periciasTreinadas || {})
-        .filter(([nome]) => listaPermitida.includes(nome) && !periciasBG.includes(nome) && periciaEspecie !== nome)
+      const salvas = Object.entries(dados.periciasTreinadas || {})
+        .filter(([nome]) => listaPermitidaClasse.includes(nome) && !periciasBG.includes(nome) && periciaEspecie !== nome)
         .map(([nome, status]) => ({ nome, expertise: status === "expertise" }));
 
-      // Monta o array mantendo as que o usuário já tinha clicado antes
-      return Array(qtdEscolhas).fill(null).map((_, i) => {
-        return salvasNaClasse[i] || { nome: "", expertise: false };
-      });
+      return Array(qtdEscolhasClasse).fill(null).map((_, i) => salvas[i] || { nome: "", expertise: false });
     });
-  }, [qtdEscolhas, listaPermitida, periciasBG, periciaEspecie]); // Removido dados.periciasTreinadas daqui para evitar loops!
+  }, [qtdEscolhasClasse, listaPermitidaClasse, periciasBG, periciaEspecie]);
 
+  // --- MEMÓRIA DOS TALENTOS ---
+  useEffect(() => {
+    setEscolhasTalentos(prev => {
+      if (prev.length === qtdExtraTalentos) return prev;
+      return Array(qtdExtraTalentos).fill(null).map((_, i) => prev[i] || { nome: "", expertise: false });
+    });
+  }, [qtdExtraTalentos]);
+
+  // --- SALVAR NA NUVEM (MAPA FINAL) ---
   useEffect(() => {
     const mapaFinal = {};
     
     periciasBG.forEach(p => mapaFinal[p] = "proficiente");
+    if (periciaEspecie) mapaFinal[periciaEspecie] = "proficiente";
     
-    if (periciaEspecie) {
-      mapaFinal[periciaEspecie] = "proficiente";
-    }
-    
-    escolhas.forEach(obj => { 
+    // Junta as escolhas da classe e dos talentos
+    const todasEscolhas = [...escolhasClasse, ...escolhasTalentos];
+
+    todasEscolhas.forEach(obj => { 
       if(obj.nome) {
         mapaFinal[obj.nome] = obj.expertise ? "expertise" : "proficiente";
       }
     });
 
-    atualizar(prev => ({ ...prev, periciasTreinadas: mapaFinal }));
-  }, [escolhas, periciasBG, periciaEspecie, atualizar]);
+    // Só atualiza se houver diferença, para não dar loop
+    const jsonAntigo = JSON.stringify(dados.periciasTreinadas || {});
+    const jsonNovo = JSON.stringify(mapaFinal);
+    if (jsonAntigo !== jsonNovo) {
+      atualizar(prev => ({ ...prev, periciasTreinadas: mapaFinal }));
+    }
+  }, [escolhasClasse, escolhasTalentos, periciasBG, periciaEspecie, atualizar, dados.periciasTreinadas]);
 
-  function mudarNome(index, novoNome) {
-    const novas = [...escolhas];
-    novas[index] = { ...novas[index], nome: novoNome };
-    setEscolhas(novas);
+  function mudarNome(index, novoNome, origem) {
+    if (origem === 'classe') {
+      const novas = [...escolhasClasse];
+      novas[index] = { ...novas[index], nome: novoNome };
+      setEscolhasClasse(novas);
+    } else {
+      const novas = [...escolhasTalentos];
+      novas[index] = { ...novas[index], nome: novoNome };
+      setEscolhasTalentos(novas);
+    }
   }
 
-  function toggleExpertise(index) {
-    const novas = [...escolhas];
-    novas[index] = { ...novas[index], expertise: !novas[index].expertise };
-    setEscolhas(novas);
+  function toggleExpertise(index, origem) {
+    if (origem === 'classe') {
+      const novas = [...escolhasClasse];
+      novas[index] = { ...novas[index], expertise: !novas[index].expertise };
+      setEscolhasClasse(novas);
+    } else {
+      const novas = [...escolhasTalentos];
+      novas[index] = { ...novas[index], expertise: !novas[index].expertise };
+      setEscolhasTalentos(novas);
+    }
   }
+
+  // Pegar as skills já selecionadas para não deixar repetir
+  const todasSelecionadas = [
+    ...periciasBG, 
+    periciaEspecie, 
+    ...escolhasClasse.map(e => e.nome), 
+    ...escolhasTalentos.map(e => e.nome)
+  ].filter(Boolean);
 
   const nivel = dados.nivel || 1;
   const profBonus = Math.ceil(nivel / 4) + 1;
 
   function getMod(atributo) {
-    const val = dados.atributos?.[atributo] || 10;
+    const val = dados.atributos?.[atributo] || dados[atributo] || 10;
     return Math.floor((val - 10) / 2);
   }
 
   return (
     <div className="layout-criador-duplo">
       
-      <div className="coluna-selecao">
+      <div className="coluna-selecao" style={{ overflowY: 'auto', maxHeight: '75vh', paddingRight: '10px' }}>
         <h3 className="subtitulo-criador">Suas Proficiências</h3>
         <p className="desc-passo" style={{marginBottom: '20px'}}>
-          Suas origens definem o que você sabe fazer de melhor.
+          Suas origens e talentos definem o que você sabe fazer de melhor.
         </p>
         
+        {/* ESCOLHAS DA CLASSE */}
         <div className="box-recurso" style={{ padding: '20px' }}>
           <h4 style={{ color: '#ffcc00', borderBottom: '1px solid #444', paddingBottom: '10px', marginBottom: '15px' }}>
-            ⚔️ Classe ({dados.classe}) - Escolha {qtdEscolhas}
+            ⚔️ Classe ({dados.classe}) - Escolha {qtdEscolhasClasse}
           </h4>
           
           <div className="corpo-opcao">
-            {escolhas.map((_, idx) => (
-              <div key={idx} className="linha-select-pericia expertise-row" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            {escolhasClasse.map((_, idx) => (
+              <div key={`c-${idx}`} className="linha-select-pericia expertise-row" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                 <select 
-                  value={escolhas[idx]?.nome || ""}
-                  onChange={(e) => mudarNome(idx, e.target.value)}
+                  value={escolhasClasse[idx]?.nome || ""}
+                  onChange={(e) => mudarNome(idx, e.target.value, 'classe')}
                   style={{ flex: 1, background: '#111', color: '#fff', border: '1px solid #555', padding: '8px', borderRadius: '4px' }}
                 >
                   <option value="">-- Selecione uma Perícia --</option>
-                  {listaPermitida.map(pericia => {
-                    const jaTemNoBG = periciasBG.includes(pericia);
-                    const jaTemNaEspecie = periciaEspecie === pericia;
-                    const jaSelecionado = escolhas.find((e, i) => e.nome === pericia && i !== idx);
-                    
-                    if (jaTemNoBG || jaTemNaEspecie || jaSelecionado) return null;
-                    
+                  {listaPermitidaClasse.map(pericia => {
+                    const jaSelecionado = todasSelecionadas.includes(pericia) && escolhasClasse[idx]?.nome !== pericia;
+                    if (jaSelecionado) return null;
                     return <option key={pericia} value={pericia}>{pericia}</option>;
                   })}
                 </select>
 
                 <button 
-                  className={`btn-expertise ${escolhas[idx]?.expertise ? 'ativo' : ''}`}
-                  onClick={() => toggleExpertise(idx)}
-                  disabled={!escolhas[idx]?.nome || !podeTerExpertise} 
+                  className={`btn-expertise ${escolhasClasse[idx]?.expertise ? 'ativo' : ''}`}
+                  onClick={() => toggleExpertise(idx, 'classe')}
+                  disabled={!escolhasClasse[idx]?.nome || !podeTerExpertise} 
                   title={podeTerExpertise ? "Ativar Especialização (Expertise)" : "Sua classe não possui Especialização"}
                   style={{ 
-                    background: escolhas[idx]?.expertise ? '#ffcc00' : '#222', 
-                    border: '1px solid #555', 
-                    borderRadius: '4px', 
-                    padding: '0 12px', 
-                    cursor: (!escolhas[idx]?.nome || !podeTerExpertise) ? 'not-allowed' : 'pointer',
-                    filter: (!escolhas[idx]?.nome || !podeTerExpertise) ? 'grayscale(100%) opacity(0.3)' : 'none'
+                    background: escolhasClasse[idx]?.expertise ? '#ffcc00' : '#222', 
+                    border: '1px solid #555', borderRadius: '4px', padding: '0 12px', 
+                    cursor: (!escolhasClasse[idx]?.nome || !podeTerExpertise) ? 'not-allowed' : 'pointer',
+                    filter: (!escolhasClasse[idx]?.nome || !podeTerExpertise) ? 'grayscale(100%) opacity(0.3)' : 'none'
                   }}
                 >
                   👑
                 </button>
               </div>
             ))}
-            <p style={{fontSize:'0.75rem', color:'#888', margin: '5px 0 0 0', fontStyle: 'italic'}}>
-              * A coroa 👑 (Expertise) dobra sua proficiência. Use apenas se sua classe possuir esta habilidade (Ex: Ladinos, Bardos).
-            </p>
           </div>
         </div>
+
+        {/* 👇 NOVO: ESCOLHAS DE TALENTOS (Só aparece se o cara pegou o talento!) 👇 */}
+        {qtdExtraTalentos > 0 && (
+          <div className="box-recurso" style={{ padding: '20px', border: '1px solid #4caf50', background: 'rgba(76, 175, 80, 0.05)' }}>
+            <h4 style={{ color: '#4caf50', borderBottom: '1px solid #444', paddingBottom: '10px', marginBottom: '15px' }}>
+              🧩 Talentos Extras - Escolha {qtdExtraTalentos}
+            </h4>
+            
+            <div className="corpo-opcao">
+              {escolhasTalentos.map((_, idx) => (
+                <div key={`t-${idx}`} className="linha-select-pericia expertise-row" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <select 
+                    value={escolhasTalentos[idx]?.nome || ""}
+                    onChange={(e) => mudarNome(idx, e.target.value, 'talento')}
+                    style={{ flex: 1, background: '#111', color: '#fff', border: '1px solid #555', padding: '8px', borderRadius: '4px' }}
+                  >
+                    <option value="">-- Qualquer Perícia --</option>
+                    {/* Talentos como Habilidoso deixam pegar QUALQUER perícia, não só as da classe! */}
+                    {LISTA_PERICIAS.map(p => {
+                      const jaSelecionado = todasSelecionadas.includes(p.nome) && escolhasTalentos[idx]?.nome !== p.nome;
+                      if (jaSelecionado) return null;
+                      return <option key={p.nome} value={p.nome}>{p.nome}</option>;
+                    })}
+                  </select>
+
+                  <button 
+                    className={`btn-expertise ${escolhasTalentos[idx]?.expertise ? 'ativo' : ''}`}
+                    onClick={() => toggleExpertise(idx, 'talento')}
+                    disabled={!escolhasTalentos[idx]?.nome || !podeTerExpertise} 
+                    title={podeTerExpertise ? "Ativar Especialização (Expertise)" : "Sua classe não possui Especialização"}
+                    style={{ 
+                      background: escolhasTalentos[idx]?.expertise ? '#ffcc00' : '#222', 
+                      border: '1px solid #555', borderRadius: '4px', padding: '0 12px', 
+                      cursor: (!escolhasTalentos[idx]?.nome || !podeTerExpertise) ? 'not-allowed' : 'pointer',
+                      filter: (!escolhasTalentos[idx]?.nome || !podeTerExpertise) ? 'grayscale(100%) opacity(0.3)' : 'none'
+                    }}
+                  >
+                    👑
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="box-recurso" style={{ padding: '20px' }}>
           <h4 style={{ color: '#aaa', borderBottom: '1px solid #444', paddingBottom: '10px', marginBottom: '15px' }}>
@@ -159,6 +246,11 @@ export function PassoPericias() {
             </div>
           </div>
         )}
+        
+        <p style={{fontSize:'0.75rem', color:'#888', margin: '15px 0 0 0', fontStyle: 'italic'}}>
+          * A coroa 👑 (Expertise) dobra sua proficiência.
+        </p>
+
       </div>
 
       <div className="coluna-detalhes">
@@ -176,7 +268,11 @@ export function PassoPericias() {
               
               const isBG = periciasBG.includes(p.nome);
               const isEspecie = periciaEspecie === p.nome;
-              const itemEscolha = escolhas.find(e => e.nome === p.nome);
+              
+              // Verifica se a perícia foi escolhida na aba da classe ou dos talentos extras
+              const itemEscolhaClasse = escolhasClasse.find(e => e.nome === p.nome);
+              const itemEscolhaTalento = escolhasTalentos.find(e => e.nome === p.nome);
+              const itemEscolha = itemEscolhaClasse || itemEscolhaTalento;
               
               let bonusProf = 0;
               let icone = "—";

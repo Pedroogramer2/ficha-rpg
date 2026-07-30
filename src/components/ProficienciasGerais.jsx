@@ -1,11 +1,17 @@
 // src/components/ProficienciasGerais.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function ProficienciasGerais(props) {
   const dados = props.dados || {};
   
-  const [idiomas, setIdiomas] = useState(dados.idiomas || "");
-  const [armasArmaduras, setArmasArmaduras] = useState(dados.profArmasArmaduras || "");
+  const [idiomas, setIdiomas] = useState("");
+  const [armasArmaduras, setArmasArmaduras] = useState("");
+
+  // 👇 O Sincronizador de Estado (Fim do Bug Fantasma 3) 👇
+  useEffect(() => {
+    setIdiomas(dados.idiomas || "");
+    setArmasArmaduras(dados.profArmasArmaduras || "");
+  }, [dados.idiomas, dados.profArmasArmaduras]);
 
   function salvar(campo, valor) {
     if (props.aoSalvar) props.aoSalvar(campo, valor);

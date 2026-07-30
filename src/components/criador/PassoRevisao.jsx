@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { IDIOMAS } from '../../data/idiomas';
 import { CLASSES_DETALHADAS } from '../../data/classesDetalhado';
 import { useCriador } from '../../context/CriadorContext';
+import { TALENTOS } from '../../data/talentos';
 
 export function PassoRevisao() {
   const { rascunho: dados, setRascunho: atualizar } = useCriador();
@@ -49,17 +50,39 @@ export function PassoRevisao() {
         const mediaDado = (infoClasse.dadoVida / 2) + 1;
         vidaCalculada += Math.floor((mediaDado + modCon) * (nivel - 1));
       }
+
+      let bonusDeslocamentoTalento = 0;
+      
+      if (dados.talentos) {
+        dados.talentos.forEach(t => {
+          const infoTalentoBanco = TALENTOS[t.nome];
+          if (infoTalentoBanco && infoTalentoBanco.efeitosPassivos) {
+            // Se tiver tag de vida extra (Robustez / Dádiva da Fortitude)
+            if (infoTalentoBanco.efeitosPassivos.vidaPorNivel) {
+              vidaCalculada += (infoTalentoBanco.efeitosPassivos.vidaPorNivel * nivel);
+            }
+            if (infoTalentoBanco.efeitosPassivos.bonusVidaMaxima) {
+              vidaCalculada += infoTalentoBanco.efeitosPassivos.bonusVidaMaxima;
+            }
+            // Se tiver tag de velocidade extra (Veloz / Dádiva da Velocidade)
+            if (infoTalentoBanco.efeitosPassivos.bonusDeslocamento) {
+              bonusDeslocamentoTalento += infoTalentoBanco.efeitosPassivos.bonusDeslocamento;
+            }
+          }
+        });
+      }
       
       if (dados.vidaMaxima !== vidaCalculada || precisouAjustar) {
         atualizar(prev => ({ 
           ...prev, 
           vidaMaxima: vidaCalculada,
           vidaAtual: vidaCalculada,
+          bonusDeslocamento: bonusDeslocamentoTalento,
           ...(precisouAjustar ? { atributos: atributosLimpos } : {})
         }));
       }
     }
-  }, [dados.atributos, dados.classe, dados.nivel, atualizar, dados.vidaMaxima, dados.forca, dados.destreza, dados.constituicao, dados.inteligencia, dados.sabedoria, dados.carisma]); 
+  }, [dados.atributos, dados.classe, dados.nivel, atualizar, dados.vidaMaxima, dados.forca, dados.destreza, dados.constituicao, dados.inteligencia, dados.sabedoria, dados.carisma, dados.talentos]); 
 
   function handleImageUpload(e) {
     const file = e.target.files[0];

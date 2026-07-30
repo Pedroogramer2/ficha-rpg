@@ -31,7 +31,7 @@ export function PassoClasse() {
   // 👇 E PUXAMOS ELAS DA NUVEM (Batizando com os nomes antigos para não quebrar nada!) 👇
   const { rascunho: dados, setRascunho: atualizar } = useCriador();
 
-  const [confirmado, setConfirmado] = useState(false);
+  const [confirmado, setConfirmado] = useState(!!dados.classe);
   const [exibirDetalhes, setExibirDetalhes] = useState(true);
 
   function selecionarClasse(chaveClasse) {
@@ -74,7 +74,7 @@ export function PassoClasse() {
   }
 
   function getOpcoesParaEscolha(escolha, nivelAtual) {
-    if (escolha.opcoes && escolha.opcoes.length > 0) return escolha.opcoes;
+    if (Array.isArray(escolha.opcoes) && escolha.opcoes.length > 0) return escolha.opcoes;
     switch (escolha.tipo) {
       case "invocacao": return INVOCACOES.filter(inv => inv.nivelMinimo <= nivelAtual);
       case "metamagia": return METAMAGIAS; 
@@ -85,10 +85,15 @@ export function PassoClasse() {
 
   function getTodasEscolhas(info, nivelAtual) {
     let lista = [];
+    const nomeSubclasse = Object.values(dados.escolhasClasse || {})
+      .find(val => SUBCLASSES[val.nome])?.nome;
+    const dadosSub = nomeSubclasse ? SUBCLASSES[nomeSubclasse] : null;
     for (let i = 1; i <= nivelAtual; i++) {
       const chave = `escolhasNivel${i}`;
       if (info[chave]) lista = [...lista, ...info[chave]];
+      if (dadosSub && dadosSub[chave]) lista = [...lista, ...dadosSub[chave]];
     }
+    
     return lista;
   }
 
@@ -279,12 +284,18 @@ export function PassoClasse() {
       <div className="layout-config-interno">
         <div className="coluna-escolhas-classe">
           {escolhasDisponiveis.length > 0 ? (
-            <div className="box-escolhas-obrigatorias">
+            <div className="box-escolhas-obrigatorias" style={{ maxHeight: '65vh', overflowY: 'auto', paddingRight: '10px' }}>
               <h3>⚡ Decisões Importantes</h3>
               
               {escolhasDisponiveis.map((escolha, idx) => {
                 const valorAtual = dados.escolhasClasse?.[escolha.titulo]?.nome || "";
-                const opcoesReais = getOpcoesParaEscolha(escolha, dados.nivel);
+                let opcoesReais = getOpcoesParaEscolha(escolha, dados.nivel);
+
+                opcoesReais = opcoesReais.filter(op => {
+                  if (op.nome === valorAtual) return true;
+                  const jaFoiEscolhido = Object.values(dados.escolhasClasse || {}).some(esc => esc.nome === op.nome);
+                  return !jaFoiEscolhido;
+                });
 
                 return (
                   <div key={idx} className="item-escolha-classe">

@@ -17,7 +17,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
 
   const [pingVisivel, setPingVisivel] = useState(false);
 
-  // Estados da Névoa
   const [pintandoNevoa, setPintandoNevoa] = useState(false);
   const [modoPincel, setModoPincel] = useState('add'); 
   const [nevoaLocal, setNevoaLocal] = useState(null); 
@@ -160,15 +159,19 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     });
   }
 
+  // 👇 BYPASS DE PERFORMANCE (O FPS agradece!) 👇
   function handleMouseMove(e) {
     if (!pan.isDown) return;
     const dx = e.clientX - pan.startX;
     const dy = e.clientY - pan.startY;
     
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-        setPan(prev => ({...prev, moved: true}));
         areaRef.current.scrollLeft = pan.sl - dx;
         areaRef.current.scrollTop = pan.st - dy;
+        // Só atualiza o React UMA vez pra avisar que moveu, não 60 vezes!
+        if (!pan.moved) {
+          setPan(prev => ({...prev, moved: true}));
+        }
     }
   }
 
@@ -259,14 +262,17 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
   }
 
  async function handleGridClick(e) {
-    if (pan.moved) return; 
+    if (pan.moved) {
+      // Pequeno timeout pra garantir que o click não sobreponha o arraste
+      setTimeout(() => setPan(prev => ({...prev, moved: false})), 50);
+      return; 
+    }
     if (modoNevoa || modoRegua) return; 
 
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = (e.clientX - rect.left) / zoom;
     const offsetY = (e.clientY - rect.top) / zoom;
 
-    // 👇 MODO PINO - AQUI ESTAVA O ERRO DE VARIÁVEL 👇
     if (modoPino && isMestre) {
       const icone = prompt("Digite um Emoji para o pino (Ex: 📍, ⛺, 💀, 🏰, ❓):", "📍");
       if (!icone) { setModoPino(false); return; }
@@ -290,10 +296,9 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
       }
 
       setModoPino(false);
-      return; // 👈 O return impede que o clique se confunda com movimento de token
+      return; 
     }
 
-    // MODO NORMAL DE MOVIMENTO
     if (!tokenSelecionado) return;
     const gridX = Math.floor(offsetX / TAMANHO_GRID);
     const gridY = Math.floor(offsetY / TAMANHO_GRID);
@@ -305,7 +310,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
   }
 
   async function apagarPino(e, pinoId) {
-    e.preventDefault(); // Previne abrir o menu do navegador
+    e.preventDefault(); 
     e.stopPropagation();
     if (!isMestre) return;
     
@@ -337,7 +342,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     if (modoRegua || modoNevoa || modoPino) return; 
     
     const rect = e.currentTarget.getBoundingClientRect();
-    // NÃO divida pelo zoom aqui! Salve o pixel bruto da tela!
     const offsetX = (e.clientX - rect.left) / zoom;
     const offsetY = (e.clientY - rect.top) / zoom;
 
@@ -346,6 +350,29 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
          ping: { x: offsetX, y: offsetY, time: Date.now() }
       });
     } catch (e) {}
+  }
+
+  // 👇 AUTOMAÇÃO DO MESTRE: CONTROLES DE NÉVOA MASSIVOS 👇
+  async function preencherNevoaTotal() {
+    if(!window.confirm("Cobrir o mapa inteiro com névoa? Os jogadores perderão a visão de tudo.")) return;
+    
+    // O mapa padrão tá hardcoded em 1600x1200
+    const colunas = Math.ceil(1600 / TAMANHO_GRID);
+    const linhas = Math.ceil(1200 / TAMANHO_GRID);
+    
+    let todaNevoa = [];
+    for(let x = 0; x < colunas; x++) {
+      for(let y = 0; y < linhas; y++) {
+        todaNevoa.push(`${x},${y}`);
+      }
+    }
+    
+    try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: todaNevoa }); } catch(e){}
+  }
+
+  async function limparNevoaTotal() {
+    if(!window.confirm("Isso vai limpar toda a névoa e revelar tudo aos jogadores. Tem certeza?")) return;
+    try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: [] }); } catch(e){}
   }
 
   const listaTokens = [];
@@ -459,7 +486,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                 })}
               </div>
 
-              {/* 👇 NOVO MENU DE AURAS VISUAIS 👇 */}
+              {/* MENU DE AURAS VISUAIS */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#111', padding: '4px 12px', borderRadius: '15px', border: '1px solid #3498db' }}>
                 <span style={{ fontSize: '0.7rem', color: '#3498db', textTransform: 'uppercase', fontWeight: 'bold', marginRight: '4px' }}>✨ Aura (ft):</span>
                 {[0, 5, 10, 15, 30].map(raio => {
@@ -501,6 +528,14 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
       </div>
 
       <div className="painel-zoom-flutuante">
+        {/* 👇 BOTÕES MASSIVOS DA NÉVOA PRA SALVAR O MESTRE 👇 */}
+        {isMestre && modoNevoa && (
+          <div style={{ display: 'flex', borderRight: '1px solid #555', paddingRight: '10px', marginRight: '10px', gap: '5px' }}>
+            <button onClick={preencherNevoaTotal} title="Cobrir Todo o Mapa" style={{ background: '#111', border: '1px solid #ff4444', borderRadius: '4px', padding: '4px 8px', fontSize: '0.8rem' }}>⬛ Cobrir Tudo</button>
+            <button onClick={limparNevoaTotal} title="Revelar Todo o Mapa" style={{ background: '#111', border: '1px solid #4caf50', borderRadius: '4px', padding: '4px 8px', fontSize: '0.8rem' }}>⬜ Revelar Tudo</button>
+          </div>
+        )}
+
         {isMestre && (
           <button 
             onClick={() => { setModoNevoa(!modoNevoa); setModoRegua(false); }} 
@@ -630,7 +665,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
               </svg>
             )}
 
-            {/* 👇 DESENHANDO OS PINOS / MARCADORES 👇 */}
             {marcadores.filter(p => p.cenaId === cenaAtivaId).map(pino => (
               <div 
                 key={pino.id}
@@ -640,7 +674,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                   position: 'absolute',
                   left: `${pino.x}px`,
                   top: `${pino.y}px`,
-                  transform: 'translate(-50%, -100%)', // O fundo do pino toca o chão!
+                  transform: 'translate(-50%, -100%)',
                   zIndex: 25,
                   fontSize: '2rem',
                   cursor: isMestre ? 'context-menu' : 'help',
@@ -655,7 +689,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
               </div>
             ))}
 
-            {/* 👇 RENDERIZANDO TOKENS E AURAS 👇 */}
             {listaTokens.map(tk => {
               const posX = posicoes[tk.id]?.x || 0;
               const posY = posicoes[tk.id]?.y || 0;
@@ -665,7 +698,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
               
               const multiplicador = tamanhosTokens[tk.id] || 1; 
 
-              // Lógica Matemática da Aura Visual
               const temAura = aurasTokens[tk.id] > 0;
               const raioFeet = aurasTokens[tk.id] || 0;
               const auraSizePx = ((raioFeet / 5) * TAMANHO_GRID * 2) + (TAMANHO_GRID * multiplicador);
@@ -674,8 +706,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
 
               return (
                 <div key={tk.id}>
-                  
-                  {/* ✨ DESENHANDO A AURA MÁGICA POR BAIXO DO TOKEN ✨ */}
                   {temAura && !estaMorto && (
                     <div className="aura-visual" style={{
                       position: 'absolute',
@@ -684,14 +714,13 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                       width: `${auraSizePx}px`,
                       height: `${auraSizePx}px`,
                       borderRadius: '50%',
-                      background: tk.corBorda, // Usa a mesma cor do token!
+                      background: tk.corBorda,
                       border: `2px dashed ${tk.corBorda}`,
                       pointerEvents: 'none',
-                      zIndex: 8, // Fica abaixo do Token que é 10
+                      zIndex: 8,
                     }}></div>
                   )}
 
-                  {/* O TOKEN FÍSICO */}
                   <div 
                     className={`token-peca ${isSelecionado ? 'selecionado' : ''}`}
                     draggable={possoArrastar && !modoRegua && !modoNevoa}
@@ -757,7 +786,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
         @keyframes piscarMira { 0% { border-color: #ffcc00; transform: scale(1.02); } 100% { border-color: white; transform: scale(1.06); } }
         @keyframes pingarRadar { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
 
-        /* 👇 A MAGIA DA AURA PULSANDO 👇 */
         .aura-visual {
           animation: pulsarAura 3s infinite alternate;
           transition: left 0.3s ease, top 0.3s ease;

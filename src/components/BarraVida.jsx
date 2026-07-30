@@ -19,15 +19,35 @@ export function BarraVida(props) {
     setTimeout(() => setToast(null), 3500); 
   }
 
-  function salvar(novaVida, novaTemp) {
-    if (props.aoSalvar) {
-      props.aoSalvar("vidaAtual", novaVida);
-      props.aoSalvar("vidaTemp", novaTemp);
-      if (novaVida > 0 && (deathSaves.sucessos > 0 || deathSaves.falhas > 0)) {
+  // 👇 AUTOMAÇÃO: MOTOR CENTRAL DE ALTERAÇÃO DE VIDA 👇
+  // Centralizamos aqui para ele sempre verificar as Condições!
+  function processarMudancaDeVida(novaVida, novaTemp) {
+    if (!props.aoSalvar) return;
+    
+    props.aoSalvar("vidaAtual", novaVida);
+    if (novaTemp !== undefined) props.aoSalvar("vidaTemp", novaTemp);
+
+    const condicoesAtuais = props.dados?.condicoes || [];
+    
+    // Se a vida bateu em 0 (e não estava em 0 antes)
+    if (novaVida === 0 && vidaAt > 0) {
+      // Usa Set para não duplicar se já tiver
+      const novasCond = new Set([...condicoesAtuais, "Inconsciente", "Caído"]);
+      props.aoSalvar("condicoes", Array.from(novasCond));
+    } 
+    // Se a vida subiu (acordou)
+    else if (novaVida > 0) {
+      if (vidaAt === 0) {
+        // Tira apenas o Inconsciente. (A regra do D&D diz que o cara acorda, mas acorda Deitado no chão. Ele precisa gastar metade da velocidade no turno dele pra levantar!)
+        const novasCond = condicoesAtuais.filter(c => c !== "Inconsciente");
+        props.aoSalvar("condicoes", novasCond);
+      }
+      
+      // Se tinha death saves na tela, limpa porque ele estabilizou/curou
+      if (deathSaves.sucessos > 0 || deathSaves.falhas > 0) {
         props.aoSalvar("deathSaves", { sucessos: 0, falhas: 0 });
       }
     }
-    setValorInput(""); 
   }
 
   function aplicarDano() {
@@ -52,7 +72,8 @@ export function BarraVida(props) {
       novaVida = Math.max(0, vidaAt - danoRestante);
     }
     
-    salvar(novaVida, novaTemp);
+    processarMudancaDeVida(novaVida, novaTemp);
+    setValorInput("");
     
     if (novaVida === 0 && danoRestante >= props.vidaMaxima) {
       exibirToast(`💀 DANO MASSIVO! Morte Instantânea!`);
@@ -65,15 +86,16 @@ export function BarraVida(props) {
     const cura = parseInt(valorInput) || 0;
     if (cura <= 0) return;
     const novaVida = Math.min(props.vidaMaxima, vidaAt + cura);
-    salvar(novaVida, vidaT);
+    
+    processarMudancaDeVida(novaVida, vidaT);
+    setValorInput("");
     exibirToast(`💚 Curou +${cura} PV!`);
   }
 
   function alterarVidaManual(e) {
     const valor = parseInt(e.target.value) || 0;
     const novaVida = Math.min(props.vidaMaxima, Math.max(0, valor));
-    if (props.aoSalvar) props.aoSalvar("vidaAtual", novaVida);
-    if (novaVida > 0 && props.aoSalvar) props.aoSalvar("deathSaves", { sucessos: 0, falhas: 0 });
+    processarMudancaDeVida(novaVida, vidaT);
   }
 
   function alterarTempManual(e) {
@@ -84,7 +106,7 @@ export function BarraVida(props) {
 
   function curarDoDescanso(qtd) {
     const novaVida = Math.min(props.vidaMaxima, vidaAt + qtd);
-    salvar(novaVida, vidaT);
+    processarMudancaDeVida(novaVida, vidaT);
     exibirToast(`☕ Recuperou ${qtd} PV no Descanso Curto!`);
   }
 
@@ -96,17 +118,18 @@ export function BarraVida(props) {
 
   function executarDescansoLongo() {
     if (props.aoSalvar) {
-      props.aoSalvar("vidaAtual", props.vidaMaxima);
-      props.aoSalvar("vidaTemp", 0);
-      props.aoSalvar("deathSaves", { sucessos: 0, falhas: 0 }); 
+      // Passa pelo novo motor para garantir que limpa as condições de morte se ele curar dormindo
+      processarMudancaDeVida(props.vidaMaxima, 0);
       
       const dv = props.dadosVida || { total: 1, gastos: 0, tipo: 8 };
-      const recuperar = Math.max(1, Math.floor(dv.total / 2));
-      const novosGastos = Math.max(0, dv.gastos - recuperar);
-      props.aoSalvar("dadosVida", { ...dv, gastos: novosGastos });
+      
+      // 👇 REGRA D&D 2024: Descanso Longo agora recupera TODOS os Dados de Vida gastos! 👇
+      props.aoSalvar("dadosVida", { ...dv, gastos: 0 });
 
+      // Zera slots de magia gastos
       if (props.dados && props.dados.slotsGastos) props.aoSalvar("slotsGastos", {}); 
 
+      // Renova os usos das Características
       if (props.dados) {
         if (props.dados.tracosClasse) props.aoSalvar("tracosClasse", props.dados.tracosClasse.map(t => ({ ...t, usosGastos: [] })));
         if (props.dados.tracosRaciais) props.aoSalvar("tracosRaciais", props.dados.tracosRaciais.map(t => ({ ...t, usosGastos: [] })));
@@ -132,6 +155,7 @@ export function BarraVida(props) {
       props.aoSalvar("tracosRaciais", renovarTracos(props.dados.tracosRaciais));
       props.aoSalvar("talentos", renovarTracos(props.dados.talentos));
 
+      // Bruxo recupera magia com Descanso Curto!
       if (props.dados.classe === "Bruxo" && props.dados.slotsGastos) props.aoSalvar("slotsGastos", {});
 
       exibirToast("☕ Descanso Curto concluído!");
@@ -165,10 +189,8 @@ export function BarraVida(props) {
       mensagemToast = `🟢 Sucesso (${d20})!`;
       mensagemChat = `rolou **Teste contra a Morte**: d20(${d20}) = **[ Sucesso 🟢 ]**`;
     } else if (d20 === 20) {
-      if (props.aoSalvar) {
-        props.aoSalvar("vidaAtual", 1);
-        props.aoSalvar("deathSaves", { sucessos: 0, falhas: 0 });
-      }
+      // Rolar 20 natural levanta o cara na hora (Regra padrão)!
+      processarMudancaDeVida(1, vidaT);
       exibirToast("✨ 20 NATURAL! Você acordou com 1 PV!");
       
       if (props.aoMandarChatMesa) {
@@ -181,7 +203,6 @@ export function BarraVida(props) {
       props.aoSalvar("deathSaves", { sucessos: novosSucessos, falhas: novasFalhas });
     }
 
-    // Adiciona o veredito final caso atinja o limite de 3 bolinhas
     if (novosSucessos >= 3) {
       mensagemToast += " 🎉 ESTÁVEL! Você sobreviveu.";
       mensagemChat += `<br/>🎉 **ESTABILIZOU!** Conseguiu resistir à morte e não está mais sangrando!`;
@@ -191,8 +212,6 @@ export function BarraVida(props) {
     }
 
     exibirToast(mensagemToast);
-    
-    // Dispara a fofoca em tempo real pro chat do mestre!
     if (props.aoMandarChatMesa) {
       props.aoMandarChatMesa(mensagemChat);
     }
@@ -215,7 +234,7 @@ export function BarraVida(props) {
           <div className="card-rolagem" onClick={(e) => e.stopPropagation()} style={{ minWidth: '280px', padding: '25px' }}>
             <h3 style={{ color: '#ffcc00', margin: '0 0 10px 0' }}>🏕️ Montar Acampamento?</h3>
             <p style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '20px', lineHeight: '1.4' }}>
-              Um descanso longo irá restaurar completamente seus Pontos de Vida, dados de vida gastos, slots de magia e habilidades de classe.
+              Um descanso longo irá restaurar completamente seus Pontos de Vida, dados de vida, slots de magia e habilidades.
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn-fechar" style={{ margin: 0, background: '#333' }} onClick={() => setMostrarModalConfirmacao(false)}>Cancelar</button>

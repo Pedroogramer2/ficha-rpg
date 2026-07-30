@@ -13,18 +13,27 @@ export function ListaPericias(props) {
   const periciasRaciais = infoRaca?.periciasGratis || [];
 
   // --- FUNÇÃO DE COMPARAÇÃO ROBUSTA ---
-  // Verifica se a perícia está na lista racial ignorando espaços extras
   function ehRacial(nomePericia) {
     return periciasRaciais.some(r => r.trim() === nomePericia.trim());
   }
 
+  // 👇 CLIQUE CORRIGIDO: O Bug Fantasma morreu!
   function togglePericia(nomePericia) {
-    let novoStatus;
+    const isRacial = ehRacial(nomePericia);
     const statusAtual = treinadas[nomePericia];
+    let novoStatus;
 
-    if (!statusAtual) novoStatus = "proficiente";
-    else if (statusAtual === true || statusAtual === "proficiente") novoStatus = "expertise";
-    else novoStatus = null;
+    if (!statusAtual) {
+      // Se já é treinado pela raça, o primeiro clique PULA para Expertise (Coroa)
+      novoStatus = isRacial ? "expertise" : "proficiente";
+    } 
+    else if (statusAtual === "proficiente" || statusAtual === true) {
+      novoStatus = "expertise";
+    } 
+    else {
+      // Se estava com expertise, ou remove tudo, ou volta pro grátis da Raça (que no banco significa deletar)
+      novoStatus = null;
+    }
 
     const novasPericias = { ...treinadas };
     if (novoStatus) novasPericias[nomePericia] = novoStatus;
@@ -37,6 +46,10 @@ export function ListaPericias(props) {
     const valor = dados.atributos?.[nomeAtributo] || dados[nomeAtributo] || 10;
     return Math.floor((valor - 10) / 2);
   }
+
+  // 🧠 O RADAR DO BARDO (Jack of All Trades) 🧠
+  const isBardo = dados.classe === "Bardo" && nivel >= 2;
+  const meiaProficiencia = Math.floor(profBonus / 2);
 
   return (
   <div className="painel-pericias">
@@ -53,14 +66,22 @@ export function ListaPericias(props) {
         let classeVisual = "";
         let icone = "⬜";
 
+        // 👇 CASCATA DE BÔNUS INTELIGENTE 👇
         if (statusBanco === "expertise") {
           bonusAdicional = profBonus * 2;
           classeVisual = "expert";
           icone = "👑";
-        } else if (statusBanco === "proficiente" || statusBanco === true || isRacial) {
+        } 
+        else if (statusBanco === "proficiente" || statusBanco === true || isRacial) {
           bonusAdicional = profBonus;
           classeVisual = "treinado";
           icone = "✅";
+        } 
+        else if (isBardo) {
+          // A Automação do Bardo entra aqui! Se não tem proficiência, ganha metade.
+          bonusAdicional = meiaProficiencia;
+          classeVisual = "meio-treinado"; // (Se quiser, pode botar um text-shadow diferente no CSS dps)
+          icone = "🌗";
         }
 
         const valorFinal = modAtributo + bonusAdicional;
@@ -78,7 +99,7 @@ export function ListaPericias(props) {
             onClick={() => togglePericia(pericia.nome)}
             style={{cursor:'pointer'}}  
           >
-            <div style={{width:'30px', textAlign:'center'}}>{icone}</div>
+            <div style={{width:'30px', textAlign:'center', fontSize: '0.9rem'}}>{icone}</div>
 
             <span className="nome-pericia">
               {pericia.nome} 
@@ -88,15 +109,12 @@ export function ListaPericias(props) {
               )}
             </span>
 
-            {/* 👇 O GATILHO DA ROLAGEM CORRIGIDO 👇 */}
             <span 
               className="valor-pericia roravel"
               onClick={(e) => {
                 e.stopPropagation();
                 if(props.aoRolar) {
-                  // Enviamos o valor final exato para a rolagem
-                  // O título avisa no log se o Talento Confiável está protegendo a jogada!
-                  const sufixoLog = minimoDado === 10 ? " (Talento Confiável)" : "";
+                  const sufixoLog = minimoDado === 10 ? " (Talento Confiável)" : (isBardo && !ehProficiente ? " (Multi-tarefa)" : "");
                   props.aoRolar(`${pericia.nome}${sufixoLog}`, valorFinal, minimoDado); 
                 }
               }}

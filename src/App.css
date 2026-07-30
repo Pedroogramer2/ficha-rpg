@@ -806,7 +806,7 @@ body {
   margin-top: 15px;
   background: linear-gradient(45deg, #111, #333);
   border: 1px solid #ffcc00;
-  color: #ffcc00;
+  color: black;
   padding: 10px;
   font-weight: bold;
   cursor: pointer;
@@ -815,7 +815,7 @@ body {
 }
 .btn-lancar:hover {
   background: #ffcc00;
-  color: black;
+  color: #ffcc00;
   box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
 }
 
@@ -3489,4 +3489,20 @@ body {
   color: #888;
   font-size: 1rem;
   pointer-events: none;
+}
+.box-escolhas-obrigatorias::-webkit-scrollbar {
+  display: none;
+}
+
+.box-escolhas-obrigatorias {
+  -ms-overflow-style: none; 
+  scrollbar-width: none;    
+}
+.select-classe-feature::-webkit-scrollbar {
+  display: none;
+}
+
+.select-classe-feature {
+  -ms-overflow-style: none; 
+  scrollbar-width: none;    
 }

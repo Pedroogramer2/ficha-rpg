@@ -1,5 +1,5 @@
 // src/pages/Ficha.jsx
-import { useEffect, useState, useRef } from 'react'; // 👈 Adicionamos o useRef aqui!
+import { useEffect, useState, useRef } from 'react'; 
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CLASSES_DETALHADAS } from '../data/classesDetalhado';
 
@@ -26,16 +26,22 @@ import { doc, onSnapshot, updateDoc, arrayUnion } from 'firebase/firestore';
 import { aplicarEfeitos, EFEITOS_GLOBAIS } from '../utils/motorDeEfeitos';
 
 const LISTA_CONDICOES = [
-  { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
-  { id: "Atordoado", icon: "💫" }, { id: "Caído", icon: "⏬" },
-  { id: "Cego", icon: "🦇" }, { id: "Enfeitiçado", icon: "💖" },
-  { id: "Envenenado", icon: "🤢" }, { id: "Exaustão", icon: "😫" },
-  { id: "Impedido", icon: "⛓️" }, { id: "Incapacitado", icon: "😵" },
-  { id: "Inconsciente", icon: "😴" }, { id: "Invisível", icon: "👻" },
-  { id: "Paralisado", icon: "⚡" }, { id: "Petrificado", icon: "🗿" },
-  { id: "Surdo", icon: "🙉" }, { id: "Bless", icon: "🙏" }, { id: "Bane", icon: "☠️" },
-  { id: "Fúria", icon: "💢" }, { id: "Matador de Colossos", icon: "🗡️" },
-  { id: "Ataque Furtivo", icon: "🥷" }, { id: "Marca do Caçador", icon: "👁️" }
+  // 🔴 DEBUFFS (Condições Negativas)
+  { id: "Agarrado", icon: "🤼", categoria: "debuff" }, { id: "Amedrontado", icon: "😱", categoria: "debuff" },
+  { id: "Atordoado", icon: "💫", categoria: "debuff" }, { id: "Caído", icon: "⏬", categoria: "debuff" },
+  { id: "Cego", icon: "🦇", categoria: "debuff" }, { id: "Enfeitiçado", icon: "💖", categoria: "debuff" },
+  { id: "Envenenado", icon: "🤢", categoria: "debuff" }, { id: "Exaustão", icon: "😫", categoria: "debuff" },
+  { id: "Impedido", icon: "⛓️", categoria: "debuff" }, { id: "Incapacitado", icon: "😵", categoria: "debuff" },
+  { id: "Inconsciente", icon: "😴", categoria: "debuff" }, { id: "Paralisado", icon: "⚡", categoria: "debuff" },
+  { id: "Petrificado", icon: "🗿", categoria: "debuff" }, { id: "Surdo", icon: "🙉", categoria: "debuff" },
+  { id: "Bane", icon: "☠️", categoria: "debuff" }, // Perdição
+
+  // 🟢 BUFFS (Condições Positivas e Universais)
+  { id: "Invisível", icon: "👻", categoria: "buff" }, { id: "Bless", icon: "🙏", categoria: "buff" },
+
+  // ✨ EXTRAS (Magias, Habilidades de Classe e Motor de Dano)
+  { id: "Fúria", icon: "💢", categoria: "extra" }, { id: "Matador de Colossos", icon: "🗡️", categoria: "extra" },
+  { id: "Ataque Furtivo", icon: "🥷", categoria: "extra" }, { id: "Marca do Caçador", icon: "👁️", categoria: "extra" }
 ];
 
 export function Ficha() {
@@ -58,8 +64,10 @@ export function Ficha() {
 
   const [usarDado3D, setUsarDado3D] = useState(localStorage.getItem('usarFicha3D') !== 'false');
   
+  // 👇 ESTADO DO MOTOR DE VANTAGEM / DESVANTAGEM 👇
+  const [modoRolagem, setModoRolagem] = useState('normal'); 
+
   const [rolagemPendente, setRolagemPendente] = useState(null);
-  // 👇 A MÁGICA DO PONTEIRO DE MEMÓRIA PARA DRIBLAR O CLOSURE 👇
   const rolagemRef = useRef(null); 
 
   const infoClasse = ficha ? CLASSES_DETALHADAS[ficha.classe] : null;
@@ -68,6 +76,7 @@ export function Ficha() {
   const bonusProf = Math.ceil(nivel / 4) + 1;
 
   const [menuCondicoesAberto, setMenuCondicoesAberto] = useState(false);
+  const [abaCondicaoAtiva, setAbaCondicaoAtiva] = useState('debuff');
 
   useEffect(() => {
     const docRef = doc(db, "personagens", id);
@@ -82,12 +91,11 @@ export function Ficha() {
     const docRef = doc(db, "personagens", id);
     await updateDoc(docRef, { [campo]: valor });
 
-    // 👇 O GATILHO DA INSPIRAÇÃO NO CHAT 👇
     if (campo === "inspiracao") {
       if (valor === true) {
         mostrarMensagem(`✨ **${ficha.nome}** ganhou Inspiração Heroica do Mestre!`);
       } else {
-        mostrarMensagem(`💥 **${ficha.nome}** gastou sua Inspiração Heroica para rolar com Vantagem!`);
+        mostrarMensagem(`💥 **${ficha.nome}** gastou sua Inspiração Heroica!`);
       }
     }
   }
@@ -133,7 +141,7 @@ export function Ficha() {
     }
   }
 
-function finalizarRolagem3D(total) {
+  function finalizarRolagem3D(total) {
     const pendente = rolagemRef.current; 
     if (!pendente) return;
 
@@ -147,7 +155,9 @@ function finalizarRolagem3D(total) {
       setResultadoDado({
         nome: pendente.nomeTesteLimpo || pendente.nomeTeste, 
         valorDado: dado, 
-        bonus: pendente.textoBonusExtra || pendente.bonus, // 👈 AGORA MOSTRA O TEXTO DO BUFF AQUI!
+        dadoDescartado: null,
+        modoRolagem: 'normal',
+        bonus: pendente.textoBonusExtra || pendente.bonus, 
         total: totalCalculado, 
         critico: dado === 20, 
         falha: dado === 1 && pendente.minimo === 1 
@@ -166,13 +176,14 @@ function finalizarRolagem3D(total) {
       const modificadorFinal = modificador + bonusExtraDoMotor;
       const totalFinal = total + modificadorFinal;
 
-      // 👇 MONTA O TEXTO BONITO PRO POPUP DO DANO 👇
       const textoBuffs = pendente.textoBuffsDano ? ` | Buffs: ${pendente.textoBuffsDano}` : "";
 
       setResultadoDado({
         nome: `⚔️ Dano: ${pendente.nomeAtaqueLimpo || pendente.nomeAtaque}`,
         valorDado: pendente.stringDeDano, 
-        bonus: `Mod: ${modificador >= 0 ? '+'+modificador : modificador}${textoBuffs}`, // 👈 MOSTRA FÚRIA/COLOSSUS AQUI
+        dadoDescartado: null,
+        modoRolagem: 'normal',
+        bonus: `Mod: ${modificador >= 0 ? '+'+modificador : modificador}${textoBuffs}`,
         total: totalFinal,
         critico: false,
         falha: false,
@@ -186,26 +197,26 @@ function finalizarRolagem3D(total) {
     rolagemRef.current = null;
   }
 
-  function rolarDado(nomeTeste, bonus, minimo = 1) {
+  function rolarDado(nomeTeste, bonus, atributoChave = "forca", minimo = 1) {
     let tipo = "teste";
     const lower = nomeTeste.toLowerCase();
     if (lower.includes("ataque")) tipo = "ataque";
     else if (lower.includes("salvaguarda") || lower.includes("save") || lower.includes("resistência")) tipo = "save";
 
-    const buffs = aplicarEfeitos(tipo, ficha.condicoes || []);
+    const buffs = aplicarEfeitos(tipo, ficha.condicoes || [], ficha.nivel || 1, atributoChave);
     const bonusFinal = bonus + buffs.totalExtra; 
     const nomeComBuffs = buffs.logs ? `${nomeTeste} ${buffs.logs}` : nomeTeste;
 
-    // 👇 MONTA O RECIBO: "5 (Bênção: +d4(3))" 👇
     const textoBonusPopUp = buffs.rolagensDetalhadas ? `${bonus} [Base] ${buffs.rolagensDetalhadas}` : bonus;
 
-    if (usarDado3D && window.dispararDado3D) {
+    // 👇 O MOTOR DE VANTAGEM / DESVANTAGEM CORTA O 3D TEMPORARIAMENTE 👇
+    if (usarDado3D && window.dispararDado3D && modoRolagem === 'normal') {
       const payload = { 
         tipo: 'd20', 
         nomeTeste: nomeComBuffs, 
         nomeTesteLimpo: nomeTeste, 
         bonus: bonusFinal, 
-        textoBonusExtra: textoBonusPopUp, // Envia o recibo pro Dado 3D
+        textoBonusExtra: textoBonusPopUp,
         minimo 
       };
       setRolagemPendente(payload);
@@ -215,28 +226,54 @@ function finalizarRolagem3D(total) {
       return; 
     }
 
-    let dado = Math.floor(Math.random() * 20) + 1;
-    if (dado < minimo) dado = minimo;
-    const totalCalculado = dado + bonusFinal;
+    // 👇 ROLAGEM DUPLA (VANTAGEM / DESVANTAGEM / NORMAL) 👇
+    let dado1 = Math.floor(Math.random() * 20) + 1;
+    let dado2 = Math.floor(Math.random() * 20) + 1;
+    if (dado1 < minimo) dado1 = minimo;
+    if (dado2 < minimo) dado2 = minimo;
+
+    let dadoFinal = dado1;
+    let dadoDescartado = null;
+
+    if (modoRolagem === 'vantagem') {
+      dadoFinal = Math.max(dado1, dado2);
+      dadoDescartado = Math.min(dado1, dado2);
+    } else if (modoRolagem === 'desvantagem') {
+      dadoFinal = Math.min(dado1, dado2);
+      dadoDescartado = Math.max(dado1, dado2);
+    }
+
+    const totalCalculado = dadoFinal + bonusFinal;
     const sinalBonus = bonusFinal >= 0 ? `+${bonusFinal}` : bonusFinal;
     
     setResultadoDado({
-      nome: nomeTeste, valorDado: dado, 
-      bonus: textoBonusPopUp, // Usa o recibo no Dado Rápido
-      total: totalCalculado, critico: dado === 20, falha: dado === 1 && minimo === 1 
+      nome: nomeTeste, 
+      valorDado: dadoFinal, 
+      dadoDescartado: dadoDescartado,
+      modoRolagem: modoRolagem,
+      bonus: textoBonusPopUp, 
+      total: totalCalculado, 
+      critico: dadoFinal === 20, 
+      falha: dadoFinal === 1 && minimo === 1 
     });
     
-    let txtCritico = dado === 20 ? " 🔥 CRÍTICO!" : dado === 1 && minimo === 1 ? " 💀 FALHA CRÍTICA!" : "";
-    enviarRolagemParaMesa(`rolou **${nomeComBuffs}**: d20(${dado}) ${sinalBonus} = **[ ${totalCalculado} ]**${txtCritico}`);
+    let txtCritico = dadoFinal === 20 ? " 🔥 CRÍTICO!" : dadoFinal === 1 && minimo === 1 ? " 💀 FALHA CRÍTICA!" : "";
+    let txtModo = modoRolagem === 'vantagem' ? " *(com Vantagem)*" : modoRolagem === 'desvantagem' ? " *(com Desvantagem)*" : "";
+    
+    enviarRolagemParaMesa(`rolou **${nomeComBuffs}**${txtModo}: d20(${dadoFinal}) ${sinalBonus} = **[ ${totalCalculado} ]**${txtCritico}`);
+    
+    // Reseta o modo rolagem após usar
+    if (modoRolagem !== 'normal') setModoRolagem('normal');
   }
 
-  function rolarDano(nomeAtaque, stringDeDano) {
-    const buffs = aplicarEfeitos("dano", ficha.condicoes || []);
+  function rolarDano(nomeAtaque, stringDeDano, atributoChave = "forca") {
+    const buffs = aplicarEfeitos("dano", ficha.condicoes || [], ficha.nivel || 1, atributoChave);
     const nomeComBuffs = buffs.logs ? `${nomeAtaque} ${buffs.logs}` : nomeAtaque;
 
     const expressaoBaixa = stringDeDano.toLowerCase();
     const apenasDados = expressaoBaixa.match(/\d+d\d+/g);
 
+    // Dano nunca rola com Vantagem, então podemos usar o 3D direto
     if (usarDado3D && window.dispararDado3D && apenasDados) {
       const payload = { 
         tipo: 'dano', 
@@ -244,7 +281,7 @@ function finalizarRolagem3D(total) {
         nomeAtaqueLimpo: nomeAtaque,
         stringDeDano: expressaoBaixa,
         bonusExtraMotor: buffs.totalExtra, 
-        textoBuffsDano: buffs.rolagensDetalhadas // Envia o recibo do Dano pro Dado 3D
+        textoBuffsDano: buffs.rolagensDetalhadas 
       };
       setRolagemPendente(payload);
       rolagemRef.current = payload; 
@@ -279,10 +316,7 @@ function finalizarRolagem3D(total) {
       totalFinal = "?";
     }
 
-    // Calcula mod limpo para mostrar no popup rápido
     let modFixo = totalFinal;
-    rolagensDetalhadas.forEach(() => { /* a rigor precisariamos subtrair os dados de totalFinal, mas vou manter limpo */ });
-    
     if (totalFinal !== "?") totalFinal += buffs.totalExtra;
 
     const detalheBuff = buffs.rolagensDetalhadas ? ` | Buffs: ${buffs.rolagensDetalhadas}` : "";
@@ -290,6 +324,8 @@ function finalizarRolagem3D(total) {
     setResultadoDado({
       nome: `⚔️ Dano: ${nomeAtaque}`,
       valorDado: expressaoBaixa, 
+      dadoDescartado: null,
+      modoRolagem: 'normal',
       bonus: rolagensDetalhadas.length > 0 ? `${rolagensDetalhadas.join(" e ")}${detalheBuff}` : `Dano Fixo${detalheBuff}`, 
       total: totalFinal,
       critico: false,
@@ -303,7 +339,7 @@ function finalizarRolagem3D(total) {
 
   function mostrarMensagem(tituloTexto) {
     setResultadoDado({
-      nome: "📢 MENSAGEM DO SISTEMA", valorDado: "-", bonus: "-",
+      nome: "📢 MENSAGEM DO SISTEMA", valorDado: "-", bonus: "-", dadoDescartado: null, modoRolagem: 'normal',
       total: tituloTexto, critico: false, falha: false, isDano: true 
     });
 
@@ -336,31 +372,64 @@ function finalizarRolagem3D(total) {
         </Link>
 
         {temPermissao && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1a1a1a', padding: '6px 15px', borderRadius: '20px', border: '1px solid #444', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.75rem', color: usarDado3D ? '#4caf50' : '#888', fontWeight: 'bold', textTransform: 'uppercase' }}>
-              <input 
-                type="checkbox" 
-                checked={usarDado3D} 
-                onChange={(e) => {
-                  setUsarDado3D(e.target.checked);
-                  localStorage.setItem('usarFicha3D', e.target.checked);
-                }} 
-              />
-              Animar Dados
-            </label>
+            {/* 👇 O GESTOR DE VANTAGEM E DESVANTAGEM (OS 3 BOTÕES) 👇 */}
+            <div style={{ display: 'flex', background: '#111', borderRadius: '20px', overflow: 'hidden', border: '1px solid #444', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>
+              <button 
+                onClick={() => setModoRolagem('desvantagem')} 
+                style={{ background: modoRolagem === 'desvantagem' ? '#f44336' : 'transparent', color: modoRolagem === 'desvantagem' ? 'white' : '#888', border: 'none', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+              >
+                Desv
+              </button>
+              <button 
+                onClick={() => setModoRolagem('normal')} 
+                style={{ background: modoRolagem === 'normal' ? '#3498db' : 'transparent', color: modoRolagem === 'normal' ? 'white' : '#888', border: 'none', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+              >
+                Normal
+              </button>
+              <button 
+                onClick={() => setModoRolagem('vantagem')} 
+                style={{ background: modoRolagem === 'vantagem' ? '#4caf50' : 'transparent', color: modoRolagem === 'vantagem' ? 'white' : '#888', border: 'none', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+              >
+                Vant
+              </button>
+            </div>
 
-            <div style={{ width: '1px', height: '20px', background: '#444' }}></div>
+            <button 
+              onClick={() => navigate(`/editar/${id}`)}
+              title="Abre o Criador para mudar Subclasse, Talentos e Magias"
+              style={{ background: '#3498db', color: 'white', border: '1px solid #2980b9', padding: '6px 15px', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.5)', transition: '0.2s' }}
+            >
+              ✏️ Editar Ficha
+            </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.75rem', color: '#ccc', textTransform: 'uppercase', fontWeight: 'bold' }}>Cor:</span>
-              <input
-                type="color"
-                value={ficha.corDado || "#ffcc00"}
-                onChange={(e) => atualizarPersonagem("corDado", e.target.value)}
-                style={{ width: '25px', height: '25px', border: 'none', cursor: 'pointer', background: 'transparent', padding: 0 }}
-                title="Escolha a cor do seu dado 3D na mesa!"
-              />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#1a1a1a', padding: '6px 15px', borderRadius: '20px', border: '1px solid #444', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.75rem', color: usarDado3D ? '#4caf50' : '#888', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                <input 
+                  type="checkbox" 
+                  checked={usarDado3D} 
+                  onChange={(e) => {
+                    setUsarDado3D(e.target.checked);
+                    localStorage.setItem('usarFicha3D', e.target.checked);
+                  }} 
+                />
+                Animar Dados
+              </label>
+
+              <div style={{ width: '1px', height: '20px', background: '#444' }}></div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#ccc', textTransform: 'uppercase', fontWeight: 'bold' }}>Cor:</span>
+                <input
+                  type="color"
+                  value={ficha.corDado || "#ffcc00"}
+                  onChange={(e) => atualizarPersonagem("corDado", e.target.value)}
+                  style={{ width: '25px', height: '25px', border: 'none', cursor: 'pointer', background: 'transparent', padding: 0 }}
+                  title="Escolha a cor do seu dado 3D na mesa!"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -384,12 +453,6 @@ function finalizarRolagem3D(total) {
           ⚠️ Status & Buffs:
         </strong>
         
-        {estaMorto && (
-          <span style={{ border: '1px solid #ff4444', color: '#ff4444', background: '#330000', padding: '4px 10px', borderRadius: '15px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            😴 Inconsciente
-          </span>
-        )}
-        
         {condicoesAtivas.map(c => {
            const condInfo = LISTA_CONDICOES.find(lc => lc.id === c);
            return (
@@ -404,7 +467,6 @@ function finalizarRolagem3D(total) {
            );
         })}
 
-        {/* O BOTÃO QUE FALTAVA KKKKKK */}
         {temPermissao && (
           <div style={{ position: 'relative', marginLeft: 'auto' }}>
             <button 
@@ -417,21 +479,31 @@ function finalizarRolagem3D(total) {
             {menuCondicoesAberto && (
               <div 
                 onMouseLeave={() => setMenuCondicoesAberto(false)}
-                style={{ position: 'absolute', top: '100%', right: '0', marginTop: '5px', background: '#111', border: '1px solid #ffcc00', borderRadius: '8px', padding: '10px', width: '280px', zIndex: 100, display: 'flex', flexWrap: 'wrap', gap: '5px', boxShadow: '0 5px 15px rgba(0,0,0,0.8)' }}
+                style={{ position: 'absolute', top: '100%', right: '0', marginTop: '5px', background: '#111', border: '1px solid #ffcc00', borderRadius: '8px', padding: '10px', width: '320px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 5px 15px rgba(0,0,0,0.8)' }}
               >
-                {LISTA_CONDICOES.map(cond => {
-                  const ativo = condicoesAtivas.includes(cond.id);
-                  return (
-                    <button 
-                      key={cond.id} 
-                      onClick={() => alternarCondicaoJogador(cond.id)}
-                      style={{ background: ativo ? '#ffcc00' : '#222', color: ativo ? 'black' : 'white', border: '1px solid #444', borderRadius: '4px', padding: '6px 8px', fontSize: '0.75rem', cursor: 'pointer', flex: '1 1 45%', textAlign: 'left', fontWeight: 'bold' }}
-                    >
-                      {cond.icon} {cond.id}
-                    </button>
-                  )
-                })}
-              </div>
+                {/* 👇 AS 3 ABINHAS DE FILTRO 👇 */}
+                <div style={{ display: 'flex', gap: '5px', borderBottom: '1px solid #333', paddingBottom: '8px' }}>
+                  <button onClick={() => setAbaCondicaoAtiva('debuff')} style={{ flex: 1, padding: '6px 4px', fontSize: '0.7rem', fontWeight: 'bold', background: abaCondicaoAtiva === 'debuff' ? '#f44336' : '#222', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', transition: '0.2s' }}>🔴 Debuffs</button>
+                  <button onClick={() => setAbaCondicaoAtiva('buff')} style={{ flex: 1, padding: '6px 4px', fontSize: '0.7rem', fontWeight: 'bold', background: abaCondicaoAtiva === 'buff' ? '#4caf50' : '#222', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', transition: '0.2s' }}>🟢 Buffs</button>
+                  <button onClick={() => setAbaCondicaoAtiva('extra')} style={{ flex: 1, padding: '6px 4px', fontSize: '0.7rem', fontWeight: 'bold', background: abaCondicaoAtiva === 'extra' ? '#9b59b6' : '#222', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', transition: '0.2s' }}>✨ Classe/Magia</button>
+                </div>
+
+                {/* 👇 A LISTA FILTRADA 👇 */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                  {LISTA_CONDICOES.filter(c => c.categoria === abaCondicaoAtiva).map(cond => {
+                    const ativo = condicoesAtivas.includes(cond.id);
+                    return (
+                      <button 
+                        key={cond.id} 
+                        onClick={() => alternarCondicaoJogador(cond.id)}
+                        style={{ background: ativo ? '#ffcc00' : '#222', color: ativo ? 'black' : 'white', border: '1px solid #444', borderRadius: '4px', padding: '6px 8px', fontSize: '0.75rem', cursor: 'pointer', flex: '1 1 45%', textAlign: 'left', fontWeight: 'bold', transition: '0.2s' }}
+                      >
+                        {cond.icon} {cond.id}
+                      </button>
+                    )
+                  })}
+                </div>
+                </div>
             )}
           </div>
         )}

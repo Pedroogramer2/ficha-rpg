@@ -2,13 +2,11 @@
 import { useState, useEffect } from 'react';
 import { CLASSES_DETALHADAS } from '../../data/classesDetalhado';
 import { ANTECEDENTES } from '../../data/antecedentes';
-// 👇 IMPORTAMOS O CÉREBRO 👇
+import { ARMAS } from '../../data/armas';          // 👈 Trazemos as Armas para checar
+import { ARMADURAS } from '../../data/armaduras'; // 👈 Trazemos as Armaduras também
 import { useCriador } from '../../context/CriadorContext';
 
-// 👇 TIRAMOS AS PROPS DAQUI 👇
 export function PassoEquipamento() {
-  
-  // 👇 E PUXAMOS DA NUVEM AQUI 👇
   const { rascunho: dados, setRascunho: atualizar } = useCriador();
 
   const infoClasse = CLASSES_DETALHADAS[dados.classe];
@@ -44,52 +42,71 @@ export function PassoEquipamento() {
     let listaFinal = [];
     let ouroTotal = ouroDoAntecedente;
 
-    const tabelaPesos = {
-      "adaga": 1, "espada longa": 3, "espada curta": 2, "rapiera": 2,
-      "arco longo": 2, "arco curto": 2, "flechas": 1, "poção": 0.5,
-      "corda": 5, "mochila": 5, "dormir": 7, "rações": 2, "tocha": 1,
-      "cota de malha": 55, "couro": 10, "couro batido": 13, "explorador": 59,
-      "masmorra": 34, "estudioso": 30, "grimório": 3, "azagaias": 2,
-      "mangual": 2, "lança": 3, "cimitarra": 3, "besta": 5
+    const tabelaPesosGerais = {
+      "flechas": 1, "poção": 0.5, "corda": 5, "mochila": 5, 
+      "dormir": 7, "rações": 2, "tocha": 1, "explorador": 59,
+      "masmorra": 34, "estudioso": 30, "grimório": 3
     };
 
-    const descobrirPeso = (nomeItem) => {
-      const nomeMinusculo = nomeItem.toLowerCase();
-      for (const [chave, peso] of Object.entries(tabelaPesos)) {
-        if (nomeMinusculo.includes(chave)) return peso;
+    // 👇 A MÁGICA COMEÇA AQUI: Função que checa o Banco Oficial 👇
+    const formatarItemInteligente = (nomeBruto, indexOrigem, nomeOrigem, qtdPassada = 1) => {
+      let nomeLimpo = nomeBruto.trim();
+      let qtdFinal = qtdPassada;
+      let pesoFinal = 0;
+      let isArma = false;
+      let isArmadura = false;
+
+      // Retira números do começo (Ex: "2 adagas")
+      const matchQtd = nomeLimpo.match(/^(\d+)\s+(.+)$/);
+      if (matchQtd) {
+        qtdFinal = parseInt(matchQtd[1]);
+        nomeLimpo = matchQtd[2].trim();
       }
-      return 0;
+
+      // Tenta achar a Arma no banco
+      const armaEncontrada = ARMAS.find(a => nomeLimpo.toLowerCase().includes(a.nome.toLowerCase().split('(')[0].trim()));
+      
+      // Tenta achar a Armadura no banco
+      const armaduraEncontrada = ARMADURAS.find(a => nomeLimpo.toLowerCase().includes(a.nome.toLowerCase().split('(')[0].trim()));
+
+      if (armaEncontrada) {
+        nomeLimpo = armaEncontrada.nome;
+        pesoFinal = 3; // Média para não zerar
+        isArma = true;
+      } else if (armaduraEncontrada) {
+        nomeLimpo = armaduraEncontrada.nome;
+        pesoFinal = armaduraEncontrada.peso || 10;
+        isArmadura = true;
+      } else {
+        // Se for um item comum de mochila, puxa da tabela
+        for (const [chave, peso] of Object.entries(tabelaPesosGerais)) {
+          if (nomeLimpo.toLowerCase().includes(chave)) pesoFinal = peso;
+        }
+      }
+
+      return { 
+        id: `${nomeOrigem}-${indexOrigem}-${Date.now()}`, 
+        nome: nomeLimpo, 
+        qtd: qtdFinal, 
+        peso: pesoFinal, 
+        origem: nomeOrigem,
+        equipado: isArma || isArmadura,
+        sintonizado: false,
+        isArma: isArma,
+        isArmadura: isArmadura
+      };
     };
 
+    // Formata o Antecedente
     itensBGPuros.forEach((item, i) => {
-      listaFinal.push({ 
-        id: `bg-${i}`, 
-        nome: item, 
-        qtd: 1, 
-        peso: descobrirPeso(item), 
-        origem: "Antecedente" 
-      });
+      listaFinal.push(formatarItemInteligente(item, i, "bg"));
     });
 
+    // Formata a Classe
     if (opcaoSelecionada && opcaoSelecionada.itens) {
       opcaoSelecionada.itens.forEach((item, i) => {
         if (!item.includes("PO")) {
-          let qtdItem = 1;
-          let nomeLimpo = item;
-          const matchQtd = item.match(/^(\d+)\s+(.+)$/);
-          
-          if (matchQtd) {
-            qtdItem = parseInt(matchQtd[1]);
-            nomeLimpo = matchQtd[2];
-          }
-
-          listaFinal.push({ 
-            id: `class-${i}`, 
-            nome: nomeLimpo, 
-            qtd: qtdItem, 
-            peso: descobrirPeso(nomeLimpo), 
-            origem: "Classe" 
-          });
+          listaFinal.push(formatarItemInteligente(item, i, "class"));
         }
       });
     }
@@ -98,13 +115,14 @@ export function PassoEquipamento() {
       ouroTotal += opcaoSelecionada.ouro;
     }
 
+    // Salva na nuvem
     atualizar(prev => ({ 
       ...prev, 
       inventario: listaFinal,
       moedas: { pc: 0, pp: 0, pe: 0, po: ouroTotal, pl: 0 } 
     }));
 
-  }, [escolha, dados.classe, dados.antecedente, ouroDoAntecedente]);
+  }, [escolha, dados.classe, dados.antecedente, ouroDoAntecedente, atualizar]); // Atualizado as dependências para evitar loops
 
   if (!opcoesClasse) return <div className="painel-vazio">Você precisa selecionar uma classe primeiro.</div>;
 

@@ -25,9 +25,10 @@ export function Inventario(props) {
     : todosOsItensDoBanco.filter(i => i.nome.toLowerCase().includes(buscaCompendio.toLowerCase()));
 
   // 👇 ADICIONA DIRETO DO BANCO DE DADOS 👇
+  // 👇 ADICIONA DIRETO DO BANCO DE DADOS 👇
   function adicionarDoCompendio(itemDoBanco) {
     
-    // Expressão regular ninja para extrair "Tem X cargas" ou "possui X cargas" do texto da descrição
+    // Expressão regular ninja para extrair cargas
     let cargasMaximas = 0;
     if (itemDoBanco.descricao) {
       const matchCargas = itemDoBanco.descricao.match(/(\d+)\s+cargas/i);
@@ -35,6 +36,10 @@ export function Inventario(props) {
         cargasMaximas = parseInt(matchCargas[1]);
       }
     }
+
+    // 👇 O CARIMBO DO PASSAPORTE PARA A ABA COMBATE 👇
+    // Verifica se o item veio do banco de ARMAS ou se tem Dano (como uma espada mágica)
+    const ehUmaArma = itemDoBanco.tipoItem === "Arma" || (itemDoBanco.dano && !itemDoBanco.descricao?.includes("Poção"));
 
     const itemFormatado = {
       id: Date.now().toString(),
@@ -46,7 +51,9 @@ export function Inventario(props) {
       sintonizado: false,
       exigeSintonia: itemDoBanco.attunement || false,
       cargasTotais: cargasMaximas,
-      cargasAtuais: cargasMaximas  
+      cargasAtuais: cargasMaximas,
+      isArma: ehUmaArma,       // 👈 AGORA ELE SABE QUE É UMA ARMA!
+      isArmadura: false
     };
     
     atualizarBanco([...itens, itemFormatado], null);
@@ -106,15 +113,19 @@ export function Inventario(props) {
       }
     }
 
+    // 👇 CARIMBA ARMAS CRIADAS MANUALMENTE TAMBÉM 👇
+    const ehArmaManual = ARMAS.some(a => nomeFormatado.includes(a.nome.toLowerCase().split('(')[0].trim()));
+
     const item = { 
       id: Date.now().toString(), 
       nome: novoItem.trim(), 
       qtd: 1, 
       peso: pesoEncontrado,
       descricao: "",
-      equipado: false,     // 👈 NOVA FLAG: Pra armas e armaduras
-      sintonizado: false,  // 👈 NOVA FLAG: Pra itens mágicos
-      exigeSintonia: false // Para o futuro: puxar automático do banco de itens mágicos
+      equipado: false,     
+      sintonizado: false,  
+      exigeSintonia: false,
+      isArma: ehArmaManual // 👈 Libera a arma criada na mão pra ir pro combate!
     };
     
     atualizarBanco([...itens, item], null);

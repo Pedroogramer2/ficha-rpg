@@ -218,3 +218,8 @@ export const ARMAS = [
     maestria: "Vex", categoria: "Armas Marciais à Distância" 
   }
 ];
+
+export const opcoesDeArmas = ARMAS.map(arma => ({
+  nome: arma.nome,
+  desc: `${arma.dano} ${arma.tipo}. ✨ ${arma.maestria}: ${PROPRIEDADES_MAESTRIA[arma.maestria] || "Efeito especial."}`
+}));

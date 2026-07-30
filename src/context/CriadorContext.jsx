@@ -7,7 +7,7 @@ const CriadorContext = createContext();
 // 2. Criamos o "Cérebro" que vai abraçar o nosso Criador de Personagem
 export function CriadorProvider({ children }) {
   
-  // Onde fica salvo o personagem enquanto o jogador não clica em "Finalizar"
+  // 👇 Esqueleto alinhado com a nossa arquitetura final (Evita bugs de undefined nas telas) 👇
   const [rascunho, setRascunho] = useState({
     nome: "",
     classe: "",
@@ -15,44 +15,44 @@ export function CriadorProvider({ children }) {
     antecedente: "",
     alinhamento: "",
     nivel: 1,
-    forca: 10,
-    destreza: 10,
-    constituicao: 10,
-    inteligencia: 10,
-    sabedoria: 10,
-    carisma: 10,
+    atributos: { forca: 10, destreza: 10, constituicao: 10, inteligencia: 10, sabedoria: 10, carisma: 10 },
     vidaMaxima: 0,
     ataques: [],
-    magias: [],
+    magiasConhecidas: { truques: [], nivel1: [] },
     inventario: [],
-    equipamento: [],
     talentos: [],
     tracosRaciais: [],
-    tracosClasse: []
+    tracosClasse: [],
+    periciasTreinadas: {},
+    escolhasClasse: {}
   });
 
-  // 👇 CORREÇÃO: Começamos no índice 0 (Primeira aba) 👇
   const [passoAtual, setPassoAtual] = useState(0);
 
-  // 👇 SISTEMA ANTI-F5: Carrega o rascunho salvo ao abrir a página 👇
+  // 👇 ANTI-F5 SUPREMO: Carrega a Ficha E A ABA QUE ELE ESTAVA 👇
   useEffect(() => {
     const salvo = localStorage.getItem('rascunhoCriador');
+    const passoSalvo = localStorage.getItem('passoCriador'); // Lembra a aba!
+    
     if (salvo) {
       try {
         setRascunho(JSON.parse(salvo));
+        if (passoSalvo) {
+          setPassoAtual(parseInt(passoSalvo));
+        }
       } catch (e) {
         console.error("Erro ao ler rascunho salvo", e);
       }
     }
   }, []);
 
-  // 👇 SISTEMA ANTI-F5: Salva as mudanças silenciosamente na máquina do cara 👇
+  // 👇 ANTI-F5 SUPREMO: Salva as mudanças e a tela atual silenciosamente 👇
   useEffect(() => {
-    // Só salva se o cara já tiver pelo menos escolhido a classe, pra não ficar salvando ficha vazia
     if (rascunho.classe) {
       localStorage.setItem('rascunhoCriador', JSON.stringify(rascunho));
+      localStorage.setItem('passoCriador', passoAtual.toString());
     }
-  }, [rascunho]);
+  }, [rascunho, passoAtual]);
 
   // Função inteligente que qualquer aba pode usar para mudar um dado na nuvem
   function atualizarRascunho(campo, valor) {

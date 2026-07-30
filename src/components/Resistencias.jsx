@@ -1,31 +1,27 @@
 // src/components/Resistencias.jsx
-import { CLASSES_DETALHADAS } from '../data/classesDetalhado'; // 🧠 Usando o banco novo
+import { CLASSES_DETALHADAS } from '../data/classesDetalhado'; 
 
 export function Resistencias(props) {
   const dados = props.dados || {};
   const classeAtual = dados.classe || "Guerreiro";
   const regrasClasse = CLASSES_DETALHADAS[classeAtual];
   
-  // Pega a lista de testes proficientes (ex: ['Força', 'Constituição'])
-  const proficiencias = regrasClasse?.proficiencias?.testes || [];
+  const proficienciasClasse = regrasClasse?.proficiencias?.testes || [];
+  const talentos = dados.talentos || [];
 
   const nivel = dados.nivel || 1;
   const bonusProficiencia = Math.ceil(nivel / 4) + 1;
 
   const atributos = ["forca", "destreza", "constituicao", "inteligencia", "sabedoria", "carisma"];
   
-  // Dicionário para cruzar a chave do banco com o nome legível das proficiências
   const MAPA_NOMES = {
-    forca: "Força",
-    destreza: "Destreza",
-    constituicao: "Constituição",
-    inteligencia: "Inteligência",
-    sabedoria: "Sabedoria",
-    carisma: "Carisma"
+    forca: "Força", destreza: "Destreza", constituicao: "Constituição",
+    inteligencia: "Inteligência", sabedoria: "Sabedoria", carisma: "Carisma"
   };
 
   function getMod(nomeAtributo) {
-    const valor = dados[nomeAtributo] || 10;
+    // Puxa do objeto 'atributos' que a gente arrumou hoje mais cedo, ou cai pro root
+    const valor = dados.atributos?.[nomeAtributo] || dados[nomeAtributo] || 10;
     return Math.floor((valor - 10) / 2);
   }
 
@@ -36,10 +32,19 @@ export function Resistencias(props) {
         {atributos.map((attr) => {
           const nomeLegivel = MAPA_NOMES[attr];
           
-          // Verifica se a classe é proficiente conferindo o nome formatado
-          const isProficiente = proficiencias.includes(nomeLegivel);
+          // 1. Checa a Classe Base
+          let isProficiente = proficienciasClasse.includes(nomeLegivel);
           
-          // Modificador + Bônus de Proficiência (se aplicável)
+          // 2. Checa o Talento "Resiliente" (Ex: "Resiliente (Destreza)")
+          if (!isProficiente && talentos.some(t => t.nome.toLowerCase().includes(`resiliente (${nomeLegivel.toLowerCase()})`))) {
+            isProficiente = true;
+          }
+
+          // 3. Checa a Alma de Diamante (Monge Nível 14 ganha proficiência em TUDO)
+          if (!isProficiente && classeAtual === "Monge" && nivel >= 14) {
+            isProficiente = true;
+          }
+          
           const total = getMod(attr) + (isProficiente ? bonusProficiencia : 0);
           const textoFinal = total >= 0 ? `+${total}` : total;
 

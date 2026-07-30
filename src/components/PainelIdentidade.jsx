@@ -1,48 +1,59 @@
 // src/components/PainelIdentidade.jsx
 import { useState } from 'react';
-import { CLASSES_DND } from '../regras';
-import { calcularVidaMaxima } from '../utils/calculadoras'; 
+import { useNavigate } from 'react-router-dom';
 
 export function PainelIdentidade(props) {
   const dados = props.dados || {};
   const [imagem, setImagem] = useState(dados.foto || null);
+  const navigate = useNavigate();
 
-  // Upload de Foto via Base64
+  // 👇 COMPRESSOR DE IMAGEM INJETADO (Adeus Bomba-Relógio!) 👇
   function handleUpload(e) {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagem(reader.result);
-        if (props.aoSalvar) props.aoSalvar("foto", reader.result);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height *= MAX_WIDTH / width));
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width *= MAX_HEIGHT / height));
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const base64Reduzida = canvas.toDataURL('image/jpeg', 0.7);
+        setImagem(base64Reduzida);
+        if (props.aoSalvar) props.aoSalvar("foto", base64Reduzida);
       };
-      reader.readAsDataURL(file);
-    }
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   const salvar = (campo, valor) => props.aoSalvar && props.aoSalvar(campo, valor);
 
-  // --- NOVA LÓGICA CENTRALIZADA ---
-  function atualizarNivel(novoNivel) {
-    salvar("nivel", novoNivel);
-    if (dados.classe) {
-      const novaVida = calcularVidaMaxima(dados.classe, novoNivel, dados.constituicao);
-      salvar("vidaMaxima", novaVida);
-    }
-  }
-
-  function atualizarClasse(novaClasse) {
-    salvar("classe", novaClasse);
-    const novaVida = calcularVidaMaxima(novaClasse, dados.nivel || 1, dados.constituicao);
-    salvar("vidaMaxima", novaVida);
-  }
-
-  // 👇 FUNÇÃO DA INSPIRAÇÃO 👇
   function alternarInspiracao() {
     salvar("inspiracao", !dados.inspiracao);
   }
 
-  // 👇 MATEMÁTICA DO XP 👇
   const TABELA_XP = {
     1: 0, 2: 300, 3: 900, 4: 2700, 5: 6500, 
     6: 14000, 7: 23000, 8: 34000, 9: 48000, 10: 64000, 
@@ -54,7 +65,6 @@ export function PainelIdentidade(props) {
   const nivelAtual = dados.nivel || 1;
   const xpProximo = nivelAtual < 20 ? TABELA_XP[nivelAtual + 1] : "MAX";
   
-  // Calcula o preenchimento da barrinha
   const porcentagemXP = nivelAtual < 20 
     ? Math.min(100, Math.max(0, (xpAtual / xpProximo) * 100)) 
     : 100;
@@ -62,7 +72,6 @@ export function PainelIdentidade(props) {
   return (
     <div className="identity-card" style={{ position: 'relative' }}>
       
-      {/* 👇 NOVO BOTÃO DE INSPIRAÇÃO (Mais claro e visual) 👇 */}
       <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10 }}>
         <div className="inspiracao-box">
           <span className="inspiracao-label">Inspiração</span>
@@ -83,7 +92,7 @@ export function PainelIdentidade(props) {
         </label>
       </div>
 
-      <div className="identity-info" style={{ paddingRight: '70px' }}> {/* Padding para não encostar na inspiração */}
+      <div className="identity-info" style={{ paddingRight: '70px' }}>
         <input 
           type="text" 
           className="input-nome-hero" 
@@ -93,7 +102,7 @@ export function PainelIdentidade(props) {
         />
 
         <div className="identity-sub">
-          
+          {/* 👇 NIVEL E CLASSE AGORA SÃO DISPLAY. O BOTÃO CHAMA O LAVA JATO 👇 */}
           <span className="badge-nivel-display" style={{ background: '#333', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
             Nível {nivelAtual}
           </span>
@@ -123,7 +132,6 @@ export function PainelIdentidade(props) {
           />
         </div>
 
-        {/* 👇 BARRA DE XP PROGRESSIVA 👇 */}
         <div className="xp-wrapper">
           <div className="xp-container" title={`${xpAtual} / ${xpProximo} XP`}>
             <div className="xp-fill" style={{ width: `${porcentagemXP}%` }}></div>
@@ -142,7 +150,6 @@ export function PainelIdentidade(props) {
             />
           </div>
         </div>
-
       </div>
     </div>
   );

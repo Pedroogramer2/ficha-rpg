@@ -4,8 +4,6 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage"; // <-- NOVO IMPORT DO STORAGE
 import { getAuth, signInAnonymously } from "firebase/auth";
 
-console.log("Variaveis do Vite:", import.meta.env);
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
