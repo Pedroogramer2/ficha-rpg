@@ -7,6 +7,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+    
+    // 👇 AUTOMAÇÃO HUMANA 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: "TODAS"
+    },
+
     tracos: [
       { nome: "Engenhoso (Resourceful)", desc: "Ao terminar um Descanso Longo, você ganha 1 Ponto de Inspiração Heroica." },
       { nome: "Habilidoso (Skillful)", desc: "Você ganha Proficiência em 1 perícia à sua escolha." },
@@ -71,6 +78,13 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DOS SENTIDOS ÉLFICOS 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Percepção", "Intuição", "Sobrevivência"]
+    },
+
     escolhaRacial: {
       titulo: "Linhagem Élfica",
       opcoes: [
@@ -94,6 +108,7 @@ export const RACAS = {
         { 
           nome: "Elfo da Floresta", 
           tracoExtra: "Passos da Floresta: Deslocamento vira 35ft. Magias: Longstrider (Nv 3) e Pass without Trace (Nv 5). Usos: 1/Descanso Longo ou com Slots.",
+          velocidadesExtras: { caminhadaBonus: 5 }, // Soma no cálculo base se for elfo da floresta
           magiasBonus: {
             nivel1: [{ id: "longstrider", nome: "Longstrider" }],
             nivel2: [{ id: "pass-without-trace", nome: "Pass without Trace" }]
@@ -168,6 +183,10 @@ export const RACAS = {
     tamanho: "Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+    
+    // 👇 AUTOMAÇÃO DO LADINO MIRIM 👇
+    periciasGratuitas: ["Furtividade"],
+
     tracos: [
       { nome: "Sorte (Lucky)", desc: "Se rolar 1 natural no d20 (Ataque, Teste ou Save), pode rerolar o dado. Você DEVE usar o novo resultado." },
       { nome: "Bravura", desc: "Vantagem em Testes de Resistência para evitar ou encerrar a condição Amedrontado (Frightened)." },
@@ -240,6 +259,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Necrótico"],
+
+    // 👇 AUTOMAÇÃO DO DRÁCULA 👇
+    velocidadesExtras: { escalada: 35 },
+    armasNaturais: [
+      { id: "mordida-dhampir", nome: "Mordida Vampírica", dano: "1d4", atributo: "CON", tipoDano: "Perfurante", propriedades: ["Arma Natural", "Cura/Bônus"] }
+    ],
+
     tracos: [
       { 
         nome: "Escalada de Aranha", 
@@ -275,6 +301,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO LOBISOMEM 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Percepção", "Furtividade", "Sobrevivência"]
+    },
+
     tracos: [
       { 
         nome: "Salto Feroz", 
@@ -297,6 +330,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO FRANKENSTEIN 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: "TODAS"
+    },
+
     escolhaRacial: {
       titulo: "Resistência Sobrenatural",
       opcoes: [
@@ -327,6 +367,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DE FACES MÚLTIPLAS 👇
+    escolhasPericiasRaciais: {
+      quantidade: 2,
+      opcoes: ["Enganação", "Intuição", "Intimidação", "Performance", "Persuasão"]
+    },
+
     tracos: [
       { 
         nome: "Instintos de Metamorfo", 
@@ -367,6 +414,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+    
+    // 👇 AUTOMAÇÃO KHORAVAR 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: "TODAS"
+    },
+    
     magiasBonus: {
       truques: [{ id: "friends", nome: "Friends" }]
     },
@@ -396,6 +450,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DOS INSTINTOS 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Acrobacia", "Atletismo", "Intimidação", "Sobrevivência"]
+    },
+
     escolhaRacial: {
       titulo: "Transformação Animal (Shifting)",
       opcoes: [
@@ -423,6 +484,15 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: ["Veneno"],
+
+    // 👇 AUTOMAÇÃO DE MÁQUINA DE COMBATE 👇
+    // O +1 na CA dele não muda a base (como o Lizardfolk 13). Ele soma +1 no final de qualquer armadura. 
+    // Na hora de programar a ficha geral, o VTT tem que identificar a tag "Proteção Integrada" nos traços para somar +1.
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: "TODAS"
+    },
+
     tracos: [
       { 
         nome: "Resiliência de Construto", 
@@ -471,6 +541,10 @@ export const RACAS = {
     tamanho: "Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO FADA RAIZ 👇
+    velocidadesExtras: { voo: 30 },
+
     magiasBonus: {
       truques: [{ id: "druidcraft", nome: "Druidcraft" }],
       nivel1: [{ id: "faerie-fire", nome: "Faerie Fire" }],
@@ -516,6 +590,10 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "120 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO LORWYN 👇
+    periciasGratuitas: ["Performance"],
+
     tracos: [
       { 
         nome: "Imitador Encantador", 
@@ -557,6 +635,13 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO PASSARINHO 👇
+    velocidadesExtras: { voo: 30 },
+    armasNaturais: [
+      { id: "garras-aarakocra", nome: "Garras (Aarakocra)", dano: "1d6", atributo: "FOR", tipoDano: "Cortante", propriedades: ["Arma Natural"] }
+    ],
+
     magiasBonus: {
       nivel2: [{ id: "gust-of-wind", nome: "Gust of Wind" }]
     },
@@ -578,6 +663,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO MULTIVERSO 👇
+    escolhasPericiasRaciais: {
+      quantidade: 2,
+      opcoes: ["Enganação", "Intuição", "Intimidação", "Performance", "Persuasão"]
+    },
+
     tracos: [
       { 
         nome: "Instintos de Metamorfo", 
@@ -639,6 +731,10 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO ELADRIN 👇
+    periciasGratuitas: ["Percepção"],
+
     escolhaRacial: {
       titulo: "Estação do Eladrin",
       opcoes: [
@@ -674,6 +770,10 @@ export const RACAS = {
     tamanho: "Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO FADA MODERNA 👇
+    velocidadesExtras: { voo: 30 },
+
     magiasBonus: {
       truques: [{ id: "druidcraft", nome: "Druidcraft" }],
       nivel1: [{ id: "faerie-fire", nome: "Faerie Fire" }],
@@ -686,7 +786,7 @@ export const RACAS = {
       }
     ]
   },
-  "Firbolg": {
+"Firbolg": {
     nome: "Firbolg",
     descricao: "Primos distantes dos gigantes, são seres pacíficos e extremamente conectados com as florestas primitivas do multiverso, possuindo magia ligada à ofuscação e natureza.",
     deslocamento: 30,
@@ -782,6 +882,10 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Ácido"],
+
+    // 👇 AUTOMAÇÃO AQUÁTICA 👇
+    velocidadesExtras: { natacao: 30 },
+
     magiasBonus: {
       truques: [{ id: "acid-splash", nome: "Acid Splash" }],
       nivel1: [{ id: "create-or-destroy-water", nome: "Create or Destroy Water" }],
@@ -805,6 +909,13 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: ["Psíquico"],
+
+    // 👇 AUTOMAÇÃO GITH 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: "TODAS"
+    },
+
     magiasBonus: {
       truques: [{ id: "mage-hand", nome: "Mage Hand" }],
       nivel1: [{ id: "jump", nome: "Jump" }],
@@ -851,6 +962,10 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: ["Frio"],
+
+    // 👇 AUTOMAÇÃO GOLIAS MODERNO 👇
+    periciasGratuitas: ["Atletismo"],
+
     tracos: [
       { 
         nome: "Pequeno Gigante", 
@@ -873,6 +988,11 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+    
+    // 👇 AUTOMAÇÃO HARENGON 👇
+    periciasGratuitas: ["Percepção"], 
+    bonusIniciativa: "proficiencia", // A ficha vai somar a proficiência na Iniciativa dele
+
     tracos: [
       { 
         nome: "Gatilho de Lebre (Hare-Trigger)", 
@@ -899,6 +1019,13 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO CORVO 👇
+    escolhasPericiasRaciais: {
+      quantidade: 2,
+      opcoes: "TODAS"
+    },
+
     tracos: [
       { 
         nome: "Duplicação Especialista", 
@@ -921,6 +1048,12 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO PEIXÃO 👇
+    caBaseRacial: 12,
+    velocidadesExtras: { natacao: 30 },
+    periciasGratuitas: ["Atletismo", "Percepção"],
+
     tracos: [
       { 
         nome: "Armadura Natural", 
@@ -947,6 +1080,11 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "120 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DA CORUJA 👇
+    velocidadesExtras: { voo: 30 },
+    periciasGratuitas: ["Furtividade"],
+
     tracos: [
       { 
         nome: "Voo", 
@@ -965,6 +1103,13 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO BODE FESTEIRO 👇
+    periciasGratuitas: ["Performance", "Persuasão"],
+    armasNaturais: [
+      { id: "chifrada-satiro", nome: "Chifrada", dano: "1d6", atributo: "FOR", tipoDano: "Concussão", propriedades: ["Arma Natural"] }
+    ],
+
     tracos: [
       { 
         nome: "Chifrada", 
@@ -991,6 +1136,11 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Frio"],
+
+    // 👇 AUTOMAÇÃO AQUALAD 👇
+    velocidadesExtras: { natacao: 30 },
+    periciasGratuitas: ["Percepção"],
+
     tracos: [
       { 
         nome: "Filho do Mar", 
@@ -1021,6 +1171,10 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Necrótico"],
+
+    // 👇 AUTOMAÇÃO EMO 👇
+    periciasGratuitas: ["Percepção"],
+
     tracos: [
       { 
         nome: "Bênção da Rainha dos Corvos", 
@@ -1047,6 +1201,14 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO GATO NINJA 👇
+    velocidadesExtras: { escalada: 30 },
+    periciasGratuitas: ["Percepção", "Furtividade"],
+    armasNaturais: [
+      { id: "garras-tabaxi", nome: "Garras (Tabaxi)", dano: "1d6", atributo: "FOR", tipoDano: "Cortante", propriedades: ["Arma Natural"] }
+    ],
+
     tracos: [
       { 
         nome: "Garras de Gato", 
@@ -1069,6 +1231,17 @@ export const RACAS = {
     tamanho: "Médio ou Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO MESTRE OOGWAY 👇
+    caBaseRacial: 17, // 👈 A Armadura cravada em 17!
+    armasNaturais: [
+      { id: "garras-tortle", nome: "Garras (Tortle)", dano: "1d6", atributo: "FOR", tipoDano: "Cortante", propriedades: ["Arma Natural"] }
+    ],
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Adestrar Animais", "Medicina", "Natureza", "Percepção", "Furtividade", "Sobrevivência"]
+    },
+
     tracos: [
       { 
         nome: "Garras", 
@@ -1099,6 +1272,10 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: ["Frio"],
+
+    // 👇 AUTOMAÇÃO AQUAMAN 👇
+    velocidadesExtras: { natacao: 30 },
+
     magiasBonus: {
       nivel1: [{ id: "fog-cloud", nome: "Fog Cloud" }],
       nivel2: [{ id: "gust-of-wind", nome: "Gust of Wind" }],
@@ -1130,6 +1307,10 @@ export const RACAS = {
     tamanho: "Pequeno (Muda para Médio no Nível 5)",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO GOBLIN MUTANTE 👇
+    periciasGratuitas: ["Persuasão"],
+
     tracos: [
       { 
         nome: "Cura do Sangue Negro", 
@@ -1156,6 +1337,10 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO BUGURSO 👇
+    periciasGratuitas: ["Furtividade"],
+
     tracos: [
       { 
         nome: "Ancestralidade Feérica", 
@@ -1186,6 +1371,16 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO CAVALÃO 👇
+    armasNaturais: [
+      { id: "cascos-centauro", nome: "Cascos", dano: "1d6", atributo: "FOR", tipoDano: "Concussão", propriedades: ["Arma Natural"] }
+    ],
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Adestrar Animais", "Medicina", "Natureza", "Sobrevivência"]
+    },
+
     tracos: [
       { 
         nome: "Investida", 
@@ -1234,6 +1429,11 @@ export const RACAS = {
     tamanho: "Pequeno",
     visaoEscuro: null,
     resistenciasPadrao: ["Veneno"],
+
+    // 👇 AUTOMAÇÃO DO SAPO VENENOSO 👇
+    velocidadesExtras: { escalada: 25 },
+    periciasGratuitas: ["Percepção"],
+
     tracos: [
       { 
         nome: "Alerta Arbóreo", 
@@ -1289,7 +1489,7 @@ export const RACAS = {
     escolhaRacial: {
       titulo: "Legado Kobold",
       opcoes: [
-        { nome: "Astúcia (Craftiness)", tracoExtra: "Você ganha proficiência em Arcanismo, Investigação, Medicina, Prestidigitação ou Sobrevivência." },
+        { nome: "Astúcia (Craftiness)", tracoExtra: "Você ganha proficiência em Arcanismo, Investigação, Medicina, Prestidigitação ou Sobrevivência (Adicione manualmente na ficha)." },
         { nome: "Desafio (Defiance)", tracoExtra: "Você tem Vantagem em Testes de Resistência para evitar ou encerrar a condição Amedrontado." },
         { nome: "Feitiçaria Dracônica", tracoExtra: "Você ganha 1 Truque à sua escolha da lista de Feiticeiro (Int, Sab ou Car). Adicione-o manualmente no seu Grimório." }
       ]
@@ -1308,6 +1508,18 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO LIZARDFOLK 👇
+    caBaseRacial: 13,
+    velocidadesExtras: { natacao: 30 },
+    armasNaturais: [
+      { id: "mordida-lagarto", nome: "Mordida (Lagarto)", dano: "1d6", atributo: "FOR", tipoDano: "Cortante", propriedades: ["Arma Natural"] }
+    ],
+    escolhasPericiasRaciais: {
+      quantidade: 2,
+      opcoes: ["Adestrar Animais", "Medicina", "Natureza", "Percepção", "Furtividade", "Sobrevivência"]
+    },
+
     tracos: [
       { 
         nome: "Anfíbio", 
@@ -1334,6 +1546,12 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: null,
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO DO TOURO 👇
+    armasNaturais: [
+      { id: "chifres-minotauro", nome: "Chifres", dano: "1d6", atributo: "FOR", tipoDano: "Perfurante", propriedades: ["Arma Natural"] }
+    ],
+
     tracos: [
       { 
         nome: "Chifres", 
@@ -1382,6 +1600,13 @@ export const RACAS = {
     tamanho: "Médio",
     visaoEscuro: "60 ft",
     resistenciasPadrao: [],
+
+    // 👇 AUTOMAÇÃO SHIFTER 👇
+    escolhasPericiasRaciais: {
+      quantidade: 1,
+      opcoes: ["Acrobacia", "Atletismo", "Intimidação", "Sobrevivência"]
+    },
+
     escolhaRacial: {
       titulo: "Transformação Animal (Shifting)",
       opcoes: [

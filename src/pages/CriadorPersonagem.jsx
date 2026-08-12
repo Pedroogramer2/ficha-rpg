@@ -26,13 +26,11 @@ function CriadorPersonagemInterno() {
   const navigate = useNavigate();
   const { id } = useParams(); 
   
-  // 👇 Puxamos a função inteligente do Contexto! 👇
   const { rascunho, setRascunho, atualizarRascunho, passoAtual, setPassoAtual } = useCriador();
   
   const [salvando, setSalvando] = useState(false); 
   const [carregandoEdicao, setCarregandoEdicao] = useState(!!id);
 
-  // 👇 Radares para calcular a vida perfeitamente no Level Up 👇
   const [nivelOriginal, setNivelOriginal] = useState(1);
   const [vidaMaximaOriginal, setVidaMaximaOriginal] = useState(0);
 
@@ -65,7 +63,6 @@ function CriadorPersonagemInterno() {
         if (snap.exists()) {
           const data = snap.data();
           setRascunho(data); 
-          // Salva como o personagem chegou aqui para a matemática do Level Up
           setNivelOriginal(data.nivel || 1);
           setVidaMaximaOriginal(data.vidaMaxima || 0);
         } else {
@@ -108,7 +105,7 @@ function CriadorPersonagemInterno() {
 
     try {
       const infoClasse = CLASSES_DETALHADAS[rascunho.classe] || { proficiencias: {}, dadoVida: 8, tabelaNiveis: [] };
-      const infoRaca = RACAS[rascunho.raca] || { periciasGratis: [] };
+      const infoRaca = RACAS[rascunho.raca] || { periciasGratuitas: [] };
 
       let textoProficiencias = "";
       if (infoClasse.proficiencias) {
@@ -118,10 +115,24 @@ function CriadorPersonagemInterno() {
       }
 
       const textoIdiomas = (rascunho.listaIdiomas || ["Comum"]).filter(i => i).join(", ");
+      
+      // 👇 AUTOMAÇÃO DAS PERÍCIAS RACIAIS (Agora o VTT injeta as perícias novas na ficha) 👇
       const periciasFinais = { ...(rascunho.periciasTreinadas || {}) };
-      if (infoRaca.periciasGratis) {
-        infoRaca.periciasGratis.forEach(p => { if (!periciasFinais[p]) periciasFinais[p] = "proficiente"; });
+      
+      // 1. Perícias que a Raça dá de graça (Ex: Percepção do Harengon)
+      if (infoRaca.periciasGratuitas) {
+        infoRaca.periciasGratuitas.forEach(p => { 
+          if (!periciasFinais[p]) periciasFinais[p] = "proficiente"; 
+        });
       }
+      
+      // 2. Perícias que o jogador escolheu no dropdown da raça (Ex: Humano, Lagarto)
+      if (rascunho.periciasRaciaisEscolhidas) {
+        rascunho.periciasRaciaisEscolhidas.forEach(p => {
+          if (p && !periciasFinais[p]) periciasFinais[p] = "proficiente";
+        });
+      }
+      // 👆 FIM DA AUTOMAÇÃO DAS PERÍCIAS 👆
 
       let tracosClasseFinais = rascunho.tracosClasse ? JSON.parse(JSON.stringify(rascunho.tracosClasse)) : [];
 

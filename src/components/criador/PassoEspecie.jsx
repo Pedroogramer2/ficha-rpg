@@ -74,7 +74,7 @@ export function PassoEspecie() {
   function selecionarRaca(chave) {
     const info = RACAS[chave];
     
-    // Atualiza base, mas reseta as escolhas (para evitar que o cara troque de Elfo pra Draconato e fique com o Legado Infernal salvo KKKK)
+    // 👇 AGORA ELE PUXA AS TAGS DE AUTOMAÇÃO PRA DENTRO DO RASCUNHO 👇
     atualizar(prev => ({
       ...prev,
       raca: chave,
@@ -82,17 +82,28 @@ export function PassoEspecie() {
       visaoEscuro: info.visaoEscuro || "",
       resistenciasRaciais: info.resistenciasPadrao || [],
       tracosRaciais: info.tracos.map(t => ({ id: t.nome, nome: t.nome, descricao: t.desc })),
-      periciaRacial: null,
-      escolhaRacialDetalhes: null 
+      
+      // 👉 INJETANDO AUTOMAÇÃO
+      caBaseRacial: info.caBaseRacial || null,
+      armasNaturais: info.armasNaturais || [],
+      velocidadesExtras: info.velocidadesExtras || {},
+      bonusIniciativaRacial: info.bonusIniciativa || null,
+      periciasGratuitas: info.periciasGratuitas || [], // Ex: Harengon ganha Percepção de graça
+      
+      // Reseta as escolhas caso ele troque de raça
+      escolhaRacialDetalhes: null,
+      periciasRaciaisEscolhidas: [], 
     }));
     setExibirDetalhes(true);
   }
 
-  function setPericiaRacial(periciaNome) {
-    atualizar(prev => ({ ...prev, periciaRacial: periciaNome }));
+  // Função dinâmica para quando a raça mandar o cara escolher X perícias
+  function handleEscolhaPericiaRacial(index, valor) {
+    const novasEscolhas = [...(dados.periciasRaciaisEscolhidas || [])];
+    novasEscolhas[index] = valor;
+    atualizar(prev => ({ ...prev, periciasRaciaisEscolhidas: novasEscolhas }));
   }
 
-  // 👇 LIDA COM A ESCOLHA DINÂMICA (Ex: Sopro, Legado) 👇
   function lidarComEscolhaRacial(nomeDaOpcao) {
     if (!racaSelecionada || !racaSelecionada.escolhaRacial) return;
     
@@ -108,7 +119,6 @@ export function PassoEspecie() {
   const listaRacas = Object.keys(RACAS);
   const racaSelecionada = dados.raca ? RACAS[dados.raca] : null;
 
-  // Calculando valores dinâmicos para exibição:
   const visaoEscuroFinal = dados.escolhaRacialDetalhes?.visaoEscuroExtra || racaSelecionada?.visaoEscuro;
   const resistenciasFinais = [
     ...(racaSelecionada?.resistenciasPadrao || []),
@@ -149,7 +159,7 @@ export function PassoEspecie() {
                 key={chave} 
                 className={`carta-classe ${isSelected ? 'ativa' : ''}`} 
                 onClick={() => selecionarRaca(chave)}
-                style={{ position: 'relative', overflow: 'hidden' }} // 👈 Segura o texto dentro
+                style={{ position: 'relative', overflow: 'hidden' }}
               >
                 <div className="carta-icone" style={{ width: '100%', height: '100%' }}>
                   {IMAGENS_RACAS[chave] ? (
@@ -159,26 +169,14 @@ export function PassoEspecie() {
                   )}
                 </div>
                 
-                {/* 👇 O NOME FORÇADO COM O GRADIENTE PRETO 👇 */}
                 <div className="carta-nome" style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  width: '100%',
-                  padding: '25px 5px 8px 5px',
+                  position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '25px 5px 8px 5px',
                   background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 50%, transparent 100%)',
-                  color: '#fff',
-                  textAlign: 'center',
-                  fontWeight: '900',
-                  fontSize: '1.2rem',
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase',
-                  textShadow: '2px 2px 4px #000',
-                  boxSizing: 'border-box'
+                  color: '#fff', textAlign: 'center', fontWeight: '900', fontSize: '1.2rem',
+                  letterSpacing: '1px', textTransform: 'uppercase', textShadow: '2px 2px 4px #000', boxSizing: 'border-box'
                 }}>
                   {chave}
                 </div>
-
                 {isSelected && <div className="brilho-borda"></div>}
               </div>
             );
@@ -202,6 +200,10 @@ export function PassoEspecie() {
                   <span className="badge-dado-vida" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid #555' }}>🏃 {racaSelecionada.deslocamento}ft</span>
                   <span className="badge-dado-vida" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid #555' }}>📏 {racaSelecionada.tamanho}</span>
                   {visaoEscuroFinal && <span className="badge-dado-vida" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid #555', color: '#ffcc00' }}>👀 Visão {visaoEscuroFinal}</span>}
+                  
+                  {/* 👇 MOSTRA NA UI AS TAGS DE AUTOMAÇÃO SE EXISTIREM 👇 */}
+                  {racaSelecionada.caBaseRacial && <span className="badge-dado-vida" style={{ background: 'rgba(34, 139, 34, 0.6)', border: '1px solid #4caf50' }}>🛡️ CA Base {racaSelecionada.caBaseRacial}</span>}
+                  {racaSelecionada.bonusIniciativa && <span className="badge-dado-vida" style={{ background: 'rgba(255, 152, 0, 0.6)', border: '1px solid #ff9800' }}>⚡ Iniciativa +{racaSelecionada.bonusIniciativa}</span>}
                 </div>
               </div>
               
@@ -216,11 +218,11 @@ export function PassoEspecie() {
                 {racaSelecionada.descricao}
               </p>
 
-              {/* 👇 CAIXA MÁGICA DE ESCOLHA RACIAL AUTOMÁTICA 👇 */}
+              {/* OPÇÕES DE SUB-RAÇA / LEGADOS */}
               {racaSelecionada.escolhaRacial && (
                 <div className="box-escolhas-obrigatorias" style={{ marginBottom: '20px', flexShrink: 0, background: 'rgba(34,34,34,0.8)' }}>
                   <h4 style={{ color: '#ffcc00', marginTop: 0 }}>{racaSelecionada.escolhaRacial.titulo}</h4>
-                  <p style={{ fontSize: '0.85rem', color: '#ccc' }}>Escolha a variação da sua espécie para definir suas características exclusivas.</p>
+                  <p style={{ fontSize: '0.85rem', color: '#ccc' }}>Escolha a variação da sua espécie.</p>
                   <select 
                     className="select-classe-feature"
                     value={dados.escolhaRacialDetalhes?.nome || ""}
@@ -241,22 +243,39 @@ export function PassoEspecie() {
                 </div>
               )}
 
-              {/* 👇 O CASO EXCEPCIONAL DO HUMANO 👇 */}
-              {racaSelecionada.nome === "Humano" && (
+              {/* 👇 O NOVO SISTEMA DINÂMICO DE ESCOLHER PERÍCIAS (Funciona pro Humano, Lizardfolk, Meio-Elfo, etc) 👇 */}
+              {racaSelecionada.escolhasPericiasRaciais && (
                 <div className="box-escolhas-obrigatorias" style={{ marginBottom: '20px', flexShrink: 0, background: 'rgba(34,34,34,0.8)' }}>
-                  <h4 style={{ color: '#ffcc00', marginTop: 0 }}>Escolha de Proficiência (Habilidoso)</h4>
-                  <p style={{ fontSize: '0.85rem', color: '#ccc' }}>Escolha uma perícia extra concedida pela sua espécie.</p>
-                  <select className="select-classe-feature" value={dados.periciaRacial || ""} onChange={(e) => setPericiaRacial(e.target.value)} style={{ background: '#111' }}>
-                    <option value="" disabled>-- Selecione uma Perícia --</option>
-                    {LISTA_PERICIAS.map(p => (
-                      <option key={p.nome} value={p.nome}>{p.nome}</option> 
-                    ))}
-                  </select>
+                  <h4 style={{ color: '#ffcc00', marginTop: 0 }}>Treinamento da Espécie</h4>
+                  <p style={{ fontSize: '0.85rem', color: '#ccc' }}>
+                    Escolha {racaSelecionada.escolhasPericiasRaciais.quantidade} perícia(s) bônus da lista.
+                  </p>
+                  
+                  {Array.from({ length: racaSelecionada.escolhasPericiasRaciais.quantidade }).map((_, i) => {
+                     // Se a raça tiver lista restrita, usa ela. Senão, usa todas as perícias do jogo (ex: Humano).
+                     const opcoesDisponiveis = racaSelecionada.escolhasPericiasRaciais.opcoes === "TODAS" 
+                        ? LISTA_PERICIAS.map(p => p.nome) 
+                        : racaSelecionada.escolhasPericiasRaciais.opcoes;
+
+                     return (
+                        <select 
+                          key={i} 
+                          className="select-classe-feature" 
+                          value={(dados.periciasRaciaisEscolhidas && dados.periciasRaciaisEscolhidas[i]) || ""} 
+                          onChange={(e) => handleEscolhaPericiaRacial(i, e.target.value)} 
+                          style={{ background: '#111', marginBottom: '10px' }}
+                        >
+                          <option value="" disabled>-- Selecione a Perícia {i + 1} --</option>
+                          {opcoesDisponiveis.map(nomePericia => (
+                            <option key={nomePericia} value={nomePericia}>{nomePericia}</option> 
+                          ))}
+                        </select>
+                     )
+                  })}
                 </div>
               )}
 
               <h4 className="titulo-tabela" style={{ flexShrink: 0 }}>Traços Raciais Básicos</h4>
-              
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '20px' }}>
                 {racaSelecionada.tracos.map((traco) => (
                   <div key={traco.nome} style={{display:'block', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px'}}>

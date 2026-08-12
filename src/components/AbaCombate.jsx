@@ -1,6 +1,7 @@
 // src/components/AbaCombate.jsx
 import { useState } from 'react';
 import { ARMAS, PROPRIEDADES_MAESTRIA } from '../data/armas';
+import { RACAS } from '../data/racas'; // 👈 IMPORTANDO AS RAÇAS
 import itensMagicos from '../data/itensMagicos'; 
 
 // 👇 DICIONÁRIO OFICIAL DE AÇÕES DE COMBATE D&D 👇
@@ -258,7 +259,24 @@ export function AbaCombate(props) {
     isFixo: true
   };
   
-  const todosAtaques = [ataqueDesarmado, ...ataques, ...ataquesDoInventario];
+  // 👇 PUXA AS ARMAS NATURAIS DA RAÇA 👇
+  let armasNaturais = [];
+  if (props.dados.raca && RACAS[props.dados.raca]?.armasNaturais) {
+     armasNaturais = RACAS[props.dados.raca].armasNaturais.map(armaRaca => ({
+       id: `racial-${armaRaca.id}`,
+       nome: armaRaca.nome,
+       dano: armaRaca.dano,
+       tipo: armaRaca.tipoDano,
+       propriedades: armaRaca.propriedades || [],
+       atributoOverride: armaRaca.atributo || "auto",
+       isRacial: true, // Tag pra pintar de verde musgo na tela
+       bonusAtaque: 0,
+       danoExtra: null
+     }));
+  }
+
+  // 👇 LISTA FINAL GIGANTE 👇
+  const todosAtaques = [ataqueDesarmado, ...armasNaturais, ...ataques, ...ataquesDoInventario];
 
   const tracosClasse = props.dados.tracosClasse || [];
   const tracosRaciais = props.dados.tracosRaciais || [];
@@ -270,12 +288,12 @@ export function AbaCombate(props) {
     const descLower = (traco.descricao || traco.desc || "").toLowerCase();
     const profBonus = Math.ceil(nivelAtivo / 4) + 1;
 
-    if (nomeLower.includes("arma de sopro") || descLower.includes("ação de ataque") || descLower.includes("ação:")) {
-      tipoAcao = "acao";
+    if (descLower.includes("reação")) {
+      tipoAcao = "reacao";
     } else if (nomeLower.includes("voo dracônico") || descLower.includes("ação bônus")) {
       tipoAcao = "bonus";
-    } else if (descLower.includes("reação")) {
-      tipoAcao = "reacao";
+    } else if (nomeLower.includes("arma de sopro") || descLower.includes("ação de ataque") || descLower.includes("ação:")) {
+      tipoAcao = "acao";
     }
 
     if (nomeLower.includes("arma de sopro")) {
@@ -347,7 +365,7 @@ export function AbaCombate(props) {
             onMouseOver={(e) => e.currentTarget.style.background = '#333'}
             onMouseOut={(e) => e.currentTarget.style.background = '#222'}
           >
-            {acao.icone} {acao.id.split(' ')[0]} {/* Mostra só o termo em PT-BR no botão pra economizar espaço */}
+            {acao.icone} {acao.id.split(' ')[0]}
           </button>
         ))}
       </div>
@@ -404,15 +422,23 @@ export function AbaCombate(props) {
           
           const exibindoConfirmacao = armaParaDeletar === atk.id;
 
+          // Define a cor da bordinha
+          let corBorda = 'none';
+          if (atk.isDoInventario) corBorda = '3px solid #3498db'; // Azul (Mochila)
+          else if (atk.isFixo) corBorda = '3px solid #7f8c8d'; // Cinza (Soco Normal)
+          else if (atk.isRacial) corBorda = '3px solid #2ecc71'; // Verde (Raça)
+
           return (
-            <div key={atk.id} className="card-ataque" style={{ borderLeft: atk.isDoInventario ? '3px solid #3498db' : atk.isFixo ? '3px solid #2ecc71' : 'none' }}>
+            <div key={atk.id} className="card-ataque" style={{ borderLeft: corBorda }}>
               <div className="header-ataque">
-                <span className="nome-arma" style={{ color: atk.isFixo ? '#2ecc71' : 'inherit' }}>
+                <span className="nome-arma" style={{ color: atk.isRacial ? '#2ecc71' : 'inherit' }}>
                   {atk.nome} 
                   {atk.isDoInventario && <span style={{ fontSize: '0.7rem', color: '#3498db', marginLeft: '5px' }}>(Inventário)</span>}
+                  {atk.isRacial && <span style={{ fontSize: '0.7rem', color: '#2ecc71', marginLeft: '5px' }}>(Raça)</span>}
                 </span>
                 
-                {!atk.isDoInventario && !atk.isFixo && (
+                {/* Armas Nativas/Raciais/Inventário não tem lixeirinha, só as adicionadas avulsas */}
+                {!atk.isDoInventario && !atk.isFixo && !atk.isRacial && (
                   exibindoConfirmacao ? (
                     <button className="btn-lixo-arma" onClick={() => removerAtaque(atk.id)} style={{ color: '#ff4444', fontWeight: 'bold', fontSize: '0.8rem' }}>
                       Certeza?
@@ -434,6 +460,7 @@ export function AbaCombate(props) {
                     </span>
                   </div>
                   
+                  {/* Armas do inventário pegam o auto do banco de dados, então não muda aqui pra não bugar */}
                   {!atk.isDoInventario && (
                     <select 
                       className="select-atributo-arma-magico"

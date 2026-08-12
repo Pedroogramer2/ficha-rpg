@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { ARMADURAS } from '../data/armaduras';
 import { TALENTOS } from '../data/talentos';
-import itensMagicos from '../data/itensMagicos';
+import { RACAS } from '../data/racas'; // 👈 PRECISAMOS IMPORTAR AS RAÇAS
+import itensMagicos from '../data/itensMagicos'; 
 
 export function StatusCombate(props) {
   const dados = props.dados || {};
@@ -11,6 +12,9 @@ export function StatusCombate(props) {
   const [escudoCA, setEscudoCA] = useState(dados.escudoCA || 0); 
   const [bonusManual, setBonusManual] = useState(dados.bonusCA_Manual || 0);
   const [modalLevelUp, setModalLevelUp] = useState(false);  
+
+  // 👇 INFORMAÇÕES DA RAÇA 👇
+  const infoRaca = dados.raca ? RACAS[dados.raca] : null;
 
   let bonusSpeedTalentos = 0;
   if (dados.talentos) {
@@ -45,6 +49,13 @@ export function StatusCombate(props) {
   const dex = dados.destreza || 10;
   const modDex = Math.floor((dex - 10) / 2);
 
+  // 👇 AUTOMAÇÃO INICIATIVA (HARENGON) 👇
+  let bonusIniciativaFinal = modDex;
+  if (infoRaca && infoRaca.bonusIniciativa === "proficiencia") {
+     const prof = Math.ceil(nivelPersonagem / 4) + 1;
+     bonusIniciativaFinal += prof;
+  }
+
   useEffect(() => {
     if (!dados.armaduraEquipada && dados.inventario) {
       const armaduraDoInventario = dados.inventario.find(i => i.isArmadura);
@@ -61,11 +72,20 @@ export function StatusCombate(props) {
   }, [dados.armaduraEquipada, dados.escudoCA]);
 
 
-  // 👇 O SUPER RADAR DE ITENS DA MOCHILA 👇
+  // 👇 O SUPER RADAR DE ITENS E RAÇAS 👇
   let bonusCA_Itens = 0;
-  let bonusSpeedItens = 0; // 👈 Puxa velocidade base
-  let velocidadeVooItens = 0; // 👈 Puxa velocidade de voo
+  let bonusSpeedItens = 0; 
+  let velocidadeVoo = 0; 
+  let velocidadeNatacao = 0;
+  let velocidadeEscalada = 0;
   
+  // Verifica Velocidades da Raça!
+  if (infoRaca && infoRaca.velocidadesExtras) {
+     if (infoRaca.velocidadesExtras.voo) velocidadeVoo = infoRaca.velocidadesExtras.voo;
+     if (infoRaca.velocidadesExtras.natacao) velocidadeNatacao = infoRaca.velocidadesExtras.natacao;
+     if (infoRaca.velocidadesExtras.escalada) velocidadeEscalada = infoRaca.velocidadesExtras.escalada;
+  }
+
   if (dados.inventario) {
     const itensEmUso = dados.inventario.filter(i => i.equipado || i.sintonizado);
     const todosMagicos = Object.values(itensMagicos).flatMap(arr => arr);
@@ -75,16 +95,15 @@ export function StatusCombate(props) {
       if (infoMagica) {
         if (infoMagica.bonusCA) bonusCA_Itens += infoMagica.bonusCA;
         
-        // Automação de Deslocamento!
         if (infoMagica.bonusDeslocamento) bonusSpeedItens += infoMagica.bonusDeslocamento;
-        if (infoMagica.concedeVoo && infoMagica.concedeVoo > velocidadeVooItens) {
-          velocidadeVooItens = infoMagica.concedeVoo; // Pega o maior voo possível
+        if (infoMagica.concedeVoo && infoMagica.concedeVoo > velocidadeVoo) {
+          velocidadeVoo = infoMagica.concedeVoo; 
         }
       }
     });
   }
 
-  // A MATEMÁTICA FINAL DA VELOCIDADE (Agora soma os itens!)
+  // A MATEMÁTICA FINAL DA VELOCIDADE
   const baseSpeed = dados.deslocamento || 30; 
   const deslocamentoFinal = baseSpeed + bonusSpeedTalentos + bonusSpeedClasse + bonusSpeedItens;
   
@@ -96,7 +115,7 @@ export function StatusCombate(props) {
 
   const totalExtra = bonusManual + bonusCA_Itens;
 
-  // --- CÁLCULO DE CA INTELIGENTE ---
+  // --- CÁLCULO DE CA INTELIGENTE (Agora lê CA Base Racial) ---
   let caFinal = 0;
   let componenteArmadura = 10; 
   let componenteDex = modDex; 
@@ -119,6 +138,7 @@ export function StatusCombate(props) {
   
   const valorSelectArmadura = armaduraObj ? armaduraObj.nome : "";
 
+  // Se tem armadura de couro, placas, etc.
   if (armaduraObj) {
     componenteArmadura = armaduraObj.caBase;
     if (armaduraObj.addDex) {
@@ -131,9 +151,18 @@ export function StatusCombate(props) {
       componenteDex = 0; 
     }
   } else {
-    componenteArmadura = 10;
-    componenteDex = modDex;
+    // SEM ARMADURA
+    // Verifica se a raça muda a base de 10 pra outra coisa (ex: Tortle 17, Lizardfolk 13)
+    componenteArmadura = (infoRaca && infoRaca.caBaseRacial) ? infoRaca.caBaseRacial : 10;
     
+    // Tortle (CA 17) diz que Dex não afeta a CA base.
+    if (componenteArmadura === 17 && infoRaca.nome.includes("Tortle")) {
+       componenteDex = 0;
+    } else {
+       componenteDex = modDex;
+    }
+    
+    // Calcula CA de Monge ou Bárbaro
     if (dados.classe === "Monge" && escudoCA === 0) {
       const wis = dados.sabedoria || 10;
       componenteClasse = Math.floor((wis - 10) / 2);
@@ -143,6 +172,20 @@ export function StatusCombate(props) {
       const con = dados.constituicao || 10;
       componenteClasse = Math.floor((con - 10) / 2);
       labelClasse = "Con";
+    }
+
+    // Se o Lizardfolk (CA 13) for Bárbaro, a regra oficial manda você escolher a maior:
+    // 13 + Dex (Lagarto) ou 10 + Dex + Con (Bárbaro).
+    // O sistema aqui já soma os dois no display, então pro Lagarto Bárbaro ser balanceado:
+    if (infoRaca && infoRaca.caBaseRacial && componenteClasse > 0) {
+       // A base vira a melhor entre a Raca ou a Classe! (Base Classe sempre é 10)
+       const totalRaca = infoRaca.caBaseRacial + modDex;
+       const totalClasse = 10 + modDex + componenteClasse;
+       if (totalClasse > totalRaca) {
+          componenteArmadura = 10; // Fica com a classe
+       } else {
+          componenteClasse = 0; // Descarta o bonus da classe porque a raça é melhor
+       }
     }
   }
 
@@ -167,7 +210,7 @@ export function StatusCombate(props) {
   }
 
   function rolarIniciativa() {
-    if (props.aoRolar) props.aoRolar("Iniciativa", modDex);
+    if (props.aoRolar) props.aoRolar("Iniciativa", bonusIniciativaFinal);
   }
 
   return (
@@ -198,11 +241,11 @@ export function StatusCombate(props) {
       <div className="box-status iniciativa" onClick={rolarIniciativa} title="Rolar Iniciativa">
         <span className="titulo-status">Iniciativa</span>
         <div className="valor-status roravel">
-          {modDex >= 0 ? `+${modDex}` : modDex}
+          {bonusIniciativaFinal >= 0 ? `+${bonusIniciativaFinal}` : bonusIniciativaFinal}
         </div>
       </div>
 
-      {/* DESLOCAMENTO (AGORA COM MAGIA DE VOO E BÔNUS DE ITENS) */}
+      {/* DESLOCAMENTO */}
       <div className="box-status speed" style={{ position: 'relative' }}>
         {bonusSpeedItens > 0 && (
            <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#8e44ad', color: 'white', fontSize: '0.5rem', fontWeight: 'bold', padding: '2px 4px', borderRadius: '10px' }} title={`+${bonusSpeedItens} de itens mágicos`}>
@@ -211,11 +254,19 @@ export function StatusCombate(props) {
         )}
         <span className="titulo-status">Deslocamento</span>
         <div className="valor-status">{deslocamentoFinal} <small style={{fontSize:'0.6em'}}>ft</small></div>
-        {velocidadeVooItens > 0 && (
-          <div style={{ color: '#3498db', fontSize: '0.65rem', fontWeight: 'bold', marginTop: '2px' }}>
-            🪽 Voo {velocidadeVooItens}ft
-          </div>
-        )}
+        
+        {/* Velocidades Extras da Raça / Item Magico */}
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '2px'}}>
+            {velocidadeVoo > 0 && (
+            <div style={{ color: '#3498db', fontSize: '0.65rem', fontWeight: 'bold' }}>🪽 Voo {velocidadeVoo}ft</div>
+            )}
+            {velocidadeNatacao > 0 && (
+            <div style={{ color: '#2ecc71', fontSize: '0.65rem', fontWeight: 'bold' }}>🌊 Nado {velocidadeNatacao}ft</div>
+            )}
+            {velocidadeEscalada > 0 && (
+            <div style={{ color: '#e67e22', fontSize: '0.65rem', fontWeight: 'bold' }}>🧗 Escalar {velocidadeEscalada}ft</div>
+            )}
+        </div>
       </div>
 
       {/* CLASSE DE ARMADURA (AC) */}
