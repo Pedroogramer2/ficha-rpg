@@ -2,13 +2,17 @@
 import { useState, useEffect } from 'react';
 import { ARMADURAS } from '../data/armaduras';
 import { TALENTOS } from '../data/talentos';
+import itensMagicos from '../data/itensMagicos';
 
 export function StatusCombate(props) {
   const dados = props.dados || {};
   
   const [armaduraNome, setArmaduraNome] = useState(dados.armaduraEquipada || "");
   const [escudoCA, setEscudoCA] = useState(dados.escudoCA || 0); 
-let bonusSpeedTalentos = 0;
+  const [bonusManual, setBonusManual] = useState(dados.bonusCA_Manual || 0);
+  const [modalLevelUp, setModalLevelUp] = useState(false);  
+
+  let bonusSpeedTalentos = 0;
   if (dados.talentos) {
     dados.talentos.forEach(t => {
       const infoTalento = Object.values(TALENTOS).find(talentoDB => talentoDB.nome === t.nome);
@@ -18,13 +22,11 @@ let bonusSpeedTalentos = 0;
     });
   }
 
-  // 👇 RADAR DE PASSIVAS: Classes (Monge e Bárbaro) 👇
   let bonusSpeedClasse = 0;
   const nivelPersonagem = dados.nivel || 1;
   const semArmadura = !dados.armaduraEquipada || dados.armaduraEquipada === "";
   const semEscudo = escudoCA === 0;
 
-  // Monge: Ganha bônus se estiver sem armadura e sem escudo (Regra Oficial D&D 2024)
   if (dados.classe === "Monge" && semArmadura && semEscudo) {
     if (nivelPersonagem >= 18) bonusSpeedClasse = 30;
     else if (nivelPersonagem >= 14) bonusSpeedClasse = 25;
@@ -33,30 +35,17 @@ let bonusSpeedTalentos = 0;
     else if (nivelPersonagem >= 2) bonusSpeedClasse = 10;
   }
   
-  // Bárbaro: Ganha +10ft no Nível 5 (Desde que não use Armadura Pesada. Como não temos a tipagem exata da armadura neste ponto do código, vamos assumir o bônus padrão se ele for lvl 5+)
   if (dados.classe === "Bárbaro" && nivelPersonagem >= 5) {
-    // Pra ficar 100% cravado, checamos se a armadura NÃO se chama Cota de Malha, Talas ou Placas
     const isArmaduraPesada = ["cota de malha", "cota de talas", "placas"].some(pesada => (dados.armaduraEquipada || "").toLowerCase().includes(pesada));
     if (!isArmaduraPesada) {
       bonusSpeedClasse = 10;
     }
   }
 
-  // A MATEMÁTICA FINAL DA VELOCIDADE:
-  const baseSpeed = dados.deslocamento || 30; 
-  const deslocamento = baseSpeed + bonusSpeedTalentos + bonusSpeedClasse;
-  useEffect(() => {
-    if (props.aoSalvar && dados.deslocamentoAtualizado !== deslocamento) {
-      props.aoSalvar("deslocamentoAtualizado", deslocamento);
-    }
-  }, [deslocamento, dados.deslocamentoAtualizado, props.aoSalvar]);
-  const [bonusManual, setBonusManual] = useState(dados.bonusCA_Manual || 0);
-  const bonusPassivo = dados.bonusCA_Passivo || 0;
-  const totalExtra = bonusManual + bonusPassivo;
-  const [modalLevelUp, setModalLevelUp] = useState(false);  
+  const dex = dados.destreza || 10;
+  const modDex = Math.floor((dex - 10) / 2);
 
   useEffect(() => {
-    // Só faz isso se o cara ainda não selecionou nenhuma armadura (pra não sobrescrever escolhas futuras dele)
     if (!dados.armaduraEquipada && dados.inventario) {
       const armaduraDoInventario = dados.inventario.find(i => i.isArmadura);
       if (armaduraDoInventario && props.aoSalvar) {
@@ -66,45 +55,68 @@ let bonusSpeedTalentos = 0;
     }
   }, [dados.inventario, dados.armaduraEquipada, props.aoSalvar]);
 
-  const dex = dados.destreza || 10;
-  const modDex = Math.floor((dex - 10) / 2);
-
-  // 👇 Faz a CA atualizar na hora se o jogador equipar algo pelo Inventário 👇
   useEffect(() => {
     setArmaduraNome(dados.armaduraEquipada || "");
     setEscudoCA(dados.escudoCA || 0);
   }, [dados.armaduraEquipada, dados.escudoCA]);
 
-  // --- CÁLCULO DE CA INTELIGENTE (COM PROTEÇÃO ANTI-TRADUÇÃO) ---
+
+  // 👇 O SUPER RADAR DE ITENS DA MOCHILA 👇
+  let bonusCA_Itens = 0;
+  let bonusSpeedItens = 0; // 👈 Puxa velocidade base
+  let velocidadeVooItens = 0; // 👈 Puxa velocidade de voo
+  
+  if (dados.inventario) {
+    const itensEmUso = dados.inventario.filter(i => i.equipado || i.sintonizado);
+    const todosMagicos = Object.values(itensMagicos).flatMap(arr => arr);
+
+    itensEmUso.forEach(itemUso => {
+      const infoMagica = todosMagicos.find(im => im.nome.toLowerCase() === itemUso.nome.toLowerCase());
+      if (infoMagica) {
+        if (infoMagica.bonusCA) bonusCA_Itens += infoMagica.bonusCA;
+        
+        // Automação de Deslocamento!
+        if (infoMagica.bonusDeslocamento) bonusSpeedItens += infoMagica.bonusDeslocamento;
+        if (infoMagica.concedeVoo && infoMagica.concedeVoo > velocidadeVooItens) {
+          velocidadeVooItens = infoMagica.concedeVoo; // Pega o maior voo possível
+        }
+      }
+    });
+  }
+
+  // A MATEMÁTICA FINAL DA VELOCIDADE (Agora soma os itens!)
+  const baseSpeed = dados.deslocamento || 30; 
+  const deslocamentoFinal = baseSpeed + bonusSpeedTalentos + bonusSpeedClasse + bonusSpeedItens;
+  
+  useEffect(() => {
+    if (props.aoSalvar && dados.deslocamentoAtualizado !== deslocamentoFinal) {
+      props.aoSalvar("deslocamentoAtualizado", deslocamentoFinal);
+    }
+  }, [deslocamentoFinal, dados.deslocamentoAtualizado, props.aoSalvar]);
+
+  const totalExtra = bonusManual + bonusCA_Itens;
+
+  // --- CÁLCULO DE CA INTELIGENTE ---
   let caFinal = 0;
   let componenteArmadura = 10; 
   let componenteDex = modDex; 
   let componenteClasse = 0; 
   let labelClasse = "";
 
-  // 🛡️ A BUSCA INTELIGENTE (Ignora parênteses e nomes parciais) 🛡️
   const nomeParaBuscar = (armaduraNome || "").toLowerCase().trim();
-  
   let armaduraObj = null;
 
   if (nomeParaBuscar) {
-    // 1. Tenta achar exatamente o nome (quando seleciona pelo Dropdown)
     armaduraObj = ARMADURAS.find(a => a.nome.toLowerCase() === nomeParaBuscar);
-    
-    // 2. Se não achou, ignora os parênteses do inglês e tenta achar por aproximação
     if (!armaduraObj) {
-      // Ordena das maiores pra menores pra não confundir "Couro" com "Couro Batido"
       const armadurasOrdenadas = [...ARMADURAS].sort((a,b) => b.nome.length - a.nome.length);
-      
       armaduraObj = armadurasOrdenadas.find(a => {
-        // Pega só o "Cota de Malha" do "Cota de Malha (Chain Mail)"
         const nomePtBr = a.nome.toLowerCase().split(' (')[0].trim();
         return nomeParaBuscar === nomePtBr || nomeParaBuscar.includes(nomePtBr) || nomePtBr.includes(nomeParaBuscar);
       });
     }
   }
   
-  // Guardamos o nome oficial para o dropdown não bugar e ficar em branco
   const valorSelectArmadura = armaduraObj ? armaduraObj.nome : "";
 
   if (armaduraObj) {
@@ -122,7 +134,6 @@ let bonusSpeedTalentos = 0;
     componenteArmadura = 10;
     componenteDex = modDex;
     
-    // 👇 AGORA SALVA SEPARADO EM VEZ DE FUNDIR NA BASE 👇
     if (dados.classe === "Monge" && escudoCA === 0) {
       const wis = dados.sabedoria || 10;
       componenteClasse = Math.floor((wis - 10) / 2);
@@ -135,14 +146,13 @@ let bonusSpeedTalentos = 0;
     }
   }
 
-  // Não esqueça de somar o componenteClasse no caFinal!
   caFinal = componenteArmadura + componenteDex + componenteClasse + escudoCA + totalExtra;
 
   useEffect(() => {
-    if (props.aoSalvar) {
+    if (props.aoSalvar && dados.ca !== caFinal) {
       props.aoSalvar("ca", caFinal);
     }
-  }, [caFinal, props.aoSalvar]);
+  }, [caFinal, props.aoSalvar, dados.ca]);
 
   function handleChangeArmadura(e) {
     const nova = e.target.value;
@@ -192,14 +202,31 @@ let bonusSpeedTalentos = 0;
         </div>
       </div>
 
-      {/* DESLOCAMENTO */}
-      <div className="box-status speed">
+      {/* DESLOCAMENTO (AGORA COM MAGIA DE VOO E BÔNUS DE ITENS) */}
+      <div className="box-status speed" style={{ position: 'relative' }}>
+        {bonusSpeedItens > 0 && (
+           <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#8e44ad', color: 'white', fontSize: '0.5rem', fontWeight: 'bold', padding: '2px 4px', borderRadius: '10px' }} title={`+${bonusSpeedItens} de itens mágicos`}>
+             ✨ Magia
+           </div>
+        )}
         <span className="titulo-status">Deslocamento</span>
-        <div className="valor-status">{deslocamento} <small style={{fontSize:'0.6em'}}>ft</small></div>
+        <div className="valor-status">{deslocamentoFinal} <small style={{fontSize:'0.6em'}}>ft</small></div>
+        {velocidadeVooItens > 0 && (
+          <div style={{ color: '#3498db', fontSize: '0.65rem', fontWeight: 'bold', marginTop: '2px' }}>
+            🪽 Voo {velocidadeVooItens}ft
+          </div>
+        )}
       </div>
 
       {/* CLASSE DE ARMADURA (AC) */}
-      <div className="box-ac-complexo">
+      <div className="box-ac-complexo" style={{ position: 'relative' }}>
+        
+        {bonusCA_Itens > 0 && (
+          <div style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ffcc00', color: 'black', fontSize: '0.6rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '10px', zIndex: 10 }}>
+            +{bonusCA_Itens} Mágico
+          </div>
+        )}
+
         <div className="ac-display-zao">
           <span className="escudo-icon">🛡️</span>
           <span className="valor-ac-grande">{caFinal}</span>
@@ -207,7 +234,6 @@ let bonusSpeedTalentos = 0;
         </div>
 
         <div className="controles-ac">
-          {/* 👇 DROPDOWN USANDO O NOME OFICIAL 👇 */}
           <select className="select-armadura" value={valorSelectArmadura} onChange={handleChangeArmadura}>
             <option value="">Sem Armadura (Roupas)</option>
             <optgroup label="Armaduras Leves">
@@ -230,7 +256,7 @@ let bonusSpeedTalentos = 0;
               <option value="5">✨ Escudo +3 (+5)</option>
             </select>
 
-            <div className="controle-bonus-extra" title="Bônus Extras de CA (Anel de Proteção, etc)">
+            <div className="controle-bonus-extra" title="Ajuste manual da CA pelo jogador (Temporário)">
               <button 
                 onClick={() => {
                   const novoBonus = Math.max(0, bonusManual - 1);
@@ -239,7 +265,7 @@ let bonusSpeedTalentos = 0;
                 }} 
                 disabled={bonusManual <= 0}
               >-</button>
-              <span>+{totalExtra} Extra</span>
+              <span>+{bonusManual} Temp</span>
               <button onClick={() => {
                   const novoBonus = bonusManual + 1;
                   setBonusManual(novoBonus);
@@ -253,7 +279,8 @@ let bonusSpeedTalentos = 0;
             <span style={{color: componenteDex === 0 ? '#555' : 'inherit'}}> + Des {componenteDex}</span>
             {componenteClasse !== 0 && <span style={{color: '#9b59b6'}}> + {labelClasse} {componenteClasse}</span>}
             {escudoCA > 0 && <span style={{color:'#44ff44'}}> + Esc {escudoCA}</span>}
-            {totalExtra > 0 && <span style={{color:'#ffcc00'}}> + Ext {totalExtra}</span>}
+            {bonusManual > 0 && <span style={{color:'#aaa'}}> + Tmp {bonusManual}</span>}
+            {bonusCA_Itens > 0 && <span style={{color:'#ffcc00', fontWeight: 'bold'}}> + Mag {bonusCA_Itens}</span>}
           </div>
         </div>
       </div>
@@ -279,9 +306,9 @@ let bonusSpeedTalentos = 0;
         .select-armadura, .select-escudo { background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px; font-size: 0.85rem; cursor: pointer; }
         .select-armadura:hover, .select-escudo:hover { background: #444; }
 
-        .controle-bonus-extra { display: flex; align-items: center; justify-content: space-between; background: #333; border: 1px solid #555; border-radius: 4px; overflow: hidden; font-size: 0.8rem; color: #ffcc00; font-weight: bold; padding: 0; min-width: 90px; }
+        .controle-bonus-extra { display: flex; align-items: center; justify-content: space-between; background: #333; border: 1px solid #555; border-radius: 4px; overflow: hidden; font-size: 0.75rem; color: #aaa; font-weight: bold; padding: 0; min-width: 90px; }
         .controle-bonus-extra button { background: #222; border: none; color: white; padding: 5px 8px; cursor: pointer; transition: 0.2s; }
-        .controle-bonus-extra button:hover:not(:disabled) { background: #555; }
+        .controle-bonus-extra button:hover:not(:disabled) { background: #555; color: #fff; }
         .controle-bonus-extra button:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .calculo-resumo { display: flex; gap: 8px; font-size: 0.7rem; color: #888; padding-left: 2px; }

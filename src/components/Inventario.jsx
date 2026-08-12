@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 import { INVOCACOES } from '../data/invocacoes'; 
 import { ARMAS } from '../data/armas'; 
+import { ARMADURAS } from '../data/armaduras';
 import itensMagicos from '../data/itensMagicos';
 
 export function Inventario(props) {
@@ -17,6 +18,7 @@ export function Inventario(props) {
 
   const todosOsItensDoBanco = [
     ...ARMAS.map(a => ({ ...a, isMagico: false, tipoItem: "Arma" })),
+    ...ARMADURAS.map(a => ({ ...a, isMagico: false, tipoItem: "Armadura" })),
     ...Object.values(itensMagicos).flatMap(arr => arr).map(i => ({ ...i, isMagico: true }))
   ];
 
@@ -24,11 +26,7 @@ export function Inventario(props) {
     ? [] 
     : todosOsItensDoBanco.filter(i => i.nome.toLowerCase().includes(buscaCompendio.toLowerCase()));
 
-  // 👇 ADICIONA DIRETO DO BANCO DE DADOS 👇
-  // 👇 ADICIONA DIRETO DO BANCO DE DADOS 👇
   function adicionarDoCompendio(itemDoBanco) {
-    
-    // Expressão regular ninja para extrair cargas
     let cargasMaximas = 0;
     if (itemDoBanco.descricao) {
       const matchCargas = itemDoBanco.descricao.match(/(\d+)\s+cargas/i);
@@ -37,23 +35,28 @@ export function Inventario(props) {
       }
     }
 
-    // 👇 O CARIMBO DO PASSAPORTE PARA A ABA COMBATE 👇
-    // Verifica se o item veio do banco de ARMAS ou se tem Dano (como uma espada mágica)
-    const ehUmaArma = itemDoBanco.tipoItem === "Arma" || (itemDoBanco.dano && !itemDoBanco.descricao?.includes("Poção"));
+    const ehUmaArma = Boolean(itemDoBanco.tipoItem === "Arma" || (itemDoBanco.dano && !itemDoBanco.descricao?.includes("Poção")));
+    const ehUmaArmadura = Boolean(itemDoBanco.tipoItem === "Armadura" || itemDoBanco.nome.toLowerCase().includes("armadura") || itemDoBanco.nome.toLowerCase().includes("armor") || itemDoBanco.ca);
+
+    const descricaoLimpa = itemDoBanco.descricao 
+      ? itemDoBanco.descricao 
+      : itemDoBanco.dano 
+        ? `Dano: ${itemDoBanco.dano} ${itemDoBanco.tipoDano || itemDoBanco.tipo || ""}` 
+        : "Nenhuma descrição detalhada.";
 
     const itemFormatado = {
       id: Date.now().toString(),
       nome: itemDoBanco.nome,
       qtd: 1,
       peso: itemDoBanco.peso || 0,
-      descricao: itemDoBanco.descricao || `Dano: ${itemDoBanco.dano} ${itemDoBanco.tipoDano || itemDoBanco.tipo}`,
+      descricao: descricaoLimpa,
       equipado: false,
       sintonizado: false,
-      exigeSintonia: itemDoBanco.attunement || false,
+      exigeSintonia: itemDoBanco.attunement || false, // 👈 SEMPRE ESTEVE AQUI!
       cargasTotais: cargasMaximas,
       cargasAtuais: cargasMaximas,
-      isArma: ehUmaArma,       // 👈 AGORA ELE SABE QUE É UMA ARMA!
-      isArmadura: false
+      isArma: ehUmaArma,
+      isArmadura: ehUmaArmadura 
     };
     
     atualizarBanco([...itens, itemFormatado], null);
@@ -67,11 +70,25 @@ export function Inventario(props) {
   }, [props.dados]);
 
   function atualizarBanco(novosItens, novasMoedas) {
-    if (novosItens) setItens(novosItens);
+    let itensLimpos = novosItens;
+
+    if (novosItens) {
+      itensLimpos = novosItens.map(item => {
+        const itemLimpo = { ...item };
+        Object.keys(itemLimpo).forEach(key => {
+          if (itemLimpo[key] === undefined) {
+            itemLimpo[key] = false; 
+          }
+        });
+        return itemLimpo;
+      });
+      setItens(itensLimpos);
+    }
+    
     if (novasMoedas) setMoedas(novasMoedas);
     
     if (props.aoSalvar) {
-      if (novosItens) props.aoSalvar("inventario", novosItens);
+      if (novosItens) props.aoSalvar("inventario", itensLimpos);
       if (novasMoedas) props.aoSalvar("moedas", novasMoedas);
     }
   }
@@ -113,7 +130,6 @@ export function Inventario(props) {
       }
     }
 
-    // 👇 CARIMBA ARMAS CRIADAS MANUALMENTE TAMBÉM 👇
     const ehArmaManual = ARMAS.some(a => nomeFormatado.includes(a.nome.toLowerCase().split('(')[0].trim()));
 
     const item = { 
@@ -124,8 +140,8 @@ export function Inventario(props) {
       descricao: "",
       equipado: false,     
       sintonizado: false,  
-      exigeSintonia: false,
-      isArma: ehArmaManual // 👈 Libera a arma criada na mão pra ir pro combate!
+      exigeSintonia: false, // Pode ser ativado manualmente depois
+      isArma: ehArmaManual
     };
     
     atualizarBanco([...itens, item], null);
@@ -153,7 +169,6 @@ export function Inventario(props) {
     atualizarBanco(novaLista, null);
   }
 
-  // 👇 MOTOR DAS ALAVANCAS: EQUIPAR 👇
   function toggleEquipar(id) {
     const novaLista = itens.map(item => {
       if (item.id === id) {
@@ -164,15 +179,12 @@ export function Inventario(props) {
     atualizarBanco(novaLista, null);
   }
 
-  // 👇 MOTOR DAS ALAVANCAS: SINTONIZAR (COM TRAVA DE SEGURANÇA) 👇
   function toggleSintonia(id) {
     const itemAtual = itens.find(i => i.id === id);
     
-    // Se o cara quer LIGAR a sintonia, verificamos o limite
     if (!itemAtual.sintonizado) {
       const sintonizados = itens.filter(i => i.sintonizado).length;
       if (sintonizados >= 3) {
-        // Dispara um Alerta simples na tela (pode trocar por um Toast depois)
         alert("🔒 Limite de Sintonia Atingido! Você já possui 3 itens sintonizados. Desfaça a sintonia de um item primeiro.");
         return;
       }
@@ -202,8 +214,213 @@ export function Inventario(props) {
     item.nome.toLowerCase().includes(busca.toLowerCase())
   );
 
-  // Conta os Sintonizados para o Topo do Inventário
+  const itensEquipados = itensFiltrados.filter(item => 
+    item.equipado || item.sintonizado || props.dados.armaduraEquipada === item.nome
+  );
+  
+  const itensMochila = itensFiltrados.filter(item => 
+    !(item.equipado || item.sintonizado || props.dados.armaduraEquipada === item.nome)
+  );
+
   const qtdSintonizados = itens.filter(i => i.sintonizado).length;
+
+  const renderItemCard = (item) => {
+    const isOpen = expandido === item.id;
+    const isEquipado = item.equipado || props.dados.armaduraEquipada === item.nome;
+    const isSintonizado = item.sintonizado;
+    
+    const isEscudo = item.nome.toLowerCase().includes("escudo") || item.nome.toLowerCase().includes("shield");
+    const isArmaduraOuEscudo = item.isArmadura || isEscudo;
+
+    return (
+      <div key={item.id} className="item-card" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
+        
+        <div 
+          className="item-row-click"
+          onClick={() => toggleExpandir(item.id)}
+          style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 15px', cursor: 'pointer', 
+            background: isOpen ? '#222' : 'transparent',
+            borderLeft: isEquipado ? '4px solid #3498db' : isSintonizado ? '4px solid #8e44ad' : 'none'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+            <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>{isOpen ? '📂' : '📁'}</span>
+            <span className="item-nome" style={{ fontWeight: 'bold', color: isEquipado ? '#3498db' : isSintonizado ? '#9b59b6' : '#fff' }}>
+              {item.nome}
+              
+              {/* 👇 AS TAGS VISUAIS DE SINTONIA 👇 */}
+              {isSintonizado && <span style={{ marginLeft: '8px', color: '#9b59b6', fontSize: '0.8rem' }} title="Sintonizado">✦ Sintonizado</span>}
+              {item.exigeSintonia && !isSintonizado && <span style={{ marginLeft: '8px', background: '#4a235a', color: '#d7bde2', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', verticalAlign: 'middle', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Requer Sintonia</span>}
+            </span>
+          </div>
+          
+          <div className="controles-qtd" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#0a0a0a', padding: '4px 8px', borderRadius: '20px', border: '1px solid #333' }}>
+            <button onClick={() => mudarQtd(item.id, -1)} style={{ background: '#222', border: 'none', color: '#fff', cursor: 'pointer', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+            <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 'bold' }}>{item.qtd}</span>
+            <button onClick={() => mudarQtd(item.id, 1)} style={{ background: '#222', border: 'none', color: '#fff', cursor: 'pointer', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="item-detalhes" style={{ padding: '15px', borderTop: '1px solid #333', background: '#111' }}>
+            <div style={{ display: 'flex', gap: '35px', flexWrap: 'wrap' }}>
+              
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Descrição / Efeitos Mágicos</label>
+                <textarea 
+                  value={item.descricao || ""}
+                  onChange={(e) => atualizarDetalhes(item.id, "descricao", e.target.value)}
+                  placeholder="Adicione notas, efeitos de poção, etc..."
+                  style={{ width: '100%', height: '80px', background: '#0a0a0a', border: '1px solid #333', color: '#fff', padding: '10px', borderRadius: '6px', resize: 'none' }}
+                />
+              </div>
+
+              <div style={{ width: '130px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Peso (Unidade)</label>
+                  <div style={{ display: 'flex', alignItems: 'center', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', paddingRight: '10px' }}>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={item.peso === 0 ? '' : item.peso}
+                      onChange={(e) => atualizarDetalhes(item.id, "peso", e.target.value)}
+                      placeholder="0"
+                      style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', padding: '10px' }}
+                    />
+                    <span style={{ fontSize: '0.8rem', color: '#666' }}>lbs</span>
+                  </div>
+                </div>
+                
+                {/* 👇 CHECKBOX MANUAL DE SINTONIA (Para customização do Mestre) 👇 */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#888', cursor: 'pointer', background: '#1a1a1a', padding: '6px', borderRadius: '6px', border: '1px solid #333' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={item.exigeSintonia || false} 
+                    onChange={(e) => atualizarDetalhes(item.id, "exigeSintonia", e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  Exige Sintonia
+                </label>
+
+                {item.cargasTotais > 0 && (
+                  <div style={{ background: '#2c003e', border: '1px solid #8e44ad', borderRadius: '6px', padding: '8px', textAlign: 'center' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#d7bde2', marginBottom: '5px', fontWeight: 'bold', textTransform: 'uppercase' }}>Cargas Mágicas</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111', borderRadius: '4px', padding: '4px' }}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); mudarCarga(item.id, -1); }}
+                        style={{ background: '#5c0099', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >-</button>
+                      
+                      <span style={{ fontWeight: 'bold', color: item.cargasAtuais === 0 ? '#ff4444' : '#fff' }}>
+                        {item.cargasAtuais} <span style={{ color: '#888', fontSize: '0.8rem' }}>/ {item.cargasTotais}</span>
+                      </span>
+                      
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); mudarCarga(item.id, 1); }}
+                        style={{ background: '#5c0099', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >+</button>
+                    </div>
+                    {item.cargasAtuais === 0 && (
+                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#ff4444', marginTop: '5px' }}>Sem cargas!</span>
+                    )}
+                  </div>
+                )}
+
+                {itemParaDeletar === item.id ? (
+                  <button 
+                    onClick={() => remover(item.id)}
+                    style={{ background: '#ff4444', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Certeza?
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setItemParaDeletar(item.id)}
+                    style={{ background: 'transparent', color: '#ff4444', border: '1px solid #ff4444', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    🗑️ Jogar Fora
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 👇 AS ALAVANCAS DE AÇÃO UNIFICADAS 👇 */}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px dashed #333', paddingTop: '15px' }}>
+              
+              {!isArmaduraOuEscudo && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleEquipar(item.id); }}
+                  style={{ background: item.equipado ? '#2980b9' : 'transparent', color: item.equipado ? '#fff' : '#3498db', border: '1px solid #3498db', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}
+                >
+                  {item.equipado ? '🛡️ Equipado' : 'Equipar'}
+                </button>
+              )}
+
+              {/* 👇 O BOTÃO SÓ APARECE SE O ITEM EXIGIR SINTONIA 👇 */}
+              {item.exigeSintonia && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleSintonia(item.id); }} 
+                  style={{ background: item.sintonizado ? '#8e44ad' : 'transparent', color: item.sintonizado ? '#fff' : '#9b59b6', border: '1px solid #9b59b6', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}
+                >
+                  {item.sintonizado ? '✨ Sintonizado' : 'Sintonizar'}
+                </button>
+              )}
+            </div>
+
+            {/* OS BOTÕES DE ARMADURA DINÂMICOS */}
+            {isArmaduraOuEscudo && (
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                
+                {item.isArmadura && !isEscudo && (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const jaVestido = props.dados.armaduraEquipada === item.nome;
+                      props.aoSalvar && props.aoSalvar("armaduraEquipada", jaVestido ? "Nenhuma" : item.nome); 
+                      
+                      const novaLista = itens.map(i => i.id === item.id ? { ...i, equipado: !jaVestido } : i);
+                      atualizarBanco(novaLista, null);
+                    }}
+                    style={{ 
+                      background: props.dados.armaduraEquipada === item.nome ? '#27ae60' : 'transparent', 
+                      color: props.dados.armaduraEquipada === item.nome ? '#fff' : '#2ecc71', 
+                      border: '1px solid #2ecc71', 
+                      padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', flex: 1, fontWeight: 'bold' 
+                    }}
+                    title="Define este item como o cálculo base da sua CA no painel principal"
+                  >
+                    {props.dados.armaduraEquipada === item.nome ? '👕 Vestindo' : 'Vestir Armadura'}
+                  </button>
+                )}
+
+                {isEscudo && (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const escudoJaNaMao = props.dados.escudoCA === 2;
+                      props.aoSalvar && props.aoSalvar("escudoCA", escudoJaNaMao ? 0 : 2); 
+                      
+                      const novaLista = itens.map(i => i.id === item.id ? { ...i, equipado: !escudoJaNaMao } : i);
+                      atualizarBanco(novaLista, null);
+                    }} 
+                    style={{ 
+                      background: props.dados.escudoCA === 2 ? '#2c3e50' : 'transparent', 
+                      color: props.dados.escudoCA === 2 ? '#fff' : '#34495e', 
+                      border: '1px solid #34495e', 
+                      padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', flex: 1, fontWeight: 'bold' 
+                    }}
+                  >
+                    {props.dados.escudoCA === 2 ? '🛡️ Na Mão (+2)' : 'Equipar Escudo'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="painel-inventario">
@@ -250,7 +467,7 @@ export function Inventario(props) {
           </div>
         </div>
 
-        {/* 👇 SLOTS DE SINTONIA 👇 */}
+        {/* SLOTS DE SINTONIA */}
         <div style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #333', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <strong style={{ fontSize: '0.85rem', marginBottom: '8px', color: '#888' }}>Sintonia</strong>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -270,10 +487,6 @@ export function Inventario(props) {
           </div>
         </div>
 
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3 style={{ margin: 0 }}>🎒 Mochila</h3>
       </div>
 
       <div className="barra-pesquisa-container">
@@ -327,11 +540,10 @@ export function Inventario(props) {
                 <div style={{ textAlign: 'center', padding: '20px', background: '#111', borderRadius: '8px', border: '1px dashed #444' }}>
                   <p style={{ color: '#ffcc00', marginBottom: '15px' }}>Nenhum item encontrado com esse nome.</p>
                   
-                  {/* 👇 O botão de fallback pra adicionar item manual 👇 */}
                   <button 
                     onClick={() => {
-                      setNovoItem(buscaCompendio); // Joga o nome que ele digitou
-                      adicionar(); // Chama a função velha de adicionar manual
+                      setNovoItem(buscaCompendio); 
+                      adicionar(); 
                       setModalAberto(false);
                       setBuscaCompendio("");
                     }}
@@ -364,7 +576,7 @@ export function Inventario(props) {
         </div>
       )}
 
-      {/* --- LISTA DE ITENS SANFONADA --- */}
+      {/* --- LISTA DE ITENS DIVIDIDA --- */}
       <div className="lista-itens">
         {itens.length === 0 && <p className="vazio" style={{ textAlign: 'center', color: '#666', padding: '20px' }}>Sua mochila está vazia...</p>}
         {itens.length > 0 && itensFiltrados.length === 0 && (
@@ -373,174 +585,25 @@ export function Inventario(props) {
           </p>
         )}
 
-        {itensFiltrados.map((item) => {
-          const isOpen = expandido === item.id;
-          const isEquipado = item.equipado;
-          const isSintonizado = item.sintonizado;
+        {/* SESSÃO 1: EQUIPAMENTOS EM USO */}
+        {itensEquipados.length > 0 && (
+          <div style={{ marginBottom: '25px' }}>
+            <h4 style={{ color: '#3498db', borderBottom: '1px solid #2980b9', paddingBottom: '5px', marginBottom: '10px', textTransform: 'uppercase', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              ⚔️ Em Uso
+            </h4>
+            {itensEquipados.map(renderItemCard)}
+          </div>
+        )}
 
-          return (
-            <div key={item.id} className="item-card" style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
-              
-              <div 
-                className="item-row-click"
-                onClick={() => toggleExpandir(item.id)}
-                style={{ 
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 15px', cursor: 'pointer', 
-                  background: isOpen ? '#222' : 'transparent',
-                  borderLeft: isEquipado ? '4px solid #3498db' : isSintonizado ? '4px solid #8e44ad' : 'none'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                  <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>{isOpen ? '📂' : '📁'}</span>
-                  <span className="item-nome" style={{ fontWeight: 'bold', color: isEquipado ? '#3498db' : '#fff' }}>
-                    {item.nome}
-                    {isSintonizado && <span style={{ marginLeft: '5px', color: '#9b59b6' }}>✦</span>}
-                  </span>
-                </div>
-                
-                <div className="controles-qtd" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#0a0a0a', padding: '4px 8px', borderRadius: '20px', border: '1px solid #333' }}>
-                  <button onClick={() => mudarQtd(item.id, -1)} style={{ background: '#222', border: 'none', color: '#fff', cursor: 'pointer', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-                  <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 'bold' }}>{item.qtd}</span>
-                  <button onClick={() => mudarQtd(item.id, 1)} style={{ background: '#222', border: 'none', color: '#fff', cursor: 'pointer', width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                </div>
-              </div>
-
-              {isOpen && (
-                <div className="item-detalhes" style={{ padding: '15px', borderTop: '1px solid #333', background: '#111' }}>
-                  <div style={{ display: 'flex', gap: '35px', flexWrap: 'wrap' }}>
-                    
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Descrição / Efeitos Mágicos</label>
-                      <textarea 
-                        value={item.descricao || ""}
-                        onChange={(e) => atualizarDetalhes(item.id, "descricao", e.target.value)}
-                        placeholder="Adicione notas, efeitos de poção, etc..."
-                        style={{ width: '100%', height: '80px', background: '#0a0a0a', border: '1px solid #333', color: '#fff', padding: '10px', borderRadius: '6px', resize: 'none' }}
-                      />
-                    </div>
-
-                    <div style={{ width: '130px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Peso (Unidade)</label>
-                        <div style={{ display: 'flex', alignItems: 'center', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', paddingRight: '10px' }}>
-                          <input 
-                            type="number" 
-                            step="0.1"
-                            value={item.peso === 0 ? '' : item.peso}
-                            onChange={(e) => atualizarDetalhes(item.id, "peso", e.target.value)}
-                            placeholder="0"
-                            style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', padding: '10px' }}
-                          />
-                          <span style={{ fontSize: '0.8rem', color: '#666' }}>lbs</span>
-                        </div>
-                      </div>
-                      {/* 👇 PAINEL DE CARGAS MÁGICAS 👇 */}
-                      {item.cargasTotais > 0 && (
-                        <div style={{ background: '#2c003e', border: '1px solid #8e44ad', borderRadius: '6px', padding: '8px', textAlign: 'center' }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', color: '#d7bde2', marginBottom: '5px', fontWeight: 'bold', textTransform: 'uppercase' }}>Cargas Mágicas</label>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111', borderRadius: '4px', padding: '4px' }}>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); mudarCarga(item.id, -1); }}
-                              style={{ background: '#5c0099', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                            >-</button>
-                            
-                            <span style={{ fontWeight: 'bold', color: item.cargasAtuais === 0 ? '#ff4444' : '#fff' }}>
-                              {item.cargasAtuais} <span style={{ color: '#888', fontSize: '0.8rem' }}>/ {item.cargasTotais}</span>
-                            </span>
-                            
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); mudarCarga(item.id, 1); }}
-                              style={{ background: '#5c0099', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                            >+</button>
-                          </div>
-                          {item.cargasAtuais === 0 && (
-                            <span style={{ display: 'block', fontSize: '0.65rem', color: '#ff4444', marginTop: '5px' }}>Sem cargas!</span>
-                          )}
-                        </div>
-                      )}
-
-                      {itemParaDeletar === item.id ? (
-                        <button 
-                          onClick={() => remover(item.id)}
-                          style={{ background: '#ff4444', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-                        >
-                          Certeza?
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => setItemParaDeletar(item.id)}
-                          style={{ background: 'transparent', color: '#ff4444', border: '1px solid #ff4444', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
-                        >
-                          🗑️ Jogar Fora
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 👇 AS ALAVANCAS DE AÇÃO 👇 */}
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px dashed #333', paddingTop: '15px' }}>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); toggleEquipar(item.id); }}
-                      style={{ background: item.equipado ? '#2980b9' : 'transparent', color: item.equipado ? '#fff' : '#3498db', border: '1px solid #3498db', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}
-                    >
-                      {item.equipado ? '🛡️ Equipado' : 'Equipar'}
-                    </button>
-
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); toggleSintonia(item.id); }} 
-                      style={{ background: item.sintonizado ? '#8e44ad' : 'transparent', color: item.sintonizado ? '#fff' : '#9b59b6', border: '1px solid #9b59b6', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}
-                    >
-                      {item.sintonizado ? '✨ Sintonizado' : 'Sintonizar'}
-                    </button>
-                  </div>
-
-                  {/* 👇 OS BOTÕES DE ARMADURA DINÂMICOS 👇 */}
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    
-                    {/* Botão VESTIR ARMADURA */}
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        const jaVestido = props.dados.armaduraEquipada === item.nome;
-                        // Se clicar de novo numa armadura já vestida, ele tira a armadura (joga vazio "")
-                        props.aoSalvar && props.aoSalvar("armaduraEquipada", jaVestido ? "" : item.nome); 
-                      }}
-                      style={{ 
-                        background: props.dados.armaduraEquipada === item.nome ? '#27ae60' : 'transparent', 
-                        color: props.dados.armaduraEquipada === item.nome ? '#fff' : '#2ecc71', 
-                        border: '1px solid #2ecc71', 
-                        padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', flex: 1, fontWeight: 'bold' 
-                      }}
-                      title="Define este item como o cálculo base da sua CA no painel principal"
-                    >
-                      {props.dados.armaduraEquipada === item.nome ? '👕 Vestindo' : 'Vestir'}
-                    </button>
-
-                    {/* Botão EQUIPAR ESCUDO (Aparece em destaque se o item se chamar Escudo/Shield) */}
-                    {(item.nome.toLowerCase().includes("escudo") || item.nome.toLowerCase().includes("shield")) && (
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          const escudoJaNaMao = props.dados.escudoCA === 2;
-                          // Funciona como um Toggle: clicou de novo, guarda o escudo
-                          props.aoSalvar && props.aoSalvar("escudoCA", escudoJaNaMao ? 0 : 2); 
-                        }} 
-                        style={{ 
-                          background: props.dados.escudoCA === 2 ? '#2c3e50' : 'transparent', 
-                          color: props.dados.escudoCA === 2 ? '#fff' : '#34495e', 
-                          border: '1px solid #34495e', 
-                          padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', flex: 1, fontWeight: 'bold' 
-                        }}
-                      >
-                        {props.dados.escudoCA === 2 ? '🛡️ Na Mão (+2)' : 'Equipar Escudo'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* SESSÃO 2: FUNDO DA MOCHILA */}
+        {itensMochila.length > 0 && (
+          <div>
+            <h4 style={{ color: '#888', borderBottom: '1px solid #444', paddingBottom: '5px', marginBottom: '10px', textTransform: 'uppercase', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🎒 Mochila
+            </h4>
+            {itensMochila.map(renderItemCard)}
+          </div>
+        )}
       </div>
     </div>
   );

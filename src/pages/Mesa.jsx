@@ -2,14 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc, collection, addDoc, deleteDoc } from 'firebase/firestore';
 import { MapaVirtual } from '../components/MapaVirtual';
 import { CaixaDeDados } from '../components/CaixaDeDados';
 import { BESTIARIO } from '../data/bestiario';
 import { ARMAS } from '../data/armas'; 
 import itensMagicos from '../data/itensMagicos';
 import { aplicarEfeitos } from '../utils/motorDeEfeitos';
-import { TALENTOS } from '../data/talentos'; // 👈 IMPORTANTE: Puxando o banco de Talentos!
+import { TALENTOS } from '../data/talentos';
 
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
@@ -63,7 +63,6 @@ export function Mesa() {
   const [buscaLoot, setBuscaLoot] = useState("");
   const [itemSelecionadoLoot, setItemSelecionadoLoot] = useState(null);
 
-  // 👇 ESTADOS DA NOVA DÁDIVA 👇
   const [modalTalentoMesaAberto, setModalTalentoMesaAberto] = useState(false);
   const [buscaTalentoMesa, setBuscaTalentoMesa] = useState("");
   const [talentoSelecionadoMesa, setTalentoSelecionadoMesa] = useState(null);
@@ -77,6 +76,19 @@ export function Mesa() {
   const [formNpc, setFormNpc] = useState({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
 
   const [dialogo, setDialogo] = useState({ ativo: false, tipo: '', titulo: '', mensagem: '', acaoConfirmar: null });
+
+  const [bestiarioCampanha, setBestiarioCampanha] = useState([]);
+
+  useEffect(() => {
+    if (!isMestre) return;
+    const subColRef = collection(db, "mesas", codigoSala, "bestiario_campanha");
+    const unsub = onSnapshot(subColRef, (snap) => {
+      const lista = [];
+      snap.forEach(d => lista.push({ id: d.id, ...d.data() }));
+      setBestiarioCampanha(lista);
+    });
+    return () => unsub();
+  }, [codigoSala, isMestre]);
 
   function abrirAlert(titulo, mensagem, acaoConfirmar = null) {
     setDialogo({ ativo: true, tipo: 'alert', titulo, mensagem, acaoConfirmar });
@@ -217,7 +229,6 @@ export function Mesa() {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
       setModalCustomNpc(false);
       setModalNpcAberto(false);
-      
       setFormNpc({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
     } catch (err) { console.error("Erro ao adicionar NPC:", err); }
   }
@@ -293,6 +304,37 @@ export function Mesa() {
       setModalHpNpc(null);
       setValorHpInput("");
     } catch (error) { console.error("Erro ao alterar vida NPC:", error); }
+  }
+
+  async function salvarNpcNoBestiarioCampanha(e) {
+    e.preventDefault();
+    if (!isMestre || !formNpc.nome) return;
+
+    const novoModelo = {
+      nome: formNpc.nome,
+      hp: parseInt(formNpc.hp) || 1,
+      ca: parseInt(formNpc.ca) || 10,
+      iniciativa: parseInt(formNpc.ini) || 0,
+      foto: formNpc.foto.trim(),
+      faccao: formNpc.faccao,
+      ataques: [],
+      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 }
+    };
+
+    try {
+      await addDoc(collection(db, "mesas", codigoSala, "bestiario_campanha"), novoModelo);
+      abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi imortalizada no Bestiário da Campanha!`);
+      setModalCustomNpc(false);
+      setFormNpc({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function deletarNpcBestiarioCampanha(idDoc) {
+    try {
+      await deleteDoc(doc(db, "mesas", codigoSala, "bestiario_campanha", idDoc));
+    } catch (e) { console.error(e); }
   }
 
   async function abrirModalDeFichas() {
@@ -506,7 +548,6 @@ export function Mesa() {
     ? [] 
     : todosOsItensDoBanco.filter(i => i.nome.toLowerCase().includes(buscaLoot.toLowerCase()));
 
-  // 👇 FILTRO DE TALENTOS 👇
   const resultadosTalentosMesa = buscaTalentoMesa.trim() === "" 
     ? [] 
     : Object.values(TALENTOS).filter(t => t.nome.toLowerCase().includes(buscaTalentoMesa.toLowerCase()));
@@ -542,23 +583,16 @@ export function Mesa() {
         inventario: arrayUnion(itemFormatado)
       });
 
-      enviarMensagemOuDado(
-        "👑 Mestre", 
-        `✨ O Mestre concedeu o item **${itemDoBanco.nome}** para *${nomeJogador}*!`, 
-        "sistema"
-      );
-
+      enviarMensagemOuDado("👑 Mestre", `✨ O Mestre concedeu o item **${itemDoBanco.nome}** para *${nomeJogador}*!`, "sistema");
       setItemSelecionadoLoot(null);
       setModalLootAberto(false);
       setBuscaLoot("");
-
     } catch (e) {
       console.error("Erro ao enviar Loot:", e);
       abrirAlert("Erro", "Erro ao entregar o item pro jogador.");
     }
   }
 
-  // 👇 A GLORIOSA FUNÇÃO DE DAR DÁDIVA / MALDIÇÃO 👇
   async function entregarTalentoMesa(talentoDoBanco, jogadorId) {
     if (!isMestre) return;
     const fichaAlvo = jogadores[jogadorId];
@@ -569,9 +603,9 @@ export function Mesa() {
     
     try {
       await updateDoc(doc(db, "personagens", jogadorId), {
-        qtdTalentosExtras: qtdExtras + 1, // Prepara o terreno pra ficha não apagar
-        [`escolhasTalentos.${novoIdSlot}`]: { nome: talentoDoBanco.nome, bonusAtributos: [] }, // Salva a escolha
-        talentos: arrayUnion({ // Injeta na mesma hora pra aparecer na aba de Características!
+        qtdTalentosExtras: qtdExtras + 1, 
+        [`escolhasTalentos.${novoIdSlot}`]: { nome: talentoDoBanco.nome, bonusAtributos: [] }, 
+        talentos: arrayUnion({ 
           id: `${novoIdSlot}-${talentoDoBanco.nome}`,
           nome: talentoDoBanco.nome,
           bonusAtributos: [],
@@ -579,16 +613,10 @@ export function Mesa() {
         })
       });
 
-      enviarMensagemOuDado(
-        "👑 Mestre", 
-        `🔮 O destino interveio! *${fichaAlvo.nome}* recebeu a dádiva/maldição: **${talentoDoBanco.nome}**!`, 
-        "sistema"
-      );
-
+      enviarMensagemOuDado("👑 Mestre", `🔮 O destino interveio! *${fichaAlvo.nome}* recebeu a dádiva/maldição: **${talentoDoBanco.nome}**!`, "sistema");
       setTalentoSelecionadoMesa(null);
       setModalTalentoMesaAberto(false);
       setBuscaTalentoMesa("");
-
     } catch (e) {
       console.error("Erro ao dar talento:", e);
       abrirAlert("Erro", "Erro ao entregar o talento.");
@@ -609,13 +637,7 @@ export function Mesa() {
                 <button className="btn-dialogo-cancelar" onClick={fecharDialogo}>Cancelar</button>
               )}
               
-              <button 
-                className="btn-dialogo-confirmar" 
-                onClick={() => {
-                  fecharDialogo();
-                  if (dialogo.acaoConfirmar) dialogo.acaoConfirmar();
-                }}
-              >
+              <button className="btn-dialogo-confirmar" onClick={() => { fecharDialogo(); if (dialogo.acaoConfirmar) dialogo.acaoConfirmar(); }}>
                 {dialogo.tipo === 'alert' ? 'Entendido' : 'Confirmar'}
               </button>
             </div>
@@ -625,6 +647,7 @@ export function Mesa() {
 
       <CaixaDeDados aoTerminarDeRolar={finalizarRolagem3D} />
       
+      {/* 👇 TODOS OS MODAIS AQUI 👇 */}
       {modalAberto && (
         <div className="overlay-modal" onClick={() => setModalAberto(false)}>
           <div className="modal-fichas" onClick={(e) => e.stopPropagation()}>
@@ -668,6 +691,71 @@ export function Mesa() {
         </div>
       )}
 
+      {/* 👇 O MODAL DE ADICIONAR NPC QUE TINHA SUMIDO ESTÁ DE VOLTA! 👇 */}
+      {modalNpcAberto && isMestre && (
+        <div className="overlay-modal" onClick={() => setModalNpcAberto(false)}>
+          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ff4444' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0, color: '#ff4444' }}>Adicionar Ameaça</h3>
+              <button onClick={() => setModalNpcAberto(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+            </div>
+            
+            <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '15px' }}>Escolha um NPC do Bestiário para adicionar rapidamente à mesa:</p>
+
+            <div className="lista-fichas-modal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {Object.entries(BESTIARIO).map(([nome, info]) => (
+                <div
+                  key={nome}
+                  onClick={() => adicionarNpcDoBestiario(nome, info)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#252525', border: '1px solid #444', padding: '10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.borderColor = '#ff4444'}
+                  onMouseOut={(e) => e.currentTarget.style.borderColor = '#444'}
+                >
+                  <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    {info.foto ? <img src={info.foto} alt={nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👹'}
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.9rem', color: 'white' }}>{nome}</strong>
+                    <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{info.hp} HP | {info.faccao}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {bestiarioCampanha.length > 0 && (
+              <>
+                <h4 style={{ color: '#ffcc00', marginTop: '20px', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>📖 Bestiário da Campanha</h4>
+                <div className="lista-fichas-modal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {bestiarioCampanha.map(npc => (
+                    <div key={npc.id} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px', background: '#332b00', border: '1px solid #ffcc00', padding: '10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}>
+                      <button onClick={(e) => { e.stopPropagation(); deletarNpcBestiarioCampanha(npc.id); }} style={{position:'absolute', top:5, right:5, background:'transparent', border:'none', color:'#ff4444', cursor:'pointer'}} title="Apagar do Bestiário">✖</button>
+                      <div onClick={() => adicionarNpcDoBestiario(npc.nome, npc)} style={{display:'flex', width:'100%', gap:'10px', alignItems:'center'}}>
+                         <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                            {npc.foto ? <img src={npc.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={npc.nome} /> : '👹'}
+                          </div>
+                          <div>
+                            <strong style={{ display: 'block', fontSize: '0.9rem', color: '#ffcc00' }}>{npc.nome}</strong>
+                            <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{npc.hp} HP | {npc.faccao}</span>
+                          </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px', textAlign: 'center' }}>
+              <button 
+                onClick={() => { setModalNpcAberto(false); setModalCustomNpc(true); }} 
+                style={{ background: 'transparent', color: '#ffcc00', border: '1px dashed #ffcc00', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+              >
+                + Forjar NPC Customizado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalCustomNpc && isMestre && (
         <div className="overlay-modal" onClick={() => setModalCustomNpc(false)}>
           <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ffcc00' }}>
@@ -676,7 +764,7 @@ export function Mesa() {
               <button onClick={() => setModalCustomNpc(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
             </div>
             
-            <form onSubmit={salvarCapangaFormulario} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <form style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <input type="text" placeholder="Nome do NPC/Monstro *" required value={formNpc.nome} onChange={e => setFormNpc({...formNpc, nome: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
               
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -693,13 +781,19 @@ export function Mesa() {
                 <option value="aliado">🟢 Aliado (Amigo)</option>
               </select>
 
-              <button type="submit" style={{ marginTop: '10px', background: '#ffcc00', color: 'black', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Gerar no Mapa</button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button type="button" onClick={salvarCapangaFormulario} style={{ flex: 1, background: '#444', color: 'white', border: '1px solid #555', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  ⚔️ Apenas Gerar no Mapa
+                </button>
+                <button type="button" onClick={salvarNpcNoBestiarioCampanha} style={{ flex: 1, background: '#ffcc00', color: 'black', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  💾 Salvar no Bestiário
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* 👇 MODAL DE LOOT (INTACTO) 👇 */}
       {modalLootAberto && isMestre && (
         <div className="overlay-modal" onClick={() => { setModalLootAberto(false); setItemSelecionadoLoot(null); }}>
           <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '2px solid #8e44ad', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(142,68,173,0.3)' }} onClick={e => e.stopPropagation()}>
@@ -748,17 +842,13 @@ export function Mesa() {
                 </div>
               </>
             ) : (
-              
               <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                
                 <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
                   <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>Item Selecionado</span>
                   <h3 style={{ margin: '5px 0', color: itemSelecionadoLoot.isMagico ? '#9b59b6' : '#3498db' }}>{itemSelecionadoLoot.nome}</h3>
                   <button onClick={() => setItemSelecionadoLoot(null)} style={{ background: 'transparent', border: '1px dashed #555', color: '#aaa', padding: '4px 10px', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>⬅ Trocar Item</button>
                 </div>
-
                 <h4 style={{ color: '#fff', textAlign: 'center', marginBottom: '15px' }}>Entregar para qual Herói?</h4>
-
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', overflowY: 'auto' }}>
                   {(!mesaDados.jogadores || mesaDados.jogadores.length === 0) ? (
                     <p style={{ color: '#ff4444' }}>Não há jogadores na mesa para receber o item.</p>
@@ -779,15 +869,12 @@ export function Mesa() {
                     ))
                   )}
                 </div>
-
               </div>
             )}
-            
           </div>
         </div>
       )}
 
-      {/* 👇 NOVO MODAL DE DÁDIVAS / TALENTOS 👇 */}
       {modalTalentoMesaAberto && isMestre && (
         <div className="overlay-modal" onClick={() => { setModalTalentoMesaAberto(false); setTalentoSelecionadoMesa(null); }}>
           <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '550px', height: '80vh', borderRadius: '12px', border: '2px solid #d35400', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 10px 30px rgba(211,84,0,0.3)' }} onClick={e => e.stopPropagation()}>
@@ -808,7 +895,6 @@ export function Mesa() {
                     style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d35400', background: '#0a0a0a', color: '#fff', fontSize: '1rem', outline: 'none' }}
                   />
                 </div>
-
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 15px 15px 15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {buscaTalentoMesa.trim() === "" ? (
                     <p style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>Qual poder você concederá aos mortais?</p>
@@ -836,17 +922,13 @@ export function Mesa() {
                 </div>
               </>
             ) : (
-              
               <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                
                 <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
                   <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>Dádiva Selecionada</span>
                   <h3 style={{ margin: '5px 0', color: '#e67e22' }}>{talentoSelecionadoMesa.nome}</h3>
                   <button onClick={() => setTalentoSelecionadoMesa(null)} style={{ background: 'transparent', border: '1px dashed #555', color: '#aaa', padding: '4px 10px', fontSize: '0.7rem', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>⬅ Trocar Talento</button>
                 </div>
-
                 <h4 style={{ color: '#fff', textAlign: 'center', marginBottom: '15px' }}>Amaldiçoar / Abençoar qual Herói?</h4>
-
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center', overflowY: 'auto' }}>
                   {(!mesaDados.jogadores || mesaDados.jogadores.length === 0) ? (
                     <p style={{ color: '#ff4444' }}>Não há jogadores na mesa.</p>
@@ -867,74 +949,45 @@ export function Mesa() {
                     ))
                   )}
                 </div>
-
               </div>
             )}
-            
           </div>
         </div>
       )}
 
-      <div className="mesa-header">
-        <Link to="/" className="btn-voltar-lobby">⬅ Sair da Mesa</Link>
-        <div>
-          <h1>⚔️ {mesaDados.nome} {isMestre && <span title="Você é o Mestre!" style={{cursor:'help'}}>👑</span>}</h1>
-          <p>Código de Convite: <strong style={{color:'#ffcc00', letterSpacing:'2px'}}>{codigoSala}</strong></p>
+      {/* 👇 O CABEÇALHO FOI TOTALMENTE REESTRUTURADO PARA NÃO BUGAR O FLEXBOX 👇 */}
+      <div className="mesa-header-container">
+        
+        {/* Grupo 1: Info da Sala */}
+        <div className="mesa-header-info">
+          <Link to="/" className="btn-voltar-lobby">⬅ Sair</Link>
+          <div>
+            <h1>⚔️ {mesaDados.nome} {isMestre && <span title="Você é o Mestre!" style={{cursor:'help'}}>👑</span>}</h1>
+            <p>Código: <strong>{codigoSala}</strong></p>
+          </div>
         </div>
         
-        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-           <button 
-             onClick={() => setAbaAtiva('combate')} 
-             style={{ background: abaAtiva === 'combate' ? '#ffcc00' : '#333', color: abaAtiva === 'combate' ? 'black' : 'white', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer', transition: '0.2s' }}
-           >
-             ⚔️ Combate
-           </button>
-           <button 
-             onClick={() => setAbaAtiva('mapa')} 
-             style={{ background: abaAtiva === 'mapa' ? '#3498db' : '#333', color: abaAtiva === 'mapa' ? 'white' : 'white', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer', transition: '0.2s' }}
-           >
-             🗺️ Mapa Virtual
-           </button>
+        {/* Grupo 2: Toolbar de Botões (Alinhados à direita) */}
+        <div className="mesa-header-toolbar">
+           <button onClick={() => setAbaAtiva('combate')} className={`btn-toolbar ${abaAtiva === 'combate' ? 'ativo-amarelo' : ''}`}>⚔️ Combate</button>
+           <button onClick={() => setAbaAtiva('mapa')} className={`btn-toolbar ${abaAtiva === 'mapa' ? 'ativo-azul' : ''}`}>🗺️ Mapa Virtual</button>
 
            {isMestre && (
-             <button
-               onClick={async () => {
-                 await updateDoc(doc(db, "mesas", codigoSala), { mapaBloqueado: !mesaDados?.mapaBloqueado });
-               }}
-               style={{
-                 background: mesaDados?.mapaBloqueado ? '#f44336' : '#4caf50',
-                 color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-               }}
-               title={mesaDados?.mapaBloqueado ? "Desbloquear Mapa para Jogadores" : "Bloquear Mapa para Jogadores"}
-             >
+             <button onClick={async () => { await updateDoc(doc(db, "mesas", codigoSala), { mapaBloqueado: !mesaDados?.mapaBloqueado }); }} className={`btn-toolbar ${mesaDados?.mapaBloqueado ? 'ativo-vermelho' : 'ativo-verde'}`}>
                {mesaDados?.mapaBloqueado ? '🔒 Trancado' : '🔓 Liberado'}
              </button>
            )}
            
-           <button 
-             onClick={() => setMostrarChat(!mostrarChat)} 
-             style={{ background: mostrarChat ? '#f44336' : '#4caf50', color: 'white', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer', transition: '0.2s' }}
-             title={mostrarChat ? "Esconder o painel lateral" : "Mostrar o painel lateral"}
-           >
+           <button onClick={() => setMostrarChat(!mostrarChat)} className={`btn-toolbar ${mostrarChat ? 'ativo-vermelho' : 'ativo-verde'}`}>
              {mostrarChat ? '💬 Ocultar Chat' : '💬 Abrir Chat'}
            </button>
 
-           <button className="btn-entrar-ficha" onClick={abrirModalDeFichas} style={{marginLeft: '10px'}}>➕ Entrar com Ficha</button>
+           <button className="btn-entrar-ficha" onClick={abrirModalDeFichas}>➕ Entrar com Ficha</button>
+           
            {isMestre && (
              <>
-               <button 
-                 onClick={() => setModalLootAberto(true)} 
-                 style={{ background: 'linear-gradient(90deg, #8e44ad 0%, #3498db 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(142,68,173,0.5)' }}
-               >
-                 🎁 Dar Loot
-               </button>
-               {/* 👇 O NOVO BOTÃO DA DÁDIVA / MALDIÇÃO 👇 */}
-               <button 
-                 onClick={() => setModalTalentoMesaAberto(true)} 
-                 style={{ background: 'linear-gradient(90deg, #d35400 0%, #c0392b 100%)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginLeft: '10px', boxShadow: '0 2px 8px rgba(192,57,43,0.5)' }}
-               >
-                 ✨ Dar Dádiva
-               </button>
+               <button onClick={() => setModalLootAberto(true)} className="btn-toolbar btn-loot">🎁 Dar Loot</button>
+               <button onClick={() => setModalTalentoMesaAberto(true)} className="btn-toolbar btn-dadiva">✨ Dar Dádiva</button>
              </>
            )}
         </div>
@@ -1411,7 +1464,6 @@ export function Mesa() {
       </div>
       
       <style>{`
-        /* CSS MANTIDO INTACTO */
         .overlay-dialogo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 99999; animation: fadeIn 0.2s; }
         .caixa-dialogo { background: #1a1a1a; border: 2px solid #ffcc00; border-radius: 12px; padding: 30px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); animation: popIn 0.3s; }
         .caixa-dialogo h3 { color: #ffcc00; margin: 0 0 15px 0; font-size: 1.5rem; }
@@ -1432,11 +1484,33 @@ export function Mesa() {
         .modal-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
 
         .mesa-layout-global { padding: 25px; max-width: 1400px; margin: 0 auto; color: white; display: flex; flex-direction: column; height: 95vh; box-sizing: border-box; }
-        .mesa-header { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px 25px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; flex-shrink: 0; gap: 25px; flex-wrap: wrap; }
-        .mesa-header h1 { margin: 0; font-size: 1.6rem; }
-        .mesa-header p { margin: 2px 0 0 0; color: #888; font-size: 0.9rem; }
-        .mesa-header > div:first-of-type { flex: 1; min-width: 200px; }
         
+        .mesa-header-container { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: #1a1a1a; padding: 15px 25px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; }
+        
+        .mesa-header-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; flex: 1; min-width: 250px; }
+        .mesa-header-info h1 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .mesa-header-info p { margin: 2px 0 0 0; color: #888; font-size: 0.85rem; }
+        .mesa-header-info strong { color: #ffcc00; letter-spacing: 2px; }
+        
+        .mesa-header-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; }
+        
+        .btn-voltar-lobby { background: #333; color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .btn-voltar-lobby:hover { background: #555; }
+        
+        .btn-toolbar { background: #333; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .btn-toolbar:hover { filter: brightness(1.2); }
+        
+        .ativo-amarelo { background: #ffcc00; color: black; }
+        .ativo-azul { background: #3498db; color: white; }
+        .ativo-vermelho { background: #f44336; color: white; }
+        .ativo-verde { background: #4caf50; color: white; }
+        
+        .btn-entrar-ficha { background: #4caf50; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .btn-entrar-ficha:hover { background: #45a049; }
+        
+        .btn-loot { background: linear-gradient(90deg, #8e44ad 0%, #3498db 100%); box-shadow: 0 2px 8px rgba(142,68,173,0.5); }
+        .btn-dadiva { background: linear-gradient(90deg, #d35400 0%, #c0392b 100%); box-shadow: 0 2px 8px rgba(192,57,43,0.5); }
+
         .btn-voltar-lobby { background: #333; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
         .btn-voltar-lobby:hover { background: #555; }
         .btn-entrar-ficha { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }

@@ -22,6 +22,13 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
   const [nevoaLocal, setNevoaLocal] = useState(null); 
   const ultimaCelulaPintada = useRef(null);
 
+  // Estados dos Modais
+  const [modalAtivo, setModalAtivo] = useState(null);
+  const [dadosModal, setDadosModal] = useState({});
+  // Adicionado o campo "arquivo" no state inicial do Modal
+  const [inputsModal, setInputsModal] = useState({ valor1: '', valor2: '', valor3: '', valor4: 'publico', arquivo: null });
+  const [uploadCarregando, setUploadCarregando] = useState(false); // Estado para mostrar feedback de carregamento
+
   const [opacidadeGrid, setOpacidadeGrid] = useState(() => {
     const salva = localStorage.getItem('opacidadeGrid');
     return salva !== null ? parseFloat(salva) : 0.15;
@@ -68,74 +75,109 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     localStorage.setItem('opacidadeGrid', novoValor.toString());
   }
 
-  async function handleUploadMapa(e) {
+  function abrirModalUploadMapa() {
     if (!isMestre) return;
-    
-    const nomeCena = prompt("Digite um nome para este novo cenário (Ex: Covil do Dragão, Esgotos):");
-    if (!nomeCena) return; 
-
-    const file = e.target.files[0];
-    if (!file) return;
-
-    alert(`Subindo o mapa "${nomeCena}" para o servidor... Aguarde.`);
-
-    const formData = new FormData();
-    formData.append("image", file);
-
-    try {
-      const resposta = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const dados = await resposta.json();
-
-      if (dados.success) {
-        const urlMapa = dados.url; 
-        const novaCenaId = "scene_" + Date.now();
-
-        const novasCenas = {
-          ...cenas,
-          [novaCenaId]: { id: novaCenaId, nome: nomeCena, bg: urlMapa }
-        };
-
-        await updateDoc(doc(db, "mesas", mesaId), { 
-          cenas: novasCenas,
-          cenaAtivaId: novaCenaId
-        });
-        
-        alert("Mapa subiu com sucesso!");
-      } else {
-        alert("Erro ao subir a imagem no Servidor.");
-      }
-    } catch (error) {
-      console.error("Erro no Upload:", error);
-      alert("Ocorreu um erro na conexão.");
-    }
+    setInputsModal({ valor1: '', valor2: '', valor3: '', valor4: 'publico', arquivo: null });
+    setModalAtivo('mapa');
   }
 
-  async function apagarCenaAtual() {
-    if (!isMestre) return;
+  // 👇 FUNÇÃO MESCLADA: LÓGICA DA VERCEL DENTRO DO MODAL NOVO 👇
+  async function confirmarUploadMapa(e) {
+    e.preventDefault();
+    const nomeCena = inputsModal.valor1.trim();
+    const linkExterno = inputsModal.valor2.trim();
+    const arquivoImagem = inputsModal.arquivo;
     
-    if (Object.keys(cenas).length <= 1) {
-      alert("Você não pode apagar a última cena da mesa!");
+    if (!nomeCena) return; 
+
+    let urlMapaSalvo = linkExterno; // Começa achando que é link externo
+
+    // Se o mestre selecionou um arquivo do PC, envia pra API
+    if (arquivoImagem) {
+      setUploadCarregando(true);
+      const formData = new FormData();
+      formData.append("image", arquivoImagem);
+
+      try {
+        const resposta = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const dados = await resposta.json();
+
+        if (dados.success) {
+          urlMapaSalvo = dados.url; 
+        } else {
+          alert("Erro ao subir a imagem no Servidor.");
+          setUploadCarregando(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Erro no Upload:", error);
+        alert("Ocorreu um erro na conexão.");
+        setUploadCarregando(false);
+        return;
+      }
+    }
+
+    if (!urlMapaSalvo) {
+      alert("Por favor, cole um link ou faça upload de um arquivo.");
+      setUploadCarregando(false);
       return;
     }
 
-    if (!window.confirm(`Tem certeza que deseja DESTRUIR a cena "${cenas[cenaAtivaId].nome}"?`)) return;
-
-    const novasCenas = { ...cenas };
-    delete novasCenas[cenaAtivaId];
-    const novaCenaAtiva = Object.keys(novasCenas)[0];
+    // Com o Link final (seja colado ou vindo da API), salva no Firebase
+    const novaCenaId = "scene_" + Date.now();
+    const novasCenas = {
+      ...cenas,
+      [novaCenaId]: { id: novaCenaId, nome: nomeCena, bg: urlMapaSalvo }
+    };
 
     try {
-      await updateDoc(doc(db, "mesas", mesaId), {
+      await updateDoc(doc(db, "mesas", mesaId), { 
         cenas: novasCenas,
-        cenaAtivaId: novaCenaAtiva
+        cenaAtivaId: novaCenaId
       });
+      setModalAtivo(null);
     } catch (error) {
-      console.error("Erro ao apagar cena:", error);
+      console.error("Erro ao adicionar cena:", error);
+    } finally {
+      setUploadCarregando(false);
     }
+  }
+
+  function apagarCenaAtual() {
+    if (!isMestre) return;
+    if (Object.keys(cenas).length <= 1) {
+      abrirConfirmacaoCustom("Erro", "Você não pode apagar a última cena da mesa!", null, true);
+      return;
+    }
+
+    abrirConfirmacaoCustom(
+      "⚠️ DESTRUIR CENA", 
+      `Tem certeza que deseja DESTRUIR a cena "${cenas[cenaAtivaId].nome}"? Todos os pinos dela serão apagados para sempre.`,
+      async () => {
+        const novasCenas = { ...cenas };
+        delete novasCenas[cenaAtivaId];
+        const novaCenaAtiva = Object.keys(novasCenas)[0];
+
+        const marcadoresSobreviventes = marcadores.filter(p => p.cenaId !== cenaAtivaId);
+
+        try {
+          await updateDoc(doc(db, "mesas", mesaId), {
+            cenas: novasCenas,
+            cenaAtivaId: novaCenaAtiva,
+            marcadores: marcadoresSobreviventes
+          });
+        } catch (error) { console.error("Erro ao apagar cena:", error); }
+      }
+    );
+  }
+
+  function abrirConfirmacaoCustom(titulo, mensagem, acaoConfirmar, apenasAviso = false) {
+    setDadosModal({ titulo, mensagem, acaoConfirmar, apenasAviso });
+    setModalAtivo('confirmacao');
   }
 
   function clicarToken(e, idToken, isNpc) {
@@ -159,7 +201,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     });
   }
 
-  // 👇 BYPASS DE PERFORMANCE (O FPS agradece!) 👇
   function handleMouseMove(e) {
     if (!pan.isDown) return;
     const dx = e.clientX - pan.startX;
@@ -168,7 +209,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         areaRef.current.scrollLeft = pan.sl - dx;
         areaRef.current.scrollTop = pan.st - dy;
-        // Só atualiza o React UMA vez pra avisar que moveu, não 60 vezes!
         if (!pan.moved) {
           setPan(prev => ({...prev, moved: true}));
         }
@@ -261,9 +301,8 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     }
   }
 
- async function handleGridClick(e) {
+  function handleGridClick(e) {
     if (pan.moved) {
-      // Pequeno timeout pra garantir que o click não sobreponha o arraste
       setTimeout(() => setPan(prev => ({...prev, moved: false})), 50);
       return; 
     }
@@ -274,28 +313,9 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     const offsetY = (e.clientY - rect.top) / zoom;
 
     if (modoPino && isMestre) {
-      const icone = prompt("Digite um Emoji para o pino (Ex: 📍, ⛺, 💀, 🏰, ❓):", "📍");
-      if (!icone) { setModoPino(false); return; }
-      
-      const anotacao = prompt("Qual o texto ou nome deste local?");
-      if (!anotacao) { setModoPino(false); return; }
-
-      const novoPino = {
-        id: "pino_" + Date.now(),
-        x: offsetX,
-        y: offsetY,
-        icone: icone.trim(),
-        texto: anotacao,
-        cenaId: cenaAtivaId 
-      };
-
-      try {
-        await updateDoc(doc(db, "mesas", mesaId), { marcadores: arrayUnion(novoPino) });
-      } catch (err) {
-        console.error("Erro ao salvar marcador no banco: ", err);
-      }
-
-      setModoPino(false);
+      setDadosModal({ tempX: offsetX, tempY: offsetY });
+      setInputsModal({ valor1: '📍', valor2: '', valor3: '', valor4: 'publico', arquivo: null });
+      setModalAtivo('pino');
       return; 
     }
 
@@ -309,17 +329,59 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     try { updateDoc(doc(db, "mesas", mesaId), { posicoesTokens: novasPosicoes }); } catch (e) {}
   }
 
+  async function confirmarCriacaoPino(e) {
+    e.preventDefault();
+    const icone = inputsModal.valor1.trim() || '📍';
+    const titulo = inputsModal.valor2.trim();
+    const descricao = inputsModal.valor3.trim();
+    const visibilidade = inputsModal.valor4 || 'publico'; 
+    
+    if (!titulo) return;
+
+    const novoPino = {
+      id: "pino_" + Date.now(),
+      x: dadosModal.tempX,
+      y: dadosModal.tempY,
+      icone: icone,
+      titulo: titulo,
+      texto: descricao,
+      visibilidade: visibilidade,
+      cenaId: cenaAtivaId 
+    };
+
+    try {
+      await updateDoc(doc(db, "mesas", mesaId), { marcadores: arrayUnion(novoPino) });
+      setModalAtivo(null);
+      setModoPino(false);
+    } catch (err) { console.error("Erro ao salvar marcador no banco: ", err); }
+  }
+
   async function apagarPino(e, pinoId) {
     e.preventDefault(); 
     e.stopPropagation();
     if (!isMestre) return;
     
-    if (window.confirm("Deseja remover este marcador do mapa?")) {
+    abrirConfirmacaoCustom("Remover Marcador", "Deseja remover este marcador do mapa permanentemente?", async () => {
       const novaLista = marcadores.filter(p => p.id !== pinoId);
-      try {
-        await updateDoc(doc(db, "mesas", mesaId), { marcadores: novaLista });
-      } catch(err) {}
-    }
+      try { await updateDoc(doc(db, "mesas", mesaId), { marcadores: novaLista }); } catch(err) {}
+    });
+  }
+
+  function lerPino(e, pino) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDadosModal(pino);
+    setModalAtivo('leitura_pino');
+  }
+
+  async function revelarPino(pinoId) {
+    if (!isMestre) return;
+    const novaLista = marcadores.map(p => p.id === pinoId ? { ...p, visibilidade: 'publico' } : p);
+    
+    try {
+      await updateDoc(doc(db, "mesas", mesaId), { marcadores: novaLista });
+      setModalAtivo(null); 
+    } catch(err) { console.error("Erro ao revelar pino: ", err); }
   }
 
   async function soltarTokenArrastado(e) {
@@ -352,27 +414,22 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     } catch (e) {}
   }
 
-  // 👇 AUTOMAÇÃO DO MESTRE: CONTROLES DE NÉVOA MASSIVOS 👇
   async function preencherNevoaTotal() {
-    if(!window.confirm("Cobrir o mapa inteiro com névoa? Os jogadores perderão a visão de tudo.")) return;
-    
-    // O mapa padrão tá hardcoded em 1600x1200
-    const colunas = Math.ceil(1600 / TAMANHO_GRID);
-    const linhas = Math.ceil(1200 / TAMANHO_GRID);
-    
-    let todaNevoa = [];
-    for(let x = 0; x < colunas; x++) {
-      for(let y = 0; y < linhas; y++) {
-        todaNevoa.push(`${x},${y}`);
+    abrirConfirmacaoCustom("Cobrindo Tudo", "Cobrir o mapa inteiro com névoa? Os jogadores perderão a visão de tudo.", async () => {
+      const colunas = Math.ceil(1600 / TAMANHO_GRID);
+      const linhas = Math.ceil(1200 / TAMANHO_GRID);
+      let todaNevoa = [];
+      for(let x = 0; x < colunas; x++) {
+        for(let y = 0; y < linhas; y++) { todaNevoa.push(`${x},${y}`); }
       }
-    }
-    
-    try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: todaNevoa }); } catch(e){}
+      try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: todaNevoa }); } catch(e){}
+    });
   }
 
   async function limparNevoaTotal() {
-    if(!window.confirm("Isso vai limpar toda a névoa e revelar tudo aos jogadores. Tem certeza?")) return;
-    try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: [] }); } catch(e){}
+    abrirConfirmacaoCustom("Revelar Tudo", "Isso vai limpar toda a névoa e revelar tudo aos jogadores. Tem certeza?", async () => {
+      try { await updateDoc(doc(db, "mesas", mesaId), { nevoa: [] }); } catch(e){}
+    });
   }
 
   const listaTokens = [];
@@ -391,14 +448,8 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
     if (npc.faccao === 'aliado') { corDaBorda = '#4caf50'; icone = '🛡️'; }
 
     listaTokens.push({
-      id: npc.id, 
-      nome: npc.nome, 
-      foto: npc.foto || null, 
-      vidaAtual: npc.vidaAtual, 
-      vidaMaxima: npc.vidaMaxima || 1,
-      isNpc: true, 
-      corBorda: corDaBorda, 
-      iconeFaccao: icone 
+      id: npc.id, nome: npc.nome, foto: npc.foto || null, vidaAtual: npc.vidaAtual, vidaMaxima: npc.vidaMaxima || 1,
+      isNpc: true, corBorda: corDaBorda, iconeFaccao: icone 
     });
   });
 
@@ -428,6 +479,148 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
   return (
     <div className={`container-mapa-virtual ${telaCheia ? 'tela-cheia' : ''}`}>
       
+      {modalAtivo && (
+        <div className="overlay-mapa-modal" onClick={() => setModalAtivo(null)}>
+          <div className="caixa-mapa-modal" onClick={e => e.stopPropagation()}>
+            
+            {modalAtivo === 'confirmacao' && (
+              <>
+                <h3 style={{ color: dadosModal.titulo.includes('⚠️') ? '#ff4444' : '#ffcc00' }}>{dadosModal.titulo}</h3>
+                <p>{dadosModal.mensagem}</p>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  {!dadosModal.apenasAviso && (
+                    <button onClick={() => setModalAtivo(null)} className="btn-modal-cancel">Cancelar</button>
+                  )}
+                  <button 
+                    onClick={() => { setModalAtivo(null); if(dadosModal.acaoConfirmar) dadosModal.acaoConfirmar(); }} 
+                    className={dadosModal.titulo.includes('⚠️') ? "btn-modal-danger" : "btn-modal-success"}
+                    style={{ flex: 1 }}
+                  >
+                    {dadosModal.apenasAviso ? 'Entendido' : 'Confirmar'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* 👇 MODAL ATUALIZADO DE NOVO MAPA COM OPÇÃO DE ARQUIVO OU LINK 👇 */}
+            {modalAtivo === 'mapa' && (
+              <form onSubmit={confirmarUploadMapa} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <h3 style={{ margin: 0, color: '#3498db' }}>🖼️ Nova Cena Tática</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#aaa' }}>Crie um novo ambiente para o combate.</p>
+                
+                <input type="text" placeholder="Nome do Cenário (Ex: Covil do Dragão)" required autoFocus
+                  value={inputsModal.valor1} onChange={e => setInputsModal({...inputsModal, valor1: e.target.value})}
+                  className="input-modal-custom"
+                />
+                
+                {/* Campo de Upload de Arquivo (Vai pra Vercel/Imgbb) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', textAlign: 'left' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#3498db' }}>Faça upload do mapa do seu PC:</label>
+                  <input type="file" accept="image/*" 
+                    onChange={e => setInputsModal({...inputsModal, arquivo: e.target.files[0]})}
+                    className="input-modal-custom"
+                    style={{ padding: '8px', cursor: 'pointer' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <hr style={{ flex: 1, borderColor: '#444' }}/>
+                  <span style={{ fontSize: '0.8rem', color: '#888' }}>OU</span>
+                  <hr style={{ flex: 1, borderColor: '#444' }}/>
+                </div>
+
+                {/* Campo de Link Externo (Para quem só quer colar um link) */}
+                <input type="url" placeholder="🔗 Colar Link da Imagem Direto" 
+                  value={inputsModal.valor2} onChange={e => setInputsModal({...inputsModal, valor2: e.target.value})}
+                  className="input-modal-custom"
+                />
+                
+                <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                  <button type="button" onClick={() => setModalAtivo(null)} className="btn-modal-cancel" disabled={uploadCarregando}>Cancelar</button>
+                  <button type="submit" className="btn-modal-success" style={{ flex: 1, background: uploadCarregando ? '#555' : '#3498db' }} disabled={uploadCarregando}>
+                    {uploadCarregando ? '⏳ Subindo...' : 'Salvar Cena'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {modalAtivo === 'pino' && (
+              <form onSubmit={confirmarCriacaoPino} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <h3 style={{ margin: 0, color: '#4caf50' }}>📍 Adicionar Marcador</h3>
+                
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input type="text" placeholder="Ícone" required maxLength={4}
+                    value={inputsModal.valor1} onChange={e => setInputsModal({...inputsModal, valor1: e.target.value})}
+                    className="input-modal-custom" style={{ width: '60px', textAlign: 'center', fontSize: '1.2rem' }} title="Apenas um Emoji ou símbolo pequeno"
+                  />
+                  <input type="text" placeholder="Título (Ex: Caverna Escura)" required autoFocus
+                    value={inputsModal.valor2} onChange={e => setInputsModal({...inputsModal, valor2: e.target.value})}
+                    className="input-modal-custom" style={{ flex: 1 }}
+                  />
+                </div>
+
+                <select 
+                  value={inputsModal.valor4} 
+                  onChange={e => setInputsModal({...inputsModal, valor4: e.target.value})}
+                  className="input-modal-custom"
+                  style={{ borderColor: inputsModal.valor4 === 'secreto' ? '#ff4444' : '#444' }}
+                >
+                  <option value="publico">👁️ Público (Todos na mesa veem)</option>
+                  <option value="secreto">🙈 Secreto (Apenas o Mestre vê)</option>
+                </select>
+
+                <textarea 
+                  placeholder="Descrição da Lore ou Notas do Mestre... (Máx 800 caracteres)"
+                  value={inputsModal.valor3} onChange={e => setInputsModal({...inputsModal, valor3: e.target.value})}
+                  className="input-modal-custom" style={{ resize: 'vertical', minHeight: '80px', maxHeight: '200px' }}
+                  maxLength={800}
+                />
+                <span style={{fontSize: '0.7rem', color: '#888', textAlign: 'right', marginTop: '-10px'}}>{inputsModal.valor3.length}/800</span>
+                
+                <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                  <button type="button" onClick={() => { setModalAtivo(null); setModoPino(false); }} className="btn-modal-cancel">Cancelar</button>
+                  <button type="submit" className="btn-modal-success" style={{ flex: 1 }}>Cavar Pino</button>
+                </div>
+              </form>
+            )}
+
+            {modalAtivo === 'leitura_pino' && (
+              <div style={{ textAlign: 'center' }}>
+                {dadosModal.visibilidade === 'secreto' && (
+                  <div style={{ color: '#ff4444', fontSize: '0.8rem', fontWeight: 'bold', border: '1px dashed #ff4444', display: 'inline-block', padding: '4px 10px', borderRadius: '15px', marginBottom: '10px' }}>
+                    🙈 PINO SECRETO (Invisível para os Jogadores)
+                  </div>
+                )}
+                
+                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{dadosModal.icone}</div>
+                <h2 style={{ margin: '0 0 15px 0', color: '#ffcc00' }}>{dadosModal.titulo || dadosModal.texto}</h2>
+                
+                {dadosModal.texto && dadosModal.titulo && (
+                  <div style={{ background: '#111', border: '1px solid #444', padding: '15px', borderRadius: '8px', textAlign: 'left', color: '#ddd', fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '400px', overflowY: 'auto' }}>
+                    {dadosModal.texto}
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button onClick={() => setModalAtivo(null)} className="btn-modal-cancel" style={{ flex: 1 }}>Fechar Janela</button>
+                  
+                  {isMestre && dadosModal.visibilidade === 'secreto' && (
+                    <button 
+                      onClick={() => revelarPino(dadosModal.id)} 
+                      className="btn-modal-success" 
+                      style={{ flex: 1, background: '#3498db' }}
+                    >
+                      👁️ Revelar ao Grupo
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
       <div className="controles-mapa">
         <div style={{display:'flex', gap:'15px', alignItems:'center', flexWrap: 'wrap'}}>
           <h2 style={{margin:0, color:'#ffcc00'}}>🗺️ Arena Tática</h2>
@@ -460,7 +653,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
 
           {tokenSelecionado && podeMudarTamanho && (
             <>
-              {/* MENU DE ESCALA (TAMANHO DO TOKEN) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#222', padding: '4px 12px', borderRadius: '15px', border: '1px solid #444' }}>
                 <span style={{ fontSize: '0.7rem', color: '#aaa', textTransform: 'uppercase', fontWeight: 'bold', marginRight: '4px' }}>Escala:</span>
                 {[1, 2, 3, 4].map(sz => {
@@ -486,7 +678,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                 })}
               </div>
 
-              {/* MENU DE AURAS VISUAIS */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#111', padding: '4px 12px', borderRadius: '15px', border: '1px solid #3498db' }}>
                 <span style={{ fontSize: '0.7rem', color: '#3498db', textTransform: 'uppercase', fontWeight: 'bold', marginRight: '4px' }}>✨ Aura (ft):</span>
                 {[0, 5, 10, 15, 30].map(raio => {
@@ -520,15 +711,13 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
         </div>
 
         {isMestre && (
-          <label className="btn-upload-mapa">
+          <button className="btn-upload-mapa" onClick={abrirModalUploadMapa}>
             ➕ Adicionar Nova Cena
-            <input type="file" accept="image/*" onChange={handleUploadMapa} hidden />
-          </label>
+          </button>
         )}
       </div>
 
       <div className="painel-zoom-flutuante">
-        {/* 👇 BOTÕES MASSIVOS DA NÉVOA PRA SALVAR O MESTRE 👇 */}
         {isMestre && modoNevoa && (
           <div style={{ display: 'flex', borderRight: '1px solid #555', paddingRight: '10px', marginRight: '10px', gap: '5px' }}>
             <button onClick={preencherNevoaTotal} title="Cobrir Todo o Mapa" style={{ background: '#111', border: '1px solid #ff4444', borderRadius: '4px', padding: '4px 8px', fontSize: '0.8rem' }}>⬛ Cobrir Tudo</button>
@@ -665,10 +854,11 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
               </svg>
             )}
 
-            {marcadores.filter(p => p.cenaId === cenaAtivaId).map(pino => (
+            {marcadores.filter(p => p.cenaId === cenaAtivaId && (isMestre || p.visibilidade !== 'secreto')).map(pino => (
               <div 
                 key={pino.id}
                 className="pino-mapa"
+                onClick={(e) => lerPino(e, pino)}
                 onContextMenu={(e) => apagarPino(e, pino.id)}
                 style={{
                   position: 'absolute',
@@ -677,13 +867,14 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                   transform: 'translate(-50%, -100%)',
                   zIndex: 25,
                   fontSize: '2rem',
-                  cursor: isMestre ? 'context-menu' : 'help',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                  cursor: 'pointer',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                  opacity: pino.visibilidade === 'secreto' ? 0.6 : 1 
                 }}
               >
                 {pino.icone}
                 <div className="tooltip-pino">
-                  {pino.texto}
+                  {pino.visibilidade === 'secreto' && "🙈 "} {pino.titulo || pino.texto}
                   {isMestre && <small style={{display:'block', color:'#ff4444', fontSize:'0.5rem', marginTop:'3px'}}>(Botão Direito p/ Apagar)</small>}
                 </div>
               </div>
@@ -747,7 +938,20 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
                         {tk.isNpc ? (estaMorto ? '💀' : tk.iconeFaccao) : tk.nome.charAt(0)}
                       </span>
                     )}
-                    <div className="token-hp-bar"><div style={{width: `${Math.min(100, (tk.vidaAtual/tk.vidaMaxima)*100)}%`, background: tk.vidaAtual > 0 ? tk.corBorda : '#000', height:'100%'}}></div></div>
+
+                    <div style={{ position: 'absolute', bottom: '-20px', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none', width: '150%', zIndex: 30 }}>
+                      
+                      <div style={{ width: '60%', height: '6px', background: '#000', borderRadius: '3px', border: '1px solid #222', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                        <div style={{ width: `${Math.min(100, (tk.vidaAtual/tk.vidaMaxima)*100)}%`, background: tk.vidaAtual > 0 ? tk.corBorda : '#000', height:'100%', transition: 'width 0.3s ease' }}></div>
+                      </div>
+                      
+                      {(isMestre || !tk.isNpc) && (
+                        <span style={{ background: 'rgba(0,0,0,0.85)', color: tk.vidaAtual === 0 ? '#ff4444' : '#fff', fontSize: '0.65rem', padding: '1px 6px', borderRadius: '10px', border: '1px solid #444', fontWeight: 'bold', marginTop: '-3px', textShadow: '1px 1px 0 #000' }}>
+                          {tk.vidaAtual} / {tk.vidaMaxima}
+                        </span>
+                      )}
+                      
+                    </div>
                   </div>
                 </div>
               );
@@ -762,6 +966,21 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
       </div>
 
       <style>{`
+        /* 👇 ESTILOS DOS NOVOS MODAIS DO MAPA 👇 */
+        .overlay-mapa-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 99999; animation: fadeIn 0.2s; }
+        .caixa-mapa-modal { background: #1a1a1a; border: 2px solid #555; border-radius: 12px; padding: 25px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); animation: popIn 0.3s; }
+        .caixa-mapa-modal h3 { margin-bottom: 15px; font-size: 1.4rem; }
+        .caixa-mapa-modal p { color: #ccc; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
+        .input-modal-custom { width: 100%; padding: 12px; background: #0a0a0a; color: white; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; }
+        .input-modal-custom:focus { outline: none; border-color: #3498db; }
+        .btn-modal-cancel { background: transparent; color: #aaa; border: 1px solid #555; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-modal-cancel:hover { background: #333; color: white; }
+        .btn-modal-success { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 10px rgba(76,175,80,0.4); }
+        .btn-modal-success:hover { background: #45a049; }
+        .btn-modal-success:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+        .btn-modal-danger { background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 10px rgba(244,67,54,0.4); }
+        .btn-modal-danger:hover { background: #da190b; }
+
         .container-mapa-virtual { display: flex; flex-direction: column; height: 100%; background: #111; border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; }
         .controles-mapa { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #1a1a1a; border-bottom: 2px solid #ffcc00; z-index: 50; }
         .btn-upload-mapa { background: #333; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; border: 1px dashed #666; font-size: 0.9rem; transition: 0.2s; font-weight: bold; }
@@ -812,8 +1031,6 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
         }
         .pino-mapa:hover .tooltip-pino { opacity: 1; visibility: visible; }
 
-        .token-hp-bar { position: absolute; bottom: -8px; left: 10%; width: 80%; height: 5px; background: #000; border-radius: 3px; border: 1px solid #444; overflow: hidden; pointer-events: none; }
-
         .container-mapa-virtual.tela-cheia {
           position: fixed !important;
           top: 0 !important;
@@ -824,7 +1041,7 @@ export function MapaVirtual({ mesaId, mesaDados, jogadores, npcs, isMestre, minh
           border-radius: 0 !important;
           border: none !important;
         }
-
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
       `}</style>
     </div>
   );

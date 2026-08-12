@@ -3,6 +3,37 @@ import { useState } from 'react';
 import { ARMAS, PROPRIEDADES_MAESTRIA } from '../data/armas';
 import itensMagicos from '../data/itensMagicos'; 
 
+// 👇 DICIONÁRIO OFICIAL DE AÇÕES DE COMBATE D&D 👇
+const DICIONARIO_ACOES = {
+  "Ataque (Attack)": "Atacar com uma arma ou um Ataque Desarmado.",
+  "Disparada (Dash)": "Pelo resto do turno, você ganha movimento extra igual ao seu Deslocamento atual.",
+  "Desengajar (Disengage)": "O seu movimento não provoca Ataques de Oportunidade pelo resto do turno.",
+  "Esquiva (Dodge)": "Até o início do seu próximo turno, as rolagens de ataque contra você têm Desvantagem, e você faz testes de resistência de Destreza com Vantagem. Você perde esse benefício se estiver Incapacitado ou se sua Velocidade for 0.",
+  "Ajudar (Help)": "Ajude um teste de habilidade ou jogada de ataque de outra criatura, ou administre os primeiros socorros.",
+  "Esconder (Hide)": "Faça um teste de Destreza (Furtividade) para se esconder dos inimigos.",
+  "Influenciar (Influence)": "Faça um teste de Carisma (Enganação, Intimidação, Atuação ou Persuasão) ou Sabedoria (Lidar com Animais) para alterar a atitude de uma criatura.",
+  "Magia (Magic)": "Lance um feitiço, use um item mágico ou use uma característica mágica.",
+  "Preparar (Ready)": "Prepare-se para realizar uma ação em resposta a um gatilho que você definir.",
+  "Procurar (Search)": "Faça um teste de Sabedoria (Intuição, Medicina, Percepção ou Sobrevivência) para focar sua atenção em procurar algo.",
+  "Estudar (Study)": "Faça um teste de Inteligência (Arcanismo, História, Investigação, Natureza ou Religião).",
+  "Utilizar (Utilize)": "Use um objeto não mágico do cenário ou inventário."
+};
+
+const LISTA_BOTOES_ACOES = [
+  { id: "Ataque (Attack)", icone: "⚔️" },
+  { id: "Disparada (Dash)", icone: "🏃" },
+  { id: "Esquiva (Dodge)", icone: "🛡️" },
+  { id: "Desengajar (Disengage)", icone: "💨" },
+  { id: "Ajudar (Help)", icone: "🤝" },
+  { id: "Esconder (Hide)", icone: "🕵️" },
+  { id: "Magia (Magic)", icone: "✨" },
+  { id: "Preparar (Ready)", icone: "⏳" },
+  { id: "Procurar (Search)", icone: "🔍" },
+  { id: "Estudar (Study)", icone: "📚" },
+  { id: "Utilizar (Utilize)", icone: "🎒" },
+  { id: "Influenciar (Influence)", icone: "🗣️" }
+];
+
 export function AbaCombate(props) {
   const [ataques, setAtaques] = useState(props.dados.ataques || []);
   
@@ -14,6 +45,9 @@ export function AbaCombate(props) {
   const [ehAcuidadeCustom, setEhAcuidadeCustom] = useState(false);
 
   const [armaParaDeletar, setArmaParaDeletar] = useState(null);
+  
+  // 👇 ESTADO DO MODAL DE AJUDA DE REGRAS 👇
+  const [modalAcaoInfo, setModalAcaoInfo] = useState(null);
 
   const inventarioEquipado = (props.dados.inventario || []).filter(item => item.equipado && item.isArma);
 
@@ -22,11 +56,9 @@ export function AbaCombate(props) {
     if (props.aoSalvar) props.aoSalvar("ataques", novaLista);
   }
 
-  // 👇 SISTEMA DE GASTAR USOS AGORA LÊ CLASSE E RAÇA! 👇
   function alternarUsoHabilidade(nomeHab, indice, isRacial = false) {
     if (!props.aoSalvar) return;
     
-    // Descobre em qual gaveta a habilidade está morando!
     const chaveBanco = isRacial ? "tracosRaciais" : "tracosClasse";
     const listaAtual = props.dados[chaveBanco] || [];
     
@@ -35,7 +67,6 @@ export function AbaCombate(props) {
         
         let usosMax = hab.usosMax || 0;
         
-        // Se for racial, a gente injeta a matemática pesada aqui no momento do clique!
         if (isRacial) {
           const nomeLower = hab.nome.toLowerCase();
           const nivelAtual = props.dados.nivel || 1;
@@ -157,10 +188,15 @@ export function AbaCombate(props) {
       const modDanoCalculado = modInfo.modificador + bonusMagico;
       
       const sinalDano = modDanoCalculado >= 0 ? `+ ${modDanoCalculado}` : `- ${Math.abs(modDanoCalculado)}`;
-      let stringFinalDano = `${ataque.dano} ${sinalDano}`;
       
-      if (ataque.danoExtra) stringFinalDano += ` + ${ataque.danoExtra}`;
-      props.aoRolarDano(ataque.nome, stringFinalDano, atributoChave);
+      const stringFinalDano = `${ataque.dano} ${sinalDano}`;
+      
+      let nomeFinal = ataque.nome;
+      if (ataque.danoExtra) {
+        nomeFinal += ` 💥 (Extra: ${ataque.danoExtra})`;
+      }
+
+      props.aoRolarDano(nomeFinal, stringFinalDano, atributoChave);
     }
   }
 
@@ -224,7 +260,6 @@ export function AbaCombate(props) {
   
   const todosAtaques = [ataqueDesarmado, ...ataques, ...ataquesDoInventario];
 
-  // 👇 O SUPER SCANNER DE HABILIDADES (Agora lê Raça também!) 👇
   const tracosClasse = props.dados.tracosClasse || [];
   const tracosRaciais = props.dados.tracosRaciais || [];
   
@@ -235,7 +270,6 @@ export function AbaCombate(props) {
     const descLower = (traco.descricao || traco.desc || "").toLowerCase();
     const profBonus = Math.ceil(nivelAtivo / 4) + 1;
 
-    // Acha qual o tipo de ação pela descrição ou pelo nome
     if (nomeLower.includes("arma de sopro") || descLower.includes("ação de ataque") || descLower.includes("ação:")) {
       tipoAcao = "acao";
     } else if (nomeLower.includes("voo dracônico") || descLower.includes("ação bônus")) {
@@ -244,7 +278,6 @@ export function AbaCombate(props) {
       tipoAcao = "reacao";
     }
 
-    // Calcula os Usos Matemáticos
     if (nomeLower.includes("arma de sopro")) {
       usosMax = profBonus;
     } else if (nomeLower.includes("voo dracônico") && nivelAtivo >= 5) {
@@ -252,12 +285,11 @@ export function AbaCombate(props) {
     }
 
     if (tipoAcao) {
-      return { ...traco, tipoAcao, usosMax, isRacial: true }; // 🧬 Ganha a Tag Racial
+      return { ...traco, tipoAcao, usosMax, isRacial: true }; 
     }
     return null;
   }).filter(Boolean);
 
-  // Funde as duas gavetas!
   const caracteristicas = [...tracosClasse, ...raciaisParaCombate];
 
   const acoesPrincipais = caracteristicas.filter(c => c.tipoAcao === "acao");
@@ -279,14 +311,44 @@ export function AbaCombate(props) {
   return (
     <div className="painel-combate">
       
-      {/* SEÇÃO 1: AÇÕES PRINCIPAIS */}
-      <h3 style={{ color: '#ffcc00', borderBottom: '2px solid #555', paddingBottom: '5px' }}>⚔️ Ações de Combate</h3>
+      {/* 👇 MODAL INTERATIVO DE AÇÕES 👇 */}
+      {modalAcaoInfo && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setModalAcaoInfo(null)}>
+          <div style={{ background: '#1a1a1a', width: '90%', maxWidth: '400px', borderRadius: '12px', border: '1px solid #3498db', padding: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#3498db', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {modalAcaoInfo.icone} {modalAcaoInfo.id}
+            </h3>
+            <p style={{ color: '#ccc', lineHeight: '1.6', margin: 0, fontSize: '0.95rem' }}>
+              {DICIONARIO_ACOES[modalAcaoInfo.id]}
+            </p>
+            <button onClick={() => setModalAcaoInfo(null)} style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#333', color: 'white', border: '1px solid #555', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              Entendi!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SEÇÃO 1: AÇÕES PRINCIPAIS E COMPÊNDIO */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #555', paddingBottom: '5px', marginBottom: '15px' }}>
+        <h3 style={{ color: '#ffcc00', margin: 0 }}>⚔️ Ações de Combate</h3>
+        <span style={{ fontSize: '0.7rem', color: '#888' }}>Clique para ler as regras</span>
+      </div>
       
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '15px' }}>
-        {['🏃 Disparada (Dash)', '🛡️ Esquiva (Dodge)', '💨 Desengajar (Disengage)', '🕵️ Esconder (Hide)', '🤝 Ajudar (Help)'].map(acao => (
-          <span key={acao} style={{ background: '#222', color: '#aaa', padding: '4px 10px', borderRadius: '15px', fontSize: '0.75rem', border: '1px solid #444', cursor: 'help' }}>
-            {acao}
-          </span>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        {LISTA_BOTOES_ACOES.map(acao => (
+          <button 
+            key={acao.id} 
+            onClick={() => setModalAcaoInfo(acao)}
+            style={{ 
+              background: '#222', color: '#ddd', padding: '6px 12px', borderRadius: '15px', 
+              fontSize: '0.75rem', border: '1px solid #444', cursor: 'pointer', 
+              transition: '0.2s', display: 'flex', alignItems: 'center', gap: '5px' 
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#333'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#222'}
+          >
+            {acao.icone} {acao.id.split(' ')[0]} {/* Mostra só o termo em PT-BR no botão pra economizar espaço */}
+          </button>
         ))}
       </div>
 
@@ -362,10 +424,15 @@ export function AbaCombate(props) {
               </div>
               
               <div className="corpo-ataque">
-                <div className="info-dano">
-                  <span className="dano-texto">
-                    {atk.dano === "1" ? "1" : atk.dano} {mod + bonusMagicoVisual >= 0 ? `+ ${mod + bonusMagicoVisual}` : `- ${Math.abs(mod + bonusMagicoVisual)}`}
-                  </span>
+                <div className="info-dano" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="dano-texto" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                      {atk.dano === "1" ? "1" : atk.dano} {mod + bonusMagicoVisual >= 0 ? `+ ${mod + bonusMagicoVisual}` : `- ${Math.abs(mod + bonusMagicoVisual)}`}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', marginTop: '2px' }}>
+                      🩸 {atk.tipo}
+                    </span>
+                  </div>
                   
                   {!atk.isDoInventario && (
                     <select 

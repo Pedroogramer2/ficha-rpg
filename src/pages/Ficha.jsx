@@ -526,12 +526,12 @@ export function Ficha() {
             </section>
                 <div className="layout-colunas">
                    <section className="coluna-atributos">
-                      <Atributo nome="FORÇA" valorInicial={ficha.forca} chaveBanco="forca" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Força") || savesProficientes.includes("forca")} bonusProf={bonusProf}/>
-                      <Atributo nome="DESTREZA" valorInicial={ficha.destreza} chaveBanco="destreza" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Destreza") || savesProficientes.includes("destreza")} bonusProf={bonusProf}/>
-                      <Atributo nome="CONSTITUIÇÃO" valorInicial={ficha.constituicao} chaveBanco="constituicao" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Constituição") || savesProficientes.includes("constituicao")} bonusProf={bonusProf}/>
-                      <Atributo nome="INTELIGÊNCIA" valorInicial={ficha.inteligencia} chaveBanco="inteligencia" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Inteligência") || savesProficientes.includes("inteligencia")} bonusProf={bonusProf}/>
-                      <Atributo nome="SABEDORIA" valorInicial={ficha.sabedoria} chaveBanco="sabedoria" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Sabedoria") || savesProficientes.includes("sabedoria")} bonusProf={bonusProf}/>
-                      <Atributo nome="CARISMA" valorInicial={ficha.carisma} chaveBanco="carisma" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Carisma") || savesProficientes.includes("carisma")} bonusProf={bonusProf}/>
+                      <Atributo nome="FORÇA" valorInicial={ficha.forca} chaveBanco="forca" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Força") || savesProficientes.includes("forca")} bonusProf={bonusProf} dados={ficha} />
+                      <Atributo nome="DESTREZA" valorInicial={ficha.destreza} chaveBanco="destreza" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Destreza") || savesProficientes.includes("destreza")} bonusProf={bonusProf} dados={ficha} />
+                      <Atributo nome="CONSTITUIÇÃO" valorInicial={ficha.constituicao} chaveBanco="constituicao" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Constituição") || savesProficientes.includes("constituicao")} bonusProf={bonusProf} dados={ficha} />
+                      <Atributo nome="INTELIGÊNCIA" valorInicial={ficha.inteligencia} chaveBanco="inteligencia" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Inteligência") || savesProficientes.includes("inteligencia")} bonusProf={bonusProf} dados={ficha} />
+                      <Atributo nome="SABEDORIA" valorInicial={ficha.sabedoria} chaveBanco="sabedoria" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Sabedoria") || savesProficientes.includes("sabedoria")} bonusProf={bonusProf} dados={ficha} />
+                      <Atributo nome="CARISMA" valorInicial={ficha.carisma} chaveBanco="carisma" aoSalvar={atualizarPersonagem} aoRolar={rolarDado} proficiente={savesProficientes.includes("Carisma") || savesProficientes.includes("carisma")} bonusProf={bonusProf} dados={ficha} />
                       <div style={{gridColumn: '1 / -1', marginTop: '20px'}}><Resistencias dados={ficha} /></div>
                    </section>
                    <section className="coluna-pericias">

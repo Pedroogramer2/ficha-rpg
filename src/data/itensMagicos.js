@@ -504,7 +504,7 @@ Comum: [
     {
       id: "veterans-cane",
       nome: "Bengala do Veterano (Veteran's Cane)",
-      tipo: "Maravilhoso",
+      tipo: "Arma",
       raridade: "Comum",
       peso: 3,
       attunement: false,
@@ -581,6 +581,7 @@ Comum: [
       peso: 0.1,
       attunement: false,
       propriedades: ["Mágica / Homebrew", "Munição"],
+      bonusAtaque: 1, // 👈 INJETADO PELA NOSSA AUTOMAÇÃO
       descricao: "Você tem +1 de bônus nas jogadas de ataque e dano feitas com esta munição mágica. Após atingir o alvo, a munição perde a magia. Normalmente achada em lotes de 10 ou 20."
     },
     {
@@ -662,6 +663,7 @@ Comum: [
       raridade: "Incomum",
       peso: 2,
       attunement: true,
+      concedeResistencia: "Frio", // 👈 MAGIA PURA!
       descricao: "Requer Sintonia. Você ganha Resistência a dano de Frio e pode tolerar temperaturas de -18°C (0°F) ou menos sem proteção adicional. Você ignora Terreno Difícil criado por gelo ou neve."
     },
     {
@@ -680,6 +682,7 @@ Comum: [
       raridade: "Incomum",
       peso: 0.1,
       attunement: true,
+      concedeResistencia: "Força", // 👈 MAIS MAGIA NA VEIA!
       descricao: "Requer Sintonia. Enquanto usa este broche, você tem Resistência a dano de Força (Force) e possui Imunidade ao dano da magia Mísseis Mágicos (Magic Missile)."
     },
     {
@@ -689,6 +692,7 @@ Comum: [
       raridade: "Incomum",
       peso: 3,
       attunement: true,
+      concedeVoo: 50, // 👈 VOANDO ALTO AUTOMATICAMENTE!
       descricao: "Requer Sintonia. Ação Mágica para montá-la e voar. Tem Deslocamento de Voo de 50 pés. Carrega até 400 libras (se passar de 200 lbs, o voo cai para 30 pés). Como Ação Mágica, pode mandá-la viajar sozinha para um local a até 1 milha. Ação Mágica (palavra de comando) a chama de volta se estiver a até 1 milha."
     },
     {
@@ -744,6 +748,8 @@ Comum: [
       raridade: "Incomum",
       peso: 1,
       attunement: true,
+      bonusCA: 1, // 👈 🛡️ +1 NA CA AUTOMÁTICO
+      bonusSaveGeral: 1, // 👈 🛡️ +1 NOS 6 SAVES AUTOMÁTICO
       descricao: "Requer Sintonia. Você ganha um bônus de +1 na sua Classe de Armadura e em todos os seus Testes de Resistência (Saving Throws) enquanto usar este manto."
     },
     {
@@ -823,7 +829,7 @@ Comum: [
       nome: "Armadura Enfeitiçada (Enspelled Armor)",
       tipo: "Armadura",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Contém uma magia de Abjuração ou Ilusão (Nível 0 a 1 para Incomum). A armadura tem 6 cargas (recupera 1d6 ao amanhecer). Ação Mágica (1 carga) para conjurar a magia da armadura (Save CD 13, Ataque +5 para raridade Incomum)."
@@ -843,7 +849,7 @@ Comum: [
       nome: "Arma Enfeitiçada (Enspelled Weapon)",
       tipo: "Arma",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -902,6 +908,7 @@ Comum: [
       raridade: "Incomum",
       peso: 2,
       attunement: true,
+      setaForca: 19,
       descricao: "Requer Sintonia. Sua Força passa a ser 19 enquanto estiver sintonizado e usando estas manoplas. Não tem efeito se sua Força natural já for 19 ou superior."
     },
     {
@@ -947,6 +954,7 @@ Comum: [
       raridade: "Incomum",
       peso: 0.5,
       attunement: false,
+      visaoNoEscuro: 60,
       descricao: "Lentes escuras. Você ganha Visão no Escuro (Darkvision) com alcance de 60 pés. Se você já possuir Visão no Escuro de outra fonte (como sua raça), o alcance dela aumenta em 60 pés."
     },
     {
@@ -1001,6 +1009,7 @@ Comum: [
       raridade: "Incomum",
       peso: 1,
       attunement: true,
+      setaInteligencia: 19, // 👈 CÉREBRO DE GÊNIO ATIVADO!
       descricao: "Requer Sintonia. Sua Inteligência passa a ser 19 enquanto estiver sintonizado e usando esta tiara. Não tem efeito se sua Inteligência natural já for 19 ou superior."
     },
     {
@@ -1056,7 +1065,7 @@ Comum: [
       peso: 2,
       attunement: false,
       dano: "1d6",
-      tipoDano: "Varia", // Perfurante ou Elétrico
+      tipoDano: "Varia", 
       propriedades: ["Arremesso (30/120)", "Mágica / Homebrew"],
       descricao: "Ao acertar, você pode escolher causar dano Elétrico em vez de Perfurante. Raio (1/dia): Ao arremessar até 120 pés, você substitui o ataque normal e a lança vira um Relâmpago (Linha 5ft). Todos na linha (incluindo alvo inicial) fazem Save de DES CD 13 (falha=4d6 dano Elétrico, sucesso=metade). A arma reaparece na sua mão."
     },
@@ -1083,7 +1092,7 @@ Comum: [
       nome: "Armadura do Marinheiro (Mariner's Armor)",
       tipo: "Armadura",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Decorada com peixes e conchas. Você ganha Deslocamento de Natação igual ao seu Deslocamento normal. Além disso, se você iniciar seu turno debaixo d'água com 0 Pontos de Vida, você recupera 1d4 PV imediatamente (só ocorre 1x/dia, recarregando ao amanhecer)."
@@ -1111,7 +1120,7 @@ Comum: [
       nome: "Armadura de Mithral (Mithral Armor)",
       tipo: "Armadura",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: false,
       descricao: "Mithral é um metal leve e flexível. Esta armadura pode ser usada por baixo de roupas normais. Se a versão comum desta armadura impõe Desvantagem em testes de Furtividade ou exige Força mínima, a versão de Mithral NÃO possui essas penalidades."
     },
@@ -1181,7 +1190,7 @@ Comum: [
     {
       id: "pipes-of-haunting",
       nome: "Flautas da Assombração (Pipes of Haunting)",
-      tipo: "Maravilhoso", // Ou "Instrumento" se quiser categorizar depois
+      tipo: "Maravilhoso", 
       raridade: "Incomum",
       peso: 2,
       attunement: false,
@@ -1242,6 +1251,8 @@ Comum: [
       raridade: "Incomum",
       peso: 0.5,
       attunement: false,
+      // NOTA: Como é uma poção de efeito temporário (1 hora), não colocamos `setaForca: 21` na automação. 
+      // Se colocássemos, a ficha dele ficaria cravada em 21 até ele lembrar de deletar o item do inventário.
       descricao: "Ao beber (Ação Bônus no D&D 2024), sua Força passa a ser 21 por 1 hora. Não tem efeito se sua Força já for igual ou maior que 21."
     },
     {
@@ -1339,10 +1350,11 @@ Comum: [
       nome: "Tiro de Repetição (Repeating Shot)",
       tipo: "Arma",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE E DANO +1 AUTOMATIZADO
       propriedades: ["Mágica / Homebrew", "Munição Automática"],
       descricao: "Requer Sintonia. Aplica-se a Armas com Munição. Você tem +1 de bônus nas jogadas de ataque e dano e ignora a propriedade Recarga (Loading). Se a arma estiver sem munição, ela cria magicamente a própria munição quando você ataca, que desaparece após o acerto ou erro."
     },
@@ -1353,6 +1365,7 @@ Comum: [
       raridade: "Incomum",
       peso: 6,
       attunement: false,
+      bonusCA: 1, // 👈 CA DO ESCUDO DE +2 VAI PRA +3!
       propriedades: ["Mágica / Homebrew"],
       descricao: "Garante +1 de bônus na sua Classe de Armadura (+3 CA total). O escudo tem 4 cargas. Quando uma criatura Grande ou menor a até 5 pés te acerta um ataque corpo a corpo, você pode usar uma Reação (1 carga) para empurrar o atacante 15 pés para trás numa linha reta. Recupera 1d4 cargas ao amanhecer."
     },
@@ -1361,10 +1374,11 @@ Comum: [
       nome: "Arma de Retorno (Returning Weapon)",
       tipo: "Arma",
       raridade: "Incomum",
-      peso: 0, // Varia
+      peso: 0,
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE E DANO +1 AUTOMATIZADO
       propriedades: ["Mágica / Homebrew", "Arremesso"],
       descricao: "Aplica-se a armas Simples ou Marciais com a propriedade Arremesso. Esta arma mágica garante +1 de bônus nas jogadas de ataque e dano, e retorna para a sua mão instantaneamente logo após você arremessá-la."
     },
@@ -1402,6 +1416,7 @@ Comum: [
       raridade: "Incomum",
       peso: 0,
       attunement: true,
+      // Não adicionei `concedeResistencia` porque o texto diz "Reduz em 2d8", e não Resistência (Metade do dano). É uma regra bem específica!
       descricao: "Requer Sintonia. Sempre que você sofrer dano de Frio (Cold), este anel reduz o dano sofrido em 2d8. Além disso, você e seu equipamento ficam ilesos a temperaturas de -18°C (0°F) ou inferiores."
     },
     {
@@ -1476,6 +1491,7 @@ Comum: [
       raridade: "Incomum",
       peso: 6,
       attunement: false,
+      bonusCA: 1, // 👈 CA +1 GARANTIDA!
       propriedades: ["Mágica / Homebrew"],
       descricao: "Enquanto empunhar este escudo, você ganha +1 de bônus na sua Classe de Armadura, além do bônus normal (+2) do escudo. (Total: +3 CA)."
     },
@@ -1543,6 +1559,7 @@ Comum: [
       raridade: "Incomum",
       peso: 0.1,
       attunement: true,
+      bonusSaveGeral: 1, // 👈 +1 NOS SAVING THROWS AUTOMATIZADO
       descricao: "Requer Sintonia. Enquanto esta ágata polida estiver com você (não precisa ser empunhada), você ganha um bônus de +1 em todos os seus Testes de Atributo e Testes de Resistência (Saving Throws)."
     },
     {
@@ -1554,6 +1571,7 @@ Comum: [
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE +1 GARANTIDO
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Arma mágica +1 nas rolagens de ataque e dano. MALDIÇÃO: Sintonizar-se o amaldiçoa (não quer se separar dela e tem Desvantagem usando outras armas). Se sofrer dano em combate, faça Save de SAB CD 15; falha = deve atacar quem te feriu até um dos dois cair a 0 PV. Conjurar Banimento (Banishment) na espada expulsa o espírito e a transforma numa Arma +1 comum. (Pode ser: Glaive, Montante, Esp. Longa, Rapieira, Cimitarra ou Esp. Curta)."
     },
@@ -1629,10 +1647,11 @@ Comum: [
       nome: "Arma +1 (Weapon +1)",
       tipo: "Arma",
       raridade: "Incomum",
-      peso: 0, // Varia conforme a arma base
+      peso: 0,
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE +1 NA VEIA!
       propriedades: ["Mágica / Homebrew"],
       descricao: "Uma arma mágica simples ou marcial. Você ganha um bônus de +1 nas jogadas de ataque e de dano feitas com ela."
     },
@@ -1641,7 +1660,7 @@ Comum: [
       nome: "Arma de Aviso (Weapon of Warning)",
       tipo: "Arma",
       raridade: "Incomum",
-      peso: 0, // Varia conforme a arma base
+      peso: 0,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -1664,6 +1683,7 @@ Comum: [
       raridade: "Incomum",
       peso: 2,
       attunement: true,
+      concedeVoo: 30, // 👈 MAGIA DE VOO ADICIONADA!
       descricao: "Requer Sintonia. Tem 4 cargas. Ação Mágica (1 carga) para ganhar Deslocamento de Voo de 30 pés por 1 hora. Se o tempo acabar e você estiver voando, desce flutuando suavemente a 30 pés por rodada. Recupera 1d4 cargas ao amanhecer."
     },
     {
@@ -1685,6 +1705,7 @@ Comum: [
       peso: 0.1,
       attunement: false,
       propriedades: ["Mágica / Homebrew", "Munição"],
+      bonusAtaque: 2, // 👈 ATAQUE +2
       descricao: "Você tem +2 de bônus nas jogadas de ataque e dano feitas com esta munição mágica. Após atingir o alvo, a munição perde a magia. Normalmente encontrada em lotes de 10 ou 20."
     },
     {
@@ -1694,6 +1715,7 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      setaConstituicao: 19, // 👈 CONSTITUIÇÃO FIXA 19
       descricao: "Requer Sintonia. Sua Constituição passa a ser 19 enquanto estiver sintonizado e usando este amuleto. Não tem efeito se sua Constituição natural já for 19 ou superior."
     },
     {
@@ -1710,9 +1732,10 @@ Comum: [
       nome: "Armadura +1 (Armor +1)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 1, // 👈 ARMADURA MÁGICA
       descricao: "Você tem +1 de bônus na sua Classe de Armadura enquanto usar esta armadura."
     },
     {
@@ -1720,9 +1743,10 @@ Comum: [
       nome: "Armadura de Resistência (Armor of Resistance)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
+      // NOTA: Como a resistência é variável (o mestre sorteia), não podemos botar `concedeResistencia` cravado. O jogador vai anotar no card manual de resistências.
       descricao: "Requer Sintonia. Você ganha Resistência a um tipo de dano (escolhido pelo Mestre ou 1d10: 1. Ácido, 2. Frio, 3. Fogo, 4. Força, 5. Elétrico, 6. Necrótico, 7. Veneno, 8. Psíquico, 9. Radiante, 10. Trovejante)."
     },
     {
@@ -1730,7 +1754,7 @@ Comum: [
       nome: "Armadura de Vulnerabilidade (Armor of Vulnerability)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Dá Resistência a um tipo (Concussão, Perfurante ou Cortante). MALDIÇÃO: Revelada ao sintonizar ou conjurar Identificar. Sintonizar amaldiçoa você; tirar a armadura não quebra a maldição (precisa de Remover Maldição). Enquanto amaldiçoado, você tem Vulnerabilidade aos outros DOIS tipos de dano físico que a armadura não resiste."
@@ -1770,6 +1794,9 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      bonusConstituicao: 2, // 👈 COMBO COMPLETO!
+      concedeResistencia: "Veneno", 
+      visaoNoEscuro: 60,
       descricao: "Requer Sintonia. Você aprende Anão (Dwarvish), tem Vantagem em Persuasão com anões/duergar, ganha +2 em Constituição (máx 20), e tem 50% de chance diária de crescer uma barba. Se você NÃO for um Anão ou Duergar, você também ganha: Visão no Escuro (60ft), Resistência a Veneno e Vantagem contra a condição Envenenado."
     },
     {
@@ -1779,6 +1806,7 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      setaForca: 21, // 👈 MONSTRÃO!
       descricao: "Requer Sintonia. Sua Força passa a ser 21 enquanto estiver sintonizado e usando este cinto. Não tem efeito se sua Força natural já for 21 ou superior."
     },
     {
@@ -1791,6 +1819,7 @@ Comum: [
       dano: "Varia",
       tipoDano: "Cortante",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 1, // 👈 ATAQUE +1
       descricao: "Requer Sintonia. Arma mágica +1 no Ataque e Dano. Enquanto sintonizado, seu PV Máximo aumenta em 1 por nível de personagem. MALDIÇÃO: Ficar sintonizado te amaldiçoa (não quer largar a arma e tem Desvantagem atacando com outras). Quando sofrer dano, faça Save de SAB CD 15. Se falhar, você entra em frenesi: deve atacar a criatura mais próxima que conseguir ver/ouvir no seu turno (aleatório se houver várias) se movendo até ela. O frenesi só acaba se não houver ninguém num raio de 60ft no início do seu turno. (Pode ser: Machado de Batalha, Machado Grande ou Alabarda)."
     },
     {
@@ -1809,6 +1838,7 @@ Comum: [
       raridade: "Raro",
       peso: 2,
       attunement: true,
+      // Não damos +Deslocamento fixo porque é um "buff ativado por botão" (o cara dobra quando quer)
       descricao: "Requer Sintonia. Ação Bônus para bater os calcanhares: seu Deslocamento é dobrado e Ataques de Oportunidade contra você são feitos com Desvantagem. Bater os calcanhares de novo encerra. Tem um limite total de 10 minutos de uso. O tempo gasto recarrega ao terminar um Descanso Longo."
     },
     {
@@ -1890,6 +1920,7 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      // Não colocamos o voo fixo na magia porque a lore é bem específica: só voa se o cara ficar "segurando a borda com as duas mãos".
       descricao: "Requer Sintonia. Você tem Vantagem em testes de Furtividade (Stealth). Em Penumbra ou Escuridão, você pode segurar as bordas para ganhar Voo de 40 pés (cai se soltar a borda ou for para a luz). Em Penumbra ou Escuridão, você pode conjurar Metamorfose (Polymorph) em si mesmo para virar um Morcego (mantendo Int, Sab e Car). A magia só recarrega no próximo amanhecer."
     },
     {
@@ -1928,6 +1959,7 @@ Comum: [
       attunement: false,
       dano: "1d4",
       tipoDano: "Perfurante",
+      bonusAtaque: 1, // 👈 ATAQUE +1
       propriedades: ["Acuidade", "Leve", "Arremesso (20/60)", "Mágica / Homebrew"],
       descricao: "Arma mágica +1 no Ataque e Dano. Ação Bônus para cobrir a lâmina com veneno por 1 min ou até acertar. Ao acertar, alvo faz Save de CON CD 15 (toma 2d10 dano de Veneno e fica Envenenado por 1 min na falha). Só recarrega no próximo amanhecer."
     },
@@ -1936,10 +1968,11 @@ Comum: [
       nome: "Arma Deslumbrante (Dazzling Weapon)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE +1
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Arma mágica +1 no Ataque e Dano. Ação Bônus para emitir Luz Plena 30ft + Luz Penumbra 30ft (pode apagar com Ação Bônus). Tem 4 cargas (recupera 1d4 ao amanhecer). Logo após ser atingido por um ataque, use uma Reação (1 carga) para forçar o atacante a fazer Save de CON CD 15 (se falhar, ele fica Cego até o final do próximo turno dele)."
     },
@@ -1957,10 +1990,11 @@ Comum: [
       nome: "Matadora de Dragões (Dragon Slayer)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE +1
       propriedades: ["Mágica / Homebrew"],
       descricao: "Arma mágica +1 no Ataque e Dano. Se o alvo for do tipo Dragão (Dragon), a arma causa 3d6 de dano extra do mesmo tipo da arma."
     },
@@ -1978,8 +2012,9 @@ Comum: [
       nome: "Cota Élfica (Elven Chain)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 20, // Padrão da Camisa de Malha/Cota de Malha
+      peso: 20, 
       attunement: false,
+      bonusCA: 1, // 👈 CA +1 GARANTIDA E INVISÍVEL!
       descricao: "Pode ser uma Cota de Malha (Chain Mail) ou Camisa de Malha (Chain Shirt). Você ganha um bônus de +1 na sua Classe de Armadura (+1 CA além da base). Você é considerado Proficiente com esta armadura mesmo que sua classe não lhe dê proficiência com armaduras médias ou pesadas."
     },
     {
@@ -1987,7 +2022,7 @@ Comum: [
       nome: "Armadura Enfeitiçada - Nv2/Nv3 (Enspelled Armor)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Contém uma magia de Abjuração ou Ilusão (Nível 2 a 3 para Raro). A armadura tem 6 cargas (recupera 1d6 ao amanhecer). Ação Mágica (1 carga) para conjurar a magia da armadura (Save CD 13 para Nv2 ou CD 15 para Nv3)."
@@ -2016,7 +2051,7 @@ Comum: [
       nome: "Língua de Fogo (Flame Tongue)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -2055,10 +2090,11 @@ Comum: [
       nome: "Matadora de Gigantes (Giant Slayer)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0, 
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 1, // 👈 ATAQUE +1 EM TUDO
       propriedades: ["Mágica / Homebrew"],
       descricao: "Arma mágica +1 nas rolagens de ataque e dano. Quando você acerta um Gigante (Giant) com esta arma, ele toma 2d6 de dano extra do mesmo tipo da arma e deve fazer um Save de FOR CD 15 (se falhar, fica com a condição Caído/Prone)."
     },
@@ -2070,6 +2106,7 @@ Comum: [
       peso: 13,
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 1, // 👈 CA +1 GARANTIDA!
       descricao: "Esta armadura concede um bônus de +1 na sua Classe de Armadura (+3 CA total). Você pode usar uma Ação Bônus para fazê-la assumir a aparência de roupas normais ou outro tipo de armadura (você decide estilo e cor). O peso não muda. A ilusão dura até você removê-la ou usar a propriedade de novo."
     },
     {
@@ -2183,6 +2220,7 @@ Comum: [
       attunement: false,
       dano: "1d6",
       tipoDano: "Concussão",
+      bonusAtaque: 1, // 👈 ATAQUE +1 FIXO (Lembrar do bônus condicional no VTT)
       propriedades: ["Mágica / Homebrew"],
       descricao: "Garante +1 nas rolagens de ataque e dano (aumenta para +3 se o alvo for um Construto). Se tirar um 20 natural no ataque, causa +7 de dano extra (ou +14 se for Construto). Se um Construto ficar com 25 PV ou menos após esse dano, ele é destruído."
     },
@@ -2268,6 +2306,7 @@ Comum: [
       raridade: "Raro",
       peso: 0.1,
       attunement: true,
+      concedeImunidade: "Veneno", // 👈 PROTEÇÃO TOTAL!
       descricao: "Requer Sintonia. Pingente com gema preta. Enquanto o usar, você tem Imunidade total à condição Envenenado (Poisoned) e a Dano de Veneno (Poison damage)."
     },
     {
@@ -2412,16 +2451,109 @@ Comum: [
       raridade: "Raro",
       peso: 0,
       attunement: true,
+      bonusCA: 1, // 👈 CA +1 GARANTIDA
+      bonusSaveGeral: 1, // 👈 SAVING THROWS +1 GARANTIDOS
       descricao: "Requer Sintonia. Você ganha um bônus de +1 na sua Classe de Armadura (CA) e em todos os seus Testes de Resistência (Saving Throws)."
     },
     {
-      id: "ring-of-resistance",
-      nome: "Anel de Resistência (Ring of Resistance)",
+      id: "ring-of-acid-resistance",
+      nome: "Anel de Resistência a Ácido (Ring of Acid Resistance)",
       tipo: "Anel",
       raridade: "Raro",
       peso: 0,
-      attunement: false,
-      descricao: "Você ganha Resistência a um tipo de dano enquanto usa este anel. A gema indica o tipo (escolhido pelo Mestre ou d10): 1. Ácido (Pérola); 2. Frio (Turmalina); 3. Fogo (Granada); 4. Força (Safira); 5. Elétrico (Citrino); 6. Necrótico (Azeviche); 7. Veneno (Ametista); 8. Psíquico (Jade); 9. Radiante (Topázio); 10. Trovejante (Espinélio)."
+      attunement: true,
+      concedeResistencia: "Ácido",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano de Ácido enquanto usa este anel. A sua magia emana da Pérola encrustada nele."
+    },
+    {
+      id: "ring-of-cold-resistance",
+      nome: "Anel de Resistência a Frio (Ring of Cold Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Frio",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano de Frio enquanto usa este anel. A sua magia emana da Turmalina encrustada nele."
+    },
+    {
+      id: "ring-of-fire-resistance",
+      nome: "Anel de Resistência ao Fogo (Ring of Fire Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Fogo",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano de Fogo enquanto usa este anel. A sua magia emana da Granada encrustada nele."
+    },
+    {
+      id: "ring-of-force-resistance",
+      nome: "Anel de Resistência a Força (Ring of Force Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Força",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano de Força enquanto usa este anel. A sua magia emana da Safira encrustada nele."
+    },
+    {
+      id: "ring-of-lightning-resistance",
+      nome: "Anel de Resistência Elétrica (Ring of Lightning Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Elétrico",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano Elétrico enquanto usa este anel. A sua magia emana do Citrino encrustado nele."
+    },
+    {
+      id: "ring-of-necrotic-resistance",
+      nome: "Anel de Resistência Necrótica (Ring of Necrotic Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Necrótico",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano Necrótico enquanto usa este anel. A sua magia emana do Azeviche encrustado nele."
+    },
+    {
+      id: "ring-of-poison-resistance",
+      nome: "Anel de Resistência a Veneno (Ring of Poison Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Veneno",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano de Veneno enquanto usa este anel. A sua magia emana da Ametista encrustada nele."
+    },
+    {
+      id: "ring-of-psychic-resistance",
+      nome: "Anel de Resistência Psíquica (Ring of Psychic Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Psíquico",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano Psíquico enquanto usa este anel. A sua magia emana do Jade encrustado nele."
+    },
+    {
+      id: "ring-of-radiant-resistance",
+      nome: "Anel de Resistência Radiante (Ring of Radiant Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Radiante",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano Radiante enquanto usa este anel. A sua magia emana do Topázio encrustado nele."
+    },
+    {
+      id: "ring-of-thunder-resistance",
+      nome: "Anel de Resistência Trovejante (Ring of Thunder Resistance)",
+      tipo: "Anel",
+      raridade: "Raro",
+      peso: 0,
+      attunement: true,
+      concedeResistencia: "Trovejante",
+      descricao: "Requer Sintonia. Você ganha Resistência a dano Trovejante enquanto usa este anel. A sua magia emana do Espinélio encrustado nele."
     },
     {
       id: "ring-of-spell-storing",
@@ -2457,6 +2589,7 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      visaoNoEscuro: 120, // 👈 OLHA TUDO!
       descricao: "Requer Sintonia. Adornado com padrões de olhos. Você tem Vantagem em testes de Percepção (visão), e ganha Visão no Escuro (Darkvision) e Visão Verdadeira (Truesight), ambas com alcance de 120 pés. PONTO FRACO: Se a magia Luz (Light) for conjurada no manto, ou Luz do Dia (Daylight) a até 5 pés, você fica Cego (Blinded) por 1 minuto. Repete o Save de CON (CD 11 pra Luz, CD 15 pra Luz do Dia) no fim de cada turno para encerrar."
     },
     {
@@ -2493,7 +2626,7 @@ Comum: [
       nome: "Armadura Salubre (Salubrious Armor)",
       tipo: "Armadura",
       raridade: "Raro",
-      peso: 45, // Padrão da Scale/Plate
+      peso: 45,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. (Pode ser Placas ou Brunea). Sempre que você recupera Pontos de Vida enquanto usa esta armadura, ela ganha um tom avermelhado e você recebe +1 de bônus na sua CA até o final do seu próximo turno."
@@ -2514,6 +2647,7 @@ Comum: [
       raridade: "Raro",
       peso: 6,
       attunement: false,
+      bonusCA: 2, // 👈 +2 ALÉM DA CA DO ESCUDO!
       propriedades: ["Mágica / Homebrew"],
       descricao: "Enquanto empunhar este escudo, você ganha +2 de bônus na sua Classe de Armadura, além do bônus normal (+2) do escudo. (Total: +4 CA)."
     },
@@ -2564,6 +2698,7 @@ Comum: [
       peso: 4,
       attunement: true,
       propriedades: ["Foco Arcano", "Mágica / Homebrew", "Versátil (1d8)"],
+      bonusAtaque: 2, // 👈 ATAQUE FÍSICO +2 AUTOMÁTICO
       descricao: "Requer Sintonia (Druida). Arma mágica (+2 no Ataque e Dano como Bordão) e +2 em Ataques de Magia. Tem 6 cargas (recupera 1d6 ao amanhecer). Magias (sua CD): Amizade Animal (1), Despertar (5), Pele de Árvore (2), Localizar Animais/Plantas (2), Passos sem Pegadas (2), Falar com Animais (1), Falar com Plantas (3), Muralha de Espinhos (6). Forma de Árvore (1 carga): Plante no chão e ele vira uma árvore de 60 pés instantaneamente."
     },
     {
@@ -2592,6 +2727,7 @@ Comum: [
       raridade: "Raro",
       peso: 1,
       attunement: true,
+      concedeResistencia: "Elétrico e Trovejante", // 👈 PROTEÇÃO DUPLA
       descricao: "Requer Sintonia. Você ganha Resistência a dano Elétrico e Trovejante. O manto tem 3 cargas (recupera todas ao amanhecer). Retribuição Chocante: Você pode gastar 1 carga para conjurar Repreensão Infernal (Hellish Rebuke, CD 13), escolhendo causar dano Elétrico ou Trovejante ao invés de Fogo."
     },
     {
@@ -2604,6 +2740,8 @@ Comum: [
       dano: "1d8",
       tipoDano: "Radiante",
       propriedades: ["Acuidade", "Versátil (1d10)", "Mágica / Homebrew", "Luminosa"],
+      bonusAtaque: 2, // 👈 ESPADA DE LUZ +2
+      danoExtra: "1d8 Radiante contra Mortos-Vivos",
       descricao: "Requer Sintonia. Parece só o cabo de uma espada. Ação Bônus para ativar a lâmina de pura luz. Funciona como Espada Longa, mas ganha a propriedade Acuidade e causa dano Radiante. Arma mágica +2 no Ataque e Dano. Causa +1d8 de dano Radiante contra Mortos-Vivos. Emite Luz Plena de 15ft a 30ft e Penumbra (que conta como Luz Solar genuína)."
     },
     {
@@ -2645,7 +2783,7 @@ Comum: [
       nome: "Arma Cruel (Vicious Weapon)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
@@ -2730,10 +2868,11 @@ Comum: [
       nome: "Arma +2 (Weapon +2)",
       tipo: "Arma",
       raridade: "Raro",
-      peso: 0, // Varia conforme a arma base
+      peso: 0,
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 2, // 👈 ARMA DE MESTRE +2
       propriedades: ["Mágica / Homebrew"],
       descricao: "Uma arma mágica simples ou marcial. Você ganha um bônus de +2 nas jogadas de ataque e de dano feitas com ela."
     },
@@ -2753,6 +2892,7 @@ Comum: [
       raridade: "Raro",
       peso: 2,
       attunement: true,
+      concedeVoo: 60, // 👈 BATEU AS ASAS E SUMIU!
       descricao: "Requer Sintonia. Manto mágico. Ação Mágica para transformá-lo num par de asas nas suas costas por até 1 hora. Te dá Deslocamento de Voo de 60 pés. Se estiver no ar quando acabar, você cai. Após sumirem, não podem ser usadas de novo por 1d12 horas."
     },
     {
@@ -2774,6 +2914,7 @@ Comum: [
       peso: 0.1,
       attunement: false,
       propriedades: ["Mágica / Homebrew", "Munição"],
+      bonusAtaque: 3, // 👈 ATAQUE E DANO +3
       descricao: "Você tem +3 de bônus nas jogadas de ataque e dano feitas com esta munição mágica. Após atingir o alvo, a munição perde a magia. Normalmente encontrada em lotes de 10 ou 20."
     },
     {
@@ -2810,9 +2951,10 @@ Comum: [
       nome: "Armadura +2 (Armor +2)",
       tipo: "Armadura",
       raridade: "Muito Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 2, // 👈 ARMADURA PESADA DE +2 CA
       descricao: "Você tem +2 de bônus na sua Classe de Armadura (além da CA normal) enquanto usar esta armadura."
     },
     {
@@ -2831,6 +2973,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 1,
       attunement: true,
+      setaForca: 23, // 👈 FORÇA FIXA 23
       descricao: "Requer Sintonia. Sua Força passa a ser 23 enquanto estiver sintonizado e usando este cinto. Não tem efeito se sua Força natural já for 23 ou superior."
     },
     {
@@ -2840,6 +2983,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 1,
       attunement: true,
+      setaForca: 25, // 👈 FORÇA FIXA 25
       descricao: "Requer Sintonia. Sua Força passa a ser 25 enquanto estiver sintonizado e usando este cinto. Não tem efeito se sua Força natural já for 25 ou superior."
     },
     {
@@ -2858,6 +3002,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 10,
       attunement: false,
+      concedeVoo: 80, // 👈 COLOCADO O MÁXIMO DA VARIANTE DE 80FT PARA O MOTOR
       descricao: "Ação Mágica (palavra de comando) para voar e pairar. Movimenta-se pelos seus comandos se você estiver a até 30 pés. O DM define o tamanho ou rola d100: 3x5 pés (200 lbs, 80ft); 4x6 pés (400 lbs, 60ft); 5x7 pés (600 lbs, 40ft); ou 6x9 pés (800 lbs, 30ft). O tapete pode aguentar o dobro do peso, mas voará com metade do Deslocamento."
     },
     {
@@ -2876,6 +3021,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 1,
       attunement: true,
+      concedeResistencia: "Veneno", // 👈 RESISTÊNCIA AUTOMÁTICA
       descricao: "Requer Sintonia. Feito de seda negra e fios prateados. Você ganha Resistência a dano de Veneno. Ganha Deslocamento de Escalada igual ao seu Deslocamento normal (anda no teto e paredes com as mãos livres). Anda por teias como Terreno Difícil (não pode ser preso nelas). Ação Mágica para conjurar a magia Teia (Web, Save CD 13), mas a área coberta é o DOBRO do tamanho normal (recarrega ao amanhecer)."
     },
     {
@@ -2904,8 +3050,9 @@ Comum: [
       nome: "Armadura Demoníaca (Demon Armor)",
       tipo: "Armadura",
       raridade: "Muito Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
+      bonusCA: 1, // 👈 CA +1 DA ARMADURA
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Ganha +1 na CA e aprende Abissal (Abyssal). Suas manoplas com garras fazem seus Ataques Desarmados causarem 1d8 Cortante (ganhando +1 no Ataque e Dano). MALDIÇÃO: Sintonizar amaldiçoa você; tirar a armadura não quebra a maldição (precisa de Remover Maldição). Você sofre Desvantagem em jogadas de ataque contra Demônios (Demons) e em Saves contra magias/habilidades deles."
     },
@@ -2916,6 +3063,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 45,
       attunement: true,
+      bonusCA: 1, // 👈 CA +1 ALÉM DA BRUNEA NORMAL
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Armadura de Escamas (Scale Mail) que dá +1 na CA (+15 CA total, limite Des +2). Vantagem em Saves contra Sopro de Dragão. Dá Resistência baseada na cor (Negro/Cobre=Ácido; Azul/Bronze=Elétrico; Latão/Ouro/Vermelho=Fogo; Verde=Veneno; Prata/Branco=Frio). Ação Mágica (1/dia) para saber a direção e distância do dragão da mesma cor mais próximo a até 30 milhas."
     },
@@ -2924,8 +3072,9 @@ Comum: [
       nome: "Placas Anãs (Dwarven Plate)",
       tipo: "Armadura",
       raridade: "Muito Raro",
-      peso: 65, // Base Plate
+      peso: 65,
       attunement: false,
+      bonusCA: 2, // 👈 PLACAS PODEROSAS DE +2 CA ADICIONAL
       propriedades: ["Mágica / Homebrew"],
       descricao: "Pode ser Meia-Placas ou Armadura de Placas. Garante um bônus de +2 na sua Classe de Armadura (+20 CA em Placas ou +17 em Meia-Placas). Além disso, se um efeito for te empurrar/mover contra sua vontade no chão, você pode usar uma Reação para reduzir a distância do empurrão em até 10 pés."
     },
@@ -2939,6 +3088,7 @@ Comum: [
       dano: "1d8",
       tipoDano: "Concussão",
       propriedades: ["Arremesso (20/60)", "Versátil (1d10)", "Mágica / Homebrew"],
+      bonusAtaque: 3, // 👈 ATAQUE +3 ANÃO BRUTO
       descricao: "Requer Sintonia (Apenas por Anões ou alguém com Cinto da Ananidade). Martelo de Guerra com +3 no Ataque e Dano. Ganha a propriedade Arremesso (20/60). Ao acertar arremessando, causa +1d8 de Dano de Força extra (ou +2d8 se o alvo for Gigante). Após o arremesso (acertando ou errando), a arma voa imediatamente de volta para a sua mão."
     },
     {
@@ -2957,9 +3107,10 @@ Comum: [
       raridade: "Muito Raro",
       peso: 2,
       attunement: true,
-      dano: "1d8", // Considerando Longbow, mude para 1d6 se Shortbow
+      dano: "1d8",
       tipoDano: "Força",
       propriedades: ["Distância (150/600)", "Mágica / Homebrew", "Pesada", "Duas Mãos"],
+      bonusAtaque: 1, // 👈 ATAQUE +1
       descricao: "Requer Sintonia (Arco Longo ou Curto). Arma +1 no Ataque/Dano. Não tem corda. Ao puxar, cria flecha dourada de energia que causa dano de FORÇA e ilumina 20ft de Luz Plena/Penumbra. Flecha de Restrição: Ao atacar, pode trocar dano por tentar prender (Save de FOR CD 15 ou Impedido por 1 min). Flecha de Transporte (Ação Mágica): Atira num aliado Médio (ou menor) ou num objeto, teleportando o alvo para um espaço livre a até 10ft de você. Escada de Energia (Ação Mágica): Atira flechas que cravam na parede, virando uma escada de até 60 pés por 1 min."
     },
     {
@@ -2967,7 +3118,7 @@ Comum: [
       nome: "Armadura Enfeitiçada - Nv4/Nv5 (Enspelled Armor)",
       tipo: "Armadura",
       raridade: "Muito Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
       descricao: "Requer Sintonia. Contém uma magia de Abjuração ou Ilusão (Nível 4 a 5 para Muito Raro). A armadura tem 6 cargas (recupera 1d6 ao amanhecer). Ação Mágica (1 carga) para conjurar a magia da armadura (Save CD 15 para Nv4 ou CD 17 para Nv5)."
@@ -2977,7 +3128,7 @@ Comum: [
       nome: "Arma Enfeitiçada - Nv4/Nv5 (Enspelled Weapon)",
       tipo: "Arma",
       raridade: "Muito Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -2989,11 +3140,12 @@ Comum: [
       nome: "Machado do Carrasco (Executioner's Axe)",
       tipo: "Arma",
       raridade: "Muito Raro",
-      peso: 4, // Varia, coloquei peso de Machado de Batalha
+      peso: 4,
       attunement: false,
       dano: "Varia",
       tipoDano: "Cortante",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 1, // 👈 ATAQUE +1
       descricao: "Pode ser um Machado de Batalha, Machado Grande, Alabarda ou Machado de Mão. Arma mágica +1 nas jogadas de ataque e dano. Sempre que você acertar um Humanoide (Humanoid) com esta arma, ele toma +2d6 de Dano Cortante extra, e você ganha uma quantidade de Pontos de Vida Temporários igual ao dano extra causado."
     },
     {
@@ -3006,6 +3158,7 @@ Comum: [
       dano: "Varia",
       tipoDano: "Varia",
       propriedades: ["Mágica / Homebrew", "Luminosa"],
+      concedeResistencia: "Fogo", // 👈 PROTEÇÃO ANTI-FOGO DIRETO DO MOTOR
       descricao: "Requer Sintonia. Espada mágica (Espadão, Esp. Longa, Rapieira, Cimitarra ou Esp. Curta). Causa +1d6 de Dano de Frio em qualquer acerto. Enquanto a empunhar, você ganha Resistência a Dano de Fogo. Em temperaturas congelantes, emite Luz Plena 10ft e Penumbra 10ft. Quando você saca a arma, pode apagar qualquer fogo não-mágico a até 30 pés (só recarrega em 1 hora)."
     },
     {
@@ -3118,11 +3271,12 @@ Comum: [
       nome: "Ladrão de Nove Vidas (Nine Lives Stealer)",
       tipo: "Arma",
       raridade: "Muito Raro",
-      peso: 0, // Varia
+      peso: 0,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 2, // 👈 ATAQUE +2 BRUTAL
       descricao: "Requer Sintonia. Arma mágica +2 nas jogadas de ataque e dano. Tem 1d8 + 1 cargas mágicas. Quando você atacar um inimigo que tiver MENOS de 100 Pontos de Vida, e rolar um 20 natural no ataque, o alvo faz um Save de CON CD 15. Se falhar, é morto instantaneamente (a espada drena sua alma). Construtos e Mortos-Vivos passam automático. A espada perde 1 carga ao matar. Se zerar as cargas, ela perde esse poder pra sempre."
     },
     {
@@ -3228,6 +3382,7 @@ Comum: [
       dano: "1d6",
       tipoDano: "Concussão",
       propriedades: ["Arremesso (30/120)", "Versátil (1d8)", "Mágica / Homebrew", "Luminosa"],
+      bonusAtaque: 2, // 👈 ATAQUE +2
       descricao: "Requer Sintonia. Bordão mágico +2 no Ataque e Dano. Pode emitir luz verde (10ft). Ação Bônus para mudar a forma: Encolhe para 6 polegadas (guarda fácil), vira Vara de 10 pés ou volta a Bordão. Dá Vantagem em Acrobacia (se não estiver encolhido). Arma de Arremesso: (30/120), volta direto pra mão após atacar. Defesa: Se estiver como Bordão e tomar um ataque, use sua Reação para girá-lo e ganhar +5 na CA contra aquele ataque (recarrega em Descanso Curto/Longo)."
     },
     {
@@ -3273,6 +3428,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 1,
       attunement: true,
+      bonusSaveGeral: 1, // 👈 PROTEÇÃO +1 EM TODOS OS SAVING THROWS
       descricao: "Requer Sintonia. Dá +1 de bônus em todos os seus Testes de Resistência. Tem 6 estrelas grandes bordadas no peito. Ação Mágica para arrancar 1 estrela e conjurar a magia Mísseis Mágicos de Nível 5! (Recupera 1d6 estrelas no anoitecer). Ação Mágica para você E TUDO que veste irem fisicamente pro Plano Astral (fica lá até usar outra Ação Mágica para voltar)."
     },
     {
@@ -3325,6 +3481,7 @@ Comum: [
       dano: "1d6",
       tipoDano: "Cortante",
       propriedades: ["Acuidade", "Leve", "Mágica / Homebrew"],
+      bonusAtaque: 2, // 👈 ATAQUE +2 DA CIMITARRA
       descricao: "Requer Sintonia. Arma mágica +2 nas jogadas de ataque e dano. Além de realizar sua Ação de Ataque normal, você pode realizar UM ataque extra com esta arma usando sua Ação Bônus em todos os seus turnos."
     },
     {
@@ -3335,6 +3492,7 @@ Comum: [
       peso: 6,
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 3, // 👈 DEFESA LENDÁRIA (+3 AC)
       descricao: "Enquanto empunhar este escudo, você ganha +3 de bônus na sua Classe de Armadura, além do bônus normal (+2) do escudo. (Total: +5 CA)."
     },
     {
@@ -3345,6 +3503,7 @@ Comum: [
       peso: 6,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 2, // 👈 DEFESA DE CAVALEIRO (+2 AC)
       descricao: "Requer Sintonia. Concede +2 de bônus na CA (Total: +4 CA). Esmagamento Poderoso: Quando usar a ação Atacar, você pode trocar um ataque por uma batida (rola FOR+Proficiência). Acerto = 2d6 + 2 + FOR (Dano de Força) e empurra o alvo até 10ft. Se for do seu tamanho ou menor, o alvo cai Prone. Campo Protetor: Reação (quando você ou aliado até 5ft sofrer ataque ou Save de área) para criar uma barreira invulnerável de 5ft ao redor de você. Empurra inimigos para fora. Nada passa para dentro ou fora por até 1 min (exige Concentração). Recarrega ao amanhecer."
     },
     {
@@ -3382,6 +3541,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 4,
       attunement: true,
+      concedeResistencia: "Fogo", // 👈 PROTEÇÃO ANTI-CHAMAS
       propriedades: ["Foco Arcano", "Mágica / Homebrew", "Versátil (1d8)"],
       descricao: "Requer Sintonia (Druida, Feiticeiro, Bruxo ou Mago). Você ganha Resistência a Dano de Fogo. Tem 10 cargas. Magias (usa sua CD): Mãos Flamejantes (1), Bola de Fogo (3), Muralha de Fogo (4). Recupera 1d6 + 4 ao amanhecer. Se gastar a última, role 1d20: num 1, vira cinzas."
     },
@@ -3392,6 +3552,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 4,
       attunement: true,
+      concedeResistencia: "Frio", // 👈 PROTEÇÃO ANTI-GELO
       propriedades: ["Foco Arcano", "Mágica / Homebrew", "Versátil (1d8)"],
       descricao: "Requer Sintonia (Druida, Feiticeiro, Bruxo ou Mago). Você ganha Resistência a Dano de Frio. Tem 10 cargas. Magias (usa sua CD): Nuvem de Névoa (1), Tempestade de Gelo (4), Muralha de Gelo (4), Cone de Frio (5). Recupera 1d6 + 4 ao amanhecer. Se gastar a última, role 1d20: num 1, vira água."
     },
@@ -3402,6 +3563,9 @@ Comum: [
       raridade: "Muito Raro",
       peso: 4,
       attunement: true,
+      bonusCA: 2, // 👈 CA +2 ABSOLUTA
+      bonusSaveGeral: 2, // 👈 SAVING THROW +2 ABSOLUTO
+      bonusAtaque: 2, // 👈 PORRADA +2
       propriedades: ["Foco Arcano", "Mágica / Homebrew", "Versátil (1d8)"],
       descricao: "Requer Sintonia (Feiticeiro, Bruxo ou Mago). Bordão mágico (+2 Ataque/Dano). Lhe concede +2 na CA, +2 nos Saves e +2 nos Ataques de Magia. Tem 20 cargas! Magias (usa sua CD): Mísseis Mágicos (1), Raio do Enfraquecimento (1), Levitação (2), Cone de Frio (5), Bola de Fogo Nv5 (5), Imobilizar Monstro (5), Relâmpago Nv5 (5), Muralha de Força (5) e Globo de Invulnerabilidade (6). Recupera 2d8 + 4 ao amanhecer (se gastar a última, pode perder as magias, ou num 20 recuperar cargas). Ataque Retributivo: Ação mágica para quebrar o cajado: 50% de chance de você ser teleportado e escapar, ou você toma dano de Força igual a 16x as cargas. Tudo num raio de 30ft toma Dano de Força igual a 4x as cargas (Save DES CD 17 pra metade)."
     },
@@ -3412,6 +3576,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 4,
       attunement: true,
+      bonusAtaque: 3, // 👈 PORRADA +3
       propriedades: ["Mágica / Homebrew", "Versátil (1d8)"],
       descricao: "Requer Sintonia. Bordão mágico +3 no Ataque e Dano. Tem 10 cargas. Ao acertar um ataque físico, você pode gastar até 3 cargas. Para cada carga gasta, causa +1d6 de Dano de Força extra. Recupera 1d6 + 4 ao amanhecer. Se gastar a última, role 1d20: num 1, vira um bordão comum."
     },
@@ -3422,6 +3587,7 @@ Comum: [
       raridade: "Muito Raro",
       peso: 4,
       attunement: true,
+      bonusAtaque: 2, // 👈 PORRADA +2
       propriedades: ["Mágica / Homebrew", "Versátil (1d8)"],
       descricao: "Requer Sintonia. Bordão mágico +2 no Ataque e Dano. Tem as seguintes propriedades (cada uma só pode ser usada 1x ao dia): Relâmpago (Acerto causa +2d6 dano Elétrico); Trovão (Acerto emite som de 300ft, alvo faz Save de CON CD 17 ou fica Atordoado até o fim do seu próximo turno); Trovão e Relâmpago (Ação Bônus para usar os dois anteriores juntos no mesmo acerto); Raio (Ação Mágica, Linha de 120ft, Save DES CD 17 ou 9d6 dano Elétrico); Estrondo (Ação Mágica, raio de 60ft, Save CON CD 17 ou 2d6 Trovejante e Surdo 1 min)."
     },
@@ -3446,6 +3612,7 @@ Comum: [
       attunement: true,
       dano: "1d8",
       tipoDano: "Concussão",
+      setaForca: 20, // 👈 FIXOU A FORÇA NO 20
       propriedades: ["Duas Mãos", "Mágica / Homebrew"],
       descricao: "Requer Sintonia. Sua Força passa a ser 20 (se já for maior, não muda). A arma causa +1d8 de Dano Trovejante a criaturas (e +3d8 em objetos não vestidos). Estrondo: Ação Mágica pra bater no chão (Cone 30ft; Save FOR CD 15 ou cai Caído/Prone, e dá 3d8 em objetos na área). Terremoto (1x ao dia): Ação Mágica pra bater no chão e gerar tremor (Raio 50ft). Estruturas tomam 50 de Dano. Criaturas fazem Save DES CD 20 ou caem Caídas (Prone). Se alguém estiver Concentrando, faz Save CON CD 20 pra não perder. Você ainda abre uma fissura de 30ft fundo e 10ft largura no chão (Save DES CD 20 pra não cair dentro)."
     },
@@ -3500,10 +3667,11 @@ Comum: [
       nome: "Arma +3 (Weapon +3)",
       tipo: "Arma",
       raridade: "Muito Raro",
-      peso: 0, // Varia conforme a arma base
+      peso: 0,
       attunement: false,
       dano: "Varia",
       tipoDano: "Varia",
+      bonusAtaque: 3, // 👈 ATAQUE +3
       propriedades: ["Mágica / Homebrew"],
       descricao: "Uma arma mágica simples ou marcial. Você ganha um bônus de +3 nas jogadas de ataque e de dano feitas com ela."
     },
@@ -3532,9 +3700,10 @@ Comum: [
       nome: "Armadura +3 (Armor +3)",
       tipo: "Armadura",
       raridade: "Lendário",
-      peso: 0, // Varia
+      peso: 0,
       attunement: false,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 3, // 👈 ARMADURA ABSOLUTA (+3 AC)
       descricao: "Você tem +3 de bônus na sua Classe de Armadura (além da CA normal) enquanto usar esta armadura."
     },
     {
@@ -3545,6 +3714,7 @@ Comum: [
       peso: 65,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
+      concedeResistencia: "Físico (Concussão, Cortante, Perfurante)", // 👈 PROTEÇÃO ANTI-PORRADA CONSTANTE
       descricao: "Requer Sintonia. (Armadura de Placas). Enquanto vestida, você tem Resistência a dano de Concussão, Perfurante e Cortante. Carapaça Metálica: Ação Mágica (1x ao dia) para se tornar IMUNE a dano de Concussão, Perfurante e Cortante por 10 minutos (ou até você tirar a armadura)."
     },
     {
@@ -3554,6 +3724,7 @@ Comum: [
       raridade: "Lendário",
       peso: 1,
       attunement: true,
+      setaForca: 27, // 👈 FORÇA FIXA 27
       descricao: "Requer Sintonia. Sua Força passa a ser 27 enquanto estiver sintonizado e usando este cinto. Não tem efeito se sua Força natural já for 27 ou superior."
     },
     {
@@ -3563,6 +3734,7 @@ Comum: [
       raridade: "Lendário",
       peso: 1,
       attunement: true,
+      setaForca: 29, // 👈 FORÇA FIXA 29 (O LIMITE ABSOLUTO!)
       descricao: "Requer Sintonia. Sua Força passa a ser 29 enquanto estiver sintonizado e usando este cinto. Não tem efeito se sua Força natural já for 29 ou superior."
     },
     {
@@ -3624,7 +3796,7 @@ Comum: [
       nome: "Defensora (Defender)",
       tipo: "Arma",
       raridade: "Lendário",
-      peso: 3, // Varia, coloquei peso padrão de espada
+      peso: 3,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -3636,9 +3808,11 @@ Comum: [
       nome: "Cota de Efreeti (Efreeti Chain)",
       tipo: "Armadura",
       raridade: "Lendário",
-      peso: 20, // Padrão da Camisa de Malha/Cota de Malha
+      peso: 20,
       attunement: true,
       propriedades: ["Mágica / Homebrew"],
+      bonusCA: 3, // 👈 CA +3 DA COTA MÁGICA
+      concedeImunidade: "Fogo", // 👈 PROTEÇÃO ABSOLUTA ANTI-CHAMAS
       descricao: "Requer Sintonia. (Cota de Malha ou Camisa de Malha). Concede um bônus de +3 na sua Classe de Armadura (+3 CA além da base). Você ganha Imunidade a Dano de Fogo e aprende a falar Primordial. Além disso, você pode andar sobre rocha derretida (lava) como se fosse chão sólido."
     },
     {
@@ -3646,9 +3820,9 @@ Comum: [
       nome: "Martelo dos Relâmpagos (Hammer of Thunderbolts)",
       tipo: "Arma",
       raridade: "Lendário",
-      peso: 10, // Peso de Maul
+      peso: 10,
       attunement: true,
-      dano: "Varia", // Maul 2d6 ou Warhammer 1d8/1d10
+      dano: "Varia",
       tipoDano: "Concussão",
       propriedades: ["Mágica / Homebrew", "Arremesso (20/60)"],
       descricao: "Requer Sintonia. (Malho ou Martelo de Guerra). Arma +1 no Ataque/Dano. Tem 5 cargas. Você pode gastar 1 carga para arremessar a arma (20/60). Se acertar, solta um trovão de 300ft: O alvo e TODOS a até 30 pés (menos você) fazem Save CON CD 17 ou ficam Atordoados até o fim do seu próximo turno. A arma volta pra sua mão após o arremesso. (Recupera 1d4+1 cargas ao amanhecer). COMBO DE GIGANTE: Se você estiver sintonizado a isso E a um Cinto de Força de Gigante (ou Manoplas de Força Ogre), a Força dada pelo item sobe em +4 (limite 30!). E se tirar 20 natural contra um Gigante, ele faz Save CON CD 17 ou MORRE na hora."
@@ -3658,11 +3832,12 @@ Comum: [
       nome: "Vingadora Sagrada (Holy Avenger)",
       tipo: "Arma",
       raridade: "Lendário",
-      peso: 3, // Varia
+      peso: 3,
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 3, // 👈 ATAQUE +3 DA ESPADA SAGRADA
       descricao: "Requer Sintonia por um Paladino. Arma mágica +3 nas jogadas de Ataque e Dano. Quando acertar um Corruptor (Fiend) ou Morto-Vivo (Undead), causa +2d10 de Dano Radiante extra. Enquanto empunhar a arma, emite uma aura de 10 pés: Você e seus aliados dentro da aura ganham Vantagem em TODOS os Testes de Resistência contra Magias. (Se você for um Paladino Nível 17+, a aura sobe para 30 pés)."
     },
     {
@@ -3688,11 +3863,13 @@ Comum: [
       nome: "Lâmina da Sorte (Luck Blade)",
       tipo: "Arma",
       raridade: "Lendário",
-      peso: 3, // Varia
+      peso: 3, 
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 1, // 👈 ATAQUE +1
+      bonusSaveGeral: 1, // 👈 SORTE GLOBAL EM TUDO (+1 EM TODOS OS SAVES)
       descricao: "Requer Sintonia. (Pode ser Espada Grande/Longa/Curta, Rapieira, Cimitarra, Foice ou Glaive). Arma mágica +1 no Ataque e Dano. E só de estar no seu corpo, te dá +1 em TODOS os Testes de Resistência. Sorte: 1x por dia, você pode rerrolar UM Teste de D20 (D20 Test) que falhou. Você deve usar a nova rolagem. Desejo: A arma vem com 1d3 cargas (NÃO RECARREGA). Você pode gastar 1 carga para conjurar a magia Desejo (Wish). Se gastar a última, perde o poder de Desejo pra sempre."
     },
     {
@@ -3700,7 +3877,7 @@ Comum: [
       nome: "Lâmina da Lua (Moonblade)",
       tipo: "Arma",
       raridade: "Lendário",
-      peso: 3, // Varia
+      peso: 3, 
       attunement: true,
       dano: "Varia",
       tipoDano: "Varia",
@@ -3790,6 +3967,7 @@ Comum: [
       dano: "1d6",
       tipoDano: "Concussão",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 3, // 👈 CANIVETE SUÍÇO MÁGICO +3
       descricao: "Requer Sintonia. É uma Maça Mágica +3. Tem 6 botões (Ação Bônus para apertar): 1) Vira Espada Longa flamejante (luz 40ft, +2d6 Dano de Fogo); 2) Vira Machado de Batalha +3; 3) Vira Lança +3 (com 6 pés de cabo); 4) Vira vara de escalada (50ft, aguenta 4.000 lbs); 5) Vira Aríete portátil (+10 Atletismo pra arrombar portas); 6) Vira bússola magnética. Habilidades Ofensivas (1/dia cada): Drenar Vida (Acerto: alvo Save CON CD 17 ou +4d6 Dano Necrótico e você cura metade disso); Paralisar (Acerto: alvo Save CON CD 17 ou Paralisado por 1 min); Aterrorizar (Ação Mágica: inimigos até 30ft fazem Save SAB CD 17 ou Amedrontados por 1 min)."
     },
     {
@@ -3809,6 +3987,7 @@ Comum: [
       raridade: "Lendário",
       peso: 0.1,
       attunement: true,
+      bonusCA: 1, // 👈 CA +1 NO PEITO
       descricao: "Requer Sintonia. Medalhão com forma de besouro. Concede +1 na sua CA e Vantagem em TODOS os Saves contra magias. Tem 12 cargas FIXAS. Se você falhar num Save de Necromancia ou feito contra um Morto-Vivo, pode usar sua Reação (gasta 1 carga) para transformar a falha em SUCESSO. Se gastar a última carga, o escaravelho vira pó e é destruído."
     },
     {
@@ -3846,6 +4025,7 @@ Comum: [
       peso: 4,
       attunement: true,
       propriedades: ["Foco Arcano", "Mágica / Homebrew", "Versátil (1d8)"],
+      bonusAtaque: 2, // 👈 ATAQUE FÍSICO +2 E ATAQUE DE MAGIA +2 (Manual na ficha)
       descricao: "Requer Sintonia (Feiticeiro, Bruxo ou Mago). Bordão mágico (+2 Ataque/Dano e +2 em Ataques de Magia). Vantagem em Saves contra magia. Tem CINQUENTA (50) cargas. Magias (usa sua CD): Tranca Arcana (0), Detectar Magia (0), Aumentar/Reduzir (0), Luz (0), Mão Mágica (0), Proteção contra o Bem e o Mal (0), Esfera Flamejante (2), Invisibilidade (2), Arrombar (2), Teia (2), Dissipar Magia (3), Tempestade de Gelo (4), Muralha de Fogo (4), Passaporte (5), Telecinese (5), Conjurar Elemental (7), Bola de Fogo Nv7 (7), Relâmpago Nv7 (7) e Viagem Planar (7). Absorção: Reação para absorver magia de alvo único (cancela ela e ganha cargas no nível da magia; SE PASSAR DE 50, O CAJADO EXPLODE!). Recupera 4d6+2 cargas/dia. Ataque Retributivo: Quebrar o cajado: 50% de chance de escapar; ou sofre 16x as cargas em Dano de Força. Quem tiver a até 30ft faz Save DES CD 17 ou sofre 6x as cargas em Dano de Força."
     },
     {
@@ -3858,6 +4038,7 @@ Comum: [
       dano: "1d8",
       tipoDano: "Cortante",
       propriedades: ["Versátil (1d10)", "Mágica / Homebrew"],
+      bonusAtaque: 3, // 👈 ATAQUE +3
       descricao: "Requer Sintonia. Espada Longa mágica +3 nas jogadas de Ataque e Dano. Resposta: Se você segurar a espada e sofrer dano de uma criatura dentro do seu alcance, você pode usar uma Reação para atacar essa criatura. O ataque tem Vantagem, e qualquer dano causado IGNORA as Resistências e Imunidades do alvo."
     },
     {
@@ -3924,6 +4105,7 @@ Comum: [
       dano: "Varia",
       tipoDano: "Cortante",
       propriedades: ["Mágica / Homebrew"],
+      bonusAtaque: 3, // 👈 ATAQUE +3 E CHANCE DE DECAPITAÇÃO!
       descricao: "Requer Sintonia. (Pode ser Espadão, Espada Longa, Cimitarra ou Glaive). Arma mágica +3 nas jogadas de Ataque e Dano. A arma IGNORA qualquer Resistência a Dano Cortante. DECAPITAÇÃO: Se você atacar uma criatura que tem cabeça, e tirar um 20 natural no dado de ataque, você CORTA A CABEÇA DO ALVO! Se ele não sobrevive sem cabeça, MORRE NA HORA. Se for imune a corte, não tiver/precisar da cabeça, for muito gigante, ou usar uma Resistência Lendária (Legendary Resistance) para cancelar a morte, o alvo toma +30 de Dano Cortante extra ao invés de morrer."
     },
     {

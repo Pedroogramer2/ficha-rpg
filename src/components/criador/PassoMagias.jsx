@@ -65,7 +65,7 @@ function ModalSelecao({ titulo, listaDisponivel, selecionados, maximo, aoSalvar,
                 {isExpanded && (
                   <div className="magia-detalhe-modal">
                     <div className="grid-detalhe">
-                      <span><strong>Tempo:</strong> {magia.tempoConjuracao}</span>
+                      <span><strong>Tempo:</strong> {magia.tempo}</span>
                       <span><strong>Alcance:</strong> {magia.alcance}</span>
                       <span><strong>Duração:</strong> {magia.duracao}</span>
                     </div>
@@ -78,6 +78,34 @@ function ModalSelecao({ titulo, listaDisponivel, selecionados, maximo, aoSalvar,
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function MagiaItemDireita({ magia, expandida, onClick }) {
+  return (
+    <div className="item-magia-direita" onClick={onClick}>
+      <div className="resumo-dir">
+        <span className="nome-dir">{magia.nome}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span className="meta-dir">{magia.tempo}</span>
+          {magia.concentracao && <span className="icon-conc" title="Concentração">C</span>}
+        </div>
+      </div>
+      {expandida && (
+        <div className="detalhe-dir">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.8rem', color: '#aaa' }}>
+            <span><strong>Alcance:</strong> {magia.alcance}</span>
+            <span><strong>Duração:</strong> {magia.duracao}</span>
+          </div>
+          <div style={{ whiteSpace: 'pre-wrap', color: '#ccc' }}>{magia.descricao}</div>
+          {magia.dano && (
+            <div style={{ color: '#ffcc00', fontWeight: 'bold', marginTop: '10px' }}>
+              💥 Dano/Cura: {magia.dano}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

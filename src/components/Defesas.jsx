@@ -1,6 +1,7 @@
 // src/components/Defesas.jsx
 import { useState, useEffect } from 'react';
 import { RACAS } from '../data/racas'; 
+import itensMagicos from '../data/itensMagicos'; // 👈 IMPORTANDO A MÁGICA
 
 export function Defesas(props) {
   const dados = props.dados || {};
@@ -28,23 +29,13 @@ export function Defesas(props) {
       racaDB.resistenciasPadrao.forEach(res => autoResistencias.push(`${res} (Raça)`));
     }
 
-    // B) Puxa as Resistências Extras baseadas em Escolhas (Ex: Draconato)
     if (racaDB.escolhaRacial && racaDB.escolhaRacial.opcoes) {
-      
-      // 1. Pega os traços normais
       const textoTracos = (dados.tracosRaciais || []).map(t => `${t.nome} ${t.descricao}`).join(" ");
-      
-      // 2. Pega as escolhas feitas nos dropdowns (A gaveta certa!)
-      const textoEscolhas = JSON.stringify(dados.escolhaRacialDetalhes || {}); // ✅ CORRIGIDO!
-      
-      // 🧠 O SUPER ARRASTÃO: Junta as duas gavetas e joga tudo pra minúsculo!
+      const textoEscolhas = JSON.stringify(dados.escolhaRacialDetalhes || {}); 
       const superArrastao = (textoTracos + " " + textoEscolhas).toLowerCase();
 
       racaDB.escolhaRacial.opcoes.forEach(opcao => {
-        // Pega só a palavra-chave (Ex: "Fogo", "Abissal")
         const palavraChave = opcao.nome.split("(")[0].trim().toLowerCase();
-        
-        // Procura no Super Arrastão!
         if (superArrastao.includes(palavraChave) && opcao.resistenciaExtra) {
           autoResistencias.push(`${opcao.resistenciaExtra} (Herança Racial)`);
         }
@@ -64,6 +55,30 @@ export function Defesas(props) {
     autoImunidades.push("Doença (Pureza Corporal)");
   }
 
+  // 👇 O MOTOR DE VARREDURA DE ITENS MÁGICOS 👇
+  if (dados.inventario) {
+    const itensEmUso = dados.inventario.filter(i => i.equipado || i.sintonizado);
+    const todosMagicos = Object.values(itensMagicos).flatMap(arr => arr);
+
+    itensEmUso.forEach(itemUso => {
+      const infoMagica = todosMagicos.find(im => im.nome.toLowerCase() === itemUso.nome.toLowerCase());
+      if (infoMagica) {
+        
+        // Pode ser um texto direto ou um Array de resistências (Ex: ["Fogo", "Frio"])
+        if (infoMagica.concedeResistencia) {
+          const res = Array.isArray(infoMagica.concedeResistencia) ? infoMagica.concedeResistencia : [infoMagica.concedeResistencia];
+          res.forEach(r => autoResistencias.push(`${r} (Magia)`));
+        }
+
+        if (infoMagica.concedeImunidade) {
+          const imu = Array.isArray(infoMagica.concedeImunidade) ? infoMagica.concedeImunidade : [infoMagica.concedeImunidade];
+          imu.forEach(i => autoImunidades.push(`${i} (Magia)`));
+        }
+
+      }
+    });
+  }
+
   return (
     <div className="painel-lateral-box">
       <h3 className="titulo-lateral">🛡️ Defesas</h3>
@@ -74,8 +89,13 @@ export function Defesas(props) {
         {autoResistencias.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
             {autoResistencias.map((res, i) => (
-              <span key={i} style={{ background: '#332b00', color: '#ffcc00', border: '1px solid #665500', padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                {res}
+              <span key={i} style={{ 
+                background: res.includes('Magia') ? '#3a005c' : '#332b00', // Roxinho para magia, Amarelo pra raça
+                color: res.includes('Magia') ? '#d7bde2' : '#ffcc00', 
+                border: res.includes('Magia') ? '1px solid #8e44ad' : '1px solid #665500', 
+                padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' 
+              }}>
+                {res.includes('Magia') ? '✨ ' : ''}{res}
               </span>
             ))}
           </div>
@@ -97,8 +117,13 @@ export function Defesas(props) {
         {autoImunidades.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
             {autoImunidades.map((imun, i) => (
-              <span key={i} style={{ background: '#003311', color: '#aaffaa', border: '1px solid #006622', padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                {imun}
+              <span key={i} style={{ 
+                background: imun.includes('Magia') ? '#3a005c' : '#003311', 
+                color: imun.includes('Magia') ? '#d7bde2' : '#aaffaa', 
+                border: imun.includes('Magia') ? '1px solid #8e44ad' : '1px solid #006622', 
+                padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' 
+              }}>
+                {imun.includes('Magia') ? '✨ ' : ''}{imun}
               </span>
             ))}
           </div>
