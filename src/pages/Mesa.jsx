@@ -10,6 +10,7 @@ import { ARMAS } from '../data/armas';
 import itensMagicos from '../data/itensMagicos';
 import { aplicarEfeitos } from '../utils/motorDeEfeitos';
 import { TALENTOS } from '../data/talentos';
+import { calcularStatusGlobais } from '../utils/calculadoras';
 
 const LISTA_CONDICOES = [
   { id: "Agarrado", icon: "🤼" }, { id: "Amedrontado", icon: "😱" },
@@ -1020,9 +1021,10 @@ export function Mesa() {
                   const porcentagem = (vidaAtual / vidaMax) * 100;
                   const corVida = porcentagem > 50 ? '#4caf50' : porcentagem > 20 ? '#ff9800' : '#f44336';
 
-                  const modDes = Math.floor(((ficha.destreza || 10) - 10) / 2);
-                  const valorCA = ficha.ca || ficha.classeArmadura || (10 + modDes + (ficha.bonusCA || 0));
-                  const valorDeslocamento = ficha.deslocamentoAtualizado || ficha.deslocamento || 30;
+                  const statusGerais = calcularStatusGlobais(ficha);
+                  const valorCA = statusGerais.caFinal;
+                  const valorDeslocamento = statusGerais.deslocamentoFinal;
+                  const valorPercPassiva = statusGerais.percepcaoPassiva;
 
                   const profBonus = Math.ceil((ficha.nivel || 1) / 4) + 1;
                   const modSab = Math.floor(((ficha.sabedoria || 10) - 10) / 2);
