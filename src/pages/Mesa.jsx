@@ -1026,13 +1026,6 @@ export function Mesa() {
                   const valorDeslocamento = statusGerais.deslocamentoFinal;
                   const valorPercPassiva = statusGerais.percepcaoPassiva;
 
-                  const profBonus = Math.ceil((ficha.nivel || 1) / 4) + 1;
-                  const modSab = Math.floor(((ficha.sabedoria || 10) - 10) / 2);
-                  let bonusTreinoPerc = 0;
-                  if (ficha.periciasTreinadas?.["Percepção"] === "proficiente") bonusTreinoPerc = profBonus;
-                  if (ficha.periciasTreinadas?.["Percepção"] === "expertise") bonusTreinoPerc = profBonus * 2;
-                  const valorPercPassiva = ficha.percepcaoPassiva || (10 + modSab + bonusTreinoPerc + (ficha.bonusPercepcaoPassiva || 0));
-
                   const possoRemover = isMestre || minhasFichasIDs.includes(ficha.id);
                   const exibindoConfirmacao = fichaParaRemover === ficha.id;
                   
