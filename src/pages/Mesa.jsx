@@ -73,8 +73,14 @@ export function Mesa() {
   const [avulsoFaces, setAvulsoFaces] = useState(20);
   const [avulsoMod, setAvulsoMod] = useState(0);
 
+  // ESTADO DE CRIAÇÃO DO NPC (COMPLETÃO E PADRONIZADO)
   const [modalCustomNpc, setModalCustomNpc] = useState(false);
-  const [formNpc, setFormNpc] = useState({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
+  const [formNpc, setFormNpc] = useState({ 
+    nome: '', hp: '', ca: '', ini: '', foto: '', faccao: 'hostil',
+    atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 },
+    ataque1: { nome: '', acerto: '', dano: '', tipo: 'Concussão' },
+    ataque2: { nome: '', acerto: '', dano: '', tipo: 'Cortante' }
+  });
 
   const [dialogo, setDialogo] = useState({ ativo: false, tipo: '', titulo: '', mensagem: '', acaoConfirmar: null });
 
@@ -209,6 +215,45 @@ export function Mesa() {
 
   const listaNpcs = mesaDados?.npcs || [];
 
+  // MÉTODOS DE FORMATAÇÃO DE DADOS DE NPC
+  function formatarAtaquesNpc() {
+    const ataquesFormatados = [];
+    if (formNpc.ataque1 && formNpc.ataque1.nome) {
+      ataquesFormatados.push({
+        nome: formNpc.ataque1.nome,
+        bonusAtaque: parseInt(formNpc.ataque1.acerto) || 0,
+        dano: formNpc.ataque1.dano || "1",
+        tipo: formNpc.ataque1.tipo || "Dano"
+      });
+    }
+    if (formNpc.ataque2 && formNpc.ataque2.nome) {
+      ataquesFormatados.push({
+        nome: formNpc.ataque2.nome,
+        bonusAtaque: parseInt(formNpc.ataque2.acerto) || 0,
+        dano: formNpc.ataque2.dano || "1",
+        tipo: formNpc.ataque2.tipo || "Dano"
+      });
+    }
+    return ataquesFormatados;
+  }
+
+  function formatarAtributosNpc() {
+    return {
+      for: parseInt(formNpc.atributos?.for) || 10, des: parseInt(formNpc.atributos?.des) || 10,
+      con: parseInt(formNpc.atributos?.con) || 10, int: parseInt(formNpc.atributos?.int) || 10,
+      sab: parseInt(formNpc.atributos?.sab) || 10, car: parseInt(formNpc.atributos?.car) || 10
+    };
+  }
+
+  function limparFormularioNpc() {
+    setFormNpc({ 
+      nome: '', hp: '', ca: '', ini: '', foto: '', faccao: 'hostil',
+      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 },
+      ataque1: { nome: '', acerto: '', dano: '', tipo: 'Concussão' },
+      ataque2: { nome: '', acerto: '', dano: '', tipo: 'Cortante' }
+    });
+  }
+
   async function salvarCapangaFormulario(e) {
     e.preventDefault();
     if (!isMestre || !formNpc.nome) return;
@@ -222,16 +267,41 @@ export function Mesa() {
       faccao: formNpc.faccao,
       ca: parseInt(formNpc.ca) || 10,
       iniciativa: parseInt(formNpc.ini) || 0,
-      ataques: [], 
-      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } 
+      ataques: formatarAtaquesNpc(), 
+      atributos: formatarAtributosNpc() 
     };
 
     try {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
       setModalCustomNpc(false);
       setModalNpcAberto(false);
-      setFormNpc({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
+      limparFormularioNpc();
     } catch (err) { console.error("Erro ao adicionar NPC:", err); }
+  }
+
+  async function salvarNpcNoBestiarioCampanha(e) {
+    e.preventDefault();
+    if (!isMestre || !formNpc.nome) return;
+
+    const novoModelo = {
+      nome: formNpc.nome,
+      hp: parseInt(formNpc.hp) || 1,
+      ca: parseInt(formNpc.ca) || 10,
+      iniciativa: parseInt(formNpc.ini) || 0,
+      foto: formNpc.foto.trim(),
+      faccao: formNpc.faccao,
+      ataques: formatarAtaquesNpc(),
+      atributos: formatarAtributosNpc()
+    };
+
+    try {
+      await addDoc(collection(db, "mesas", codigoSala, "bestiario_campanha"), novoModelo);
+      abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi imortalizada no Bestiário da Campanha!`);
+      setModalCustomNpc(false);
+      limparFormularioNpc();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function adicionarNpcDoBestiario(nomeBase, dadosNpc) {
@@ -240,15 +310,20 @@ export function Mesa() {
     const qtdExistente = listaNpcs.filter(n => n.nome.startsWith(nomeBase)).length;
     const nomeFinal = qtdExistente > 0 ? `${nomeBase} ${qtdExistente + 1}` : nomeBase;
 
+    // Resiliência de leitura de dados de NPCs antigos
+    const hpSafe = parseInt(dadosNpc.hp) || parseInt(dadosNpc.vidaMaxima) || 1;
+    const caSafe = parseInt(dadosNpc.ca) || 10;
+    const iniSafe = parseInt(dadosNpc.iniciativa) || parseInt(dadosNpc.ini) || 0;
+
     const novoNPC = {
       id: Date.now().toString() + Math.random().toString(16).slice(2),
       nome: nomeFinal,
-      vidaMaxima: dadosNpc.hp,
-      vidaAtual: dadosNpc.hp,
+      vidaMaxima: hpSafe,
+      vidaAtual: hpSafe,
       foto: dadosNpc.foto || "",
       faccao: dadosNpc.faccao || "hostil",
-      ca: dadosNpc.ca || 10,
-      iniciativa: dadosNpc.iniciativa || 0,
+      ca: caSafe,
+      iniciativa: iniSafe,
       ataques: dadosNpc.ataques || [],
       atributos: dadosNpc.atributos || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 } 
     };
@@ -262,7 +337,9 @@ export function Mesa() {
       const sinal = mod >= 0 ? `+${mod}` : mod;
       enviarMensagemOuDado(nomeFinal, `entrou na batalha e rolou **Iniciativa**: d20(${r}) ${sinal} = **[ ${r + mod} ]**`, "sistema");
 
-    } catch (e) { console.error("Erro ao adicionar NPC do bestiário:", e); }
+    } catch (e) { 
+      console.error("Erro ao adicionar NPC do bestiário:", e); 
+    }
   }
 
   async function apagarCapanga(npcId) {
@@ -281,14 +358,18 @@ export function Mesa() {
     const valor = parseInt(valorHpInput) || 0;
     if (valor <= 0) return;
 
-    let novaVida = npcAlvo.vidaAtual;
-    if (acao === 'dano') novaVida = Math.max(0, npcAlvo.vidaAtual - valor);
-    if (acao === 'cura') novaVida = Math.min(npcAlvo.vidaMaxima, npcAlvo.vidaAtual + valor);
+    // Resiliência extra na leitura da vida do NPC
+    const maxHP = parseInt(npcAlvo.vidaMaxima) || parseInt(npcAlvo.hp) || 1;
+    let vidaBase = npcAlvo.vidaAtual !== undefined ? npcAlvo.vidaAtual : maxHP;
+    
+    let novaVida = vidaBase;
+    if (acao === 'dano') novaVida = Math.max(0, vidaBase - valor);
+    if (acao === 'cura') novaVida = Math.min(maxHP, vidaBase + valor);
 
     let novasCondicoes = npcAlvo.condicoes || [];
     let msgMorte = "";
 
-    if (novaVida === 0 && npcAlvo.vidaAtual > 0) {
+    if (novaVida === 0 && vidaBase > 0) {
       novasCondicoes = [...new Set([...novasCondicoes, "Inconsciente", "Caído"])];
       msgMorte = `\n💀 **${npcAlvo.nome}** foi abatido e caiu inconsciente!`;
     } 
@@ -305,31 +386,6 @@ export function Mesa() {
       setModalHpNpc(null);
       setValorHpInput("");
     } catch (error) { console.error("Erro ao alterar vida NPC:", error); }
-  }
-
-  async function salvarNpcNoBestiarioCampanha(e) {
-    e.preventDefault();
-    if (!isMestre || !formNpc.nome) return;
-
-    const novoModelo = {
-      nome: formNpc.nome,
-      hp: parseInt(formNpc.hp) || 1,
-      ca: parseInt(formNpc.ca) || 10,
-      iniciativa: parseInt(formNpc.ini) || 0,
-      foto: formNpc.foto.trim(),
-      faccao: formNpc.faccao,
-      ataques: [],
-      atributos: { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 }
-    };
-
-    try {
-      await addDoc(collection(db, "mesas", codigoSala, "bestiario_campanha"), novoModelo);
-      abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi imortalizada no Bestiário da Campanha!`);
-      setModalCustomNpc(false);
-      setFormNpc({ nome: '', hp: 10, ca: 10, ini: 0, foto: '', faccao: 'hostil' });
-    } catch (err) {
-      console.error(err);
-    }
   }
 
   async function deletarNpcBestiarioCampanha(idDoc) {
@@ -375,8 +431,9 @@ export function Mesa() {
     const valor = parseInt(valorHpInput) || 0;
     if (valor <= 0) return;
 
-    const vidaMax = fichaAfetada.vidaMaxima || 1;
-    const vidaAtual = fichaAfetada.vidaAtual !== undefined ? fichaAfetada.vidaAtual : vidaMax;
+    // 👇 SOLUÇÃO AQUI: Resiliência pra ler o HP antigo ou novo
+    const vidaMax = parseInt(fichaAfetada.vidaMaxima) || parseInt(fichaAfetada.hp) || 1;
+    const vidaAtual = fichaAfetada.vidaAtual !== undefined ? parseInt(fichaAfetada.vidaAtual) : vidaMax;
     
     let novaVida = vidaAtual;
     if (acao === 'dano') novaVida = Math.max(0, vidaAtual - valor);
@@ -678,21 +735,21 @@ export function Mesa() {
         </div>
       )}
 
-      {modalHp && isMestre && (
-        <div className="overlay-modal" onClick={() => { setModalHp(null); setValorHpInput(""); }}>
-          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ width: '300px', textAlign: 'center', alignItems: 'center' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#fff' }}>Alterar HP (Jogador)</h3>
-            <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '15px' }}>Modificando a vida de <strong>{jogadores[modalHp]?.nome}</strong></p>
+      {modalHpNpc && isMestre && (
+        <div className="overlay-modal" onClick={() => { setModalHpNpc(null); setValorHpInput(""); }}>
+          <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ width: '300px', textAlign: 'center', alignItems: 'center', border: '1px solid #ff4444' }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#ff4444' }}>Alterar HP (Ameaça)</h3>
+            <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '15px' }}>Modificando a vida de <strong>{listaNpcs.find(n => n.id === modalHpNpc)?.nome}</strong></p>
             <input type="number" placeholder="Digite o valor..." value={valorHpInput} onChange={e => setValorHpInput(e.target.value)} onFocus={e => e.target.select()} style={{ width: '100%', padding: '15px', fontSize: '1.2rem', textAlign: 'center', background: '#111', border: '1px solid #444', color: '#fff', borderRadius: '8px', marginBottom: '20px', boxSizing: 'border-box' }}/>
             <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-              <button onClick={() => alterarVidaDoJogador('dano')} style={{ flex: 1, padding: '12px', background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💔 Dano</button>
-              <button onClick={() => alterarVidaDoJogador('cura')} style={{ flex: 1, padding: '12px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💚 Cura</button>
+              <button onClick={() => alterarVidaNpc('dano')} style={{ flex: 1, padding: '12px', background: '#88160e', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💔 Dano</button>
+              <button onClick={() => alterarVidaNpc('cura')} style={{ flex: 1, padding: '12px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>💚 Cura</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 👇 O MODAL DE ADICIONAR NPC QUE TINHA SUMIDO ESTÁ DE VOLTA! 👇 */}
+      {/* MODAL DE ADICIONAR NPC / BESTIÁRIO */}
       {modalNpcAberto && isMestre && (
         <div className="overlay-modal" onClick={() => setModalNpcAberto(false)}>
           <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ff4444' }}>
@@ -717,7 +774,7 @@ export function Mesa() {
                   </div>
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.9rem', color: 'white' }}>{nome}</strong>
-                    <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{info.hp} HP | {info.faccao}</span>
+                    <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{info.hp || info.vidaMaxima} HP | {info.faccao}</span>
                   </div>
                 </div>
               ))}
@@ -736,7 +793,7 @@ export function Mesa() {
                           </div>
                           <div>
                             <strong style={{ display: 'block', fontSize: '0.9rem', color: '#ffcc00' }}>{npc.nome}</strong>
-                            <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{npc.hp} HP | {npc.faccao}</span>
+                            <span style={{ fontSize: '0.7rem', color: '#aaa' }}>{npc.vidaMaxima || npc.hp} HP | {npc.faccao}</span>
                           </div>
                       </div>
                     </div>
@@ -757,6 +814,7 @@ export function Mesa() {
         </div>
       )}
 
+      {/* O GERADOR CUSTOMIZADO COM OS CAMPOS NOVOS */}
       {modalCustomNpc && isMestre && (
         <div className="overlay-modal" onClick={() => setModalCustomNpc(false)}>
           <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ffcc00' }}>
@@ -766,27 +824,57 @@ export function Mesa() {
             </div>
             
             <form style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <input type="text" placeholder="Nome do NPC/Monstro *" required value={formNpc.nome} onChange={e => setFormNpc({...formNpc, nome: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input type="text" placeholder="Nome do NPC *" required value={formNpc.nome} onChange={e => setFormNpc({...formNpc, nome: e.target.value})} style={{ flex: 2, padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
+                <select value={formNpc.faccao} onChange={e => setFormNpc({...formNpc, faccao: e.target.value})} style={{ flex: 1, padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }}>
+                  <option value="hostil">🔴 Hostil</option>
+                  <option value="neutro">🟡 Neutro</option>
+                  <option value="aliado">🟢 Aliado</option>
+                </select>
+              </div>
               
               <div style={{ display: 'flex', gap: '10px' }}>
-                <input type="number" placeholder="Vida (HP) *" required value={formNpc.hp} onChange={e => setFormNpc({...formNpc, hp: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Pontos de Vida" />
+                <input type="number" placeholder="HP *" required value={formNpc.hp} onChange={e => setFormNpc({...formNpc, hp: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Pontos de Vida" />
                 <input type="number" placeholder="CA *" required value={formNpc.ca} onChange={e => setFormNpc({...formNpc, ca: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Classe de Armadura" />
                 <input type="number" placeholder="Ini *" required value={formNpc.ini} onChange={e => setFormNpc({...formNpc, ini: e.target.value})} style={{ flex: 1, minWidth: 0, width: '10px', boxSizing: 'border-box', padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} title="Iniciativa" />
               </div>
 
-              <input type="url" placeholder="URL da Imagem (Opcional)" value={formNpc.foto} onChange={e => setFormNpc({...formNpc, foto: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
-              
-              <select value={formNpc.faccao} onChange={e => setFormNpc({...formNpc, faccao: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }}>
-                <option value="hostil">🔴 Hostil (Inimigo)</option>
-                <option value="neutro">🟡 Neutro (Povo Local)</option>
-                <option value="aliado">🟢 Aliado (Amigo)</option>
-              </select>
+              {/* ATRIBUTOS */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '5px', background: '#1a1a1a', padding: '5px', borderRadius: '6px', border: '1px solid #333' }}>
+                {['for', 'des', 'con', 'int', 'sab', 'car'].map(attr => (
+                  <div key={attr} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <label style={{ fontSize: '0.6rem', color: '#ffcc00', textTransform: 'uppercase', fontWeight: 'bold' }}>{attr}</label>
+                    <input type="number" value={formNpc.atributos?.[attr] || 10} onChange={e => setFormNpc({...formNpc, atributos: {...formNpc.atributos, [attr]: e.target.value}})} style={{ width: '100%', padding: '6px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', textAlign: 'center', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+                  </div>
+                ))}
+              </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={salvarCapangaFormulario} style={{ flex: 1, background: '#444', color: 'white', border: '1px solid #555', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+              {/* ATAQUES RÁPIDOS */}
+              <div style={{ background: '#222', padding: '8px', borderRadius: '6px', border: '1px dashed #555' }}>
+                <span style={{ fontSize: '0.7rem', color: '#aaa', textTransform: 'uppercase', marginBottom: '5px', display: 'block' }}>Ataques do NPC (Opcional)</span>
+                
+                <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
+                  <input type="text" placeholder="Nome" value={formNpc.ataque1.nome} onChange={e => setFormNpc({...formNpc, ataque1: {...formNpc.ataque1, nome: e.target.value}})} style={{ flex: 2, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="number" placeholder="+Hit" value={formNpc.ataque1.acerto} onChange={e => setFormNpc({...formNpc, ataque1: {...formNpc.ataque1, acerto: e.target.value}})} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="text" placeholder="Dano" value={formNpc.ataque1.dano} onChange={e => setFormNpc({...formNpc, ataque1: {...formNpc.ataque1, dano: e.target.value}})} style={{ flex: 1.5, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="text" placeholder="Tipo" value={formNpc.ataque1.tipo} onChange={e => setFormNpc({...formNpc, ataque1: {...formNpc.ataque1, tipo: e.target.value}})} style={{ flex: 1.5, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: '#ffcc00', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <input type="text" placeholder="Nome" value={formNpc.ataque2.nome} onChange={e => setFormNpc({...formNpc, ataque2: {...formNpc.ataque2, nome: e.target.value}})} style={{ flex: 2, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="number" placeholder="+Hit" value={formNpc.ataque2.acerto} onChange={e => setFormNpc({...formNpc, ataque2: {...formNpc.ataque2, acerto: e.target.value}})} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="text" placeholder="Dano" value={formNpc.ataque2.dano} onChange={e => setFormNpc({...formNpc, ataque2: {...formNpc.ataque2, dano: e.target.value}})} style={{ flex: 1.5, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                  <input type="text" placeholder="Tipo" value={formNpc.ataque2.tipo} onChange={e => setFormNpc({...formNpc, ataque2: {...formNpc.ataque2, tipo: e.target.value}})} style={{ flex: 1.5, minWidth: 0, boxSizing: 'border-box', padding: '8px', background: '#111', color: '#ffcc00', border: '1px solid #444', borderRadius: '4px', fontSize: '0.8rem' }} />
+                </div>
+              </div>
+
+              <input type="url" placeholder="URL da Imagem (Opcional)" value={formNpc.foto} onChange={e => setFormNpc({...formNpc, foto: e.target.value})} style={{ padding: '10px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '6px' }} />
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                <button type="button" onClick={salvarCapangaFormulario} style={{ flex: 1, background: '#444', color: 'white', border: '1px solid #555', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
                   ⚔️ Apenas Gerar no Mapa
                 </button>
-                <button type="button" onClick={salvarNpcNoBestiarioCampanha} style={{ flex: 1, background: '#ffcc00', color: 'black', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="button" onClick={salvarNpcNoBestiarioCampanha} style={{ flex: 1, background: '#ffcc00', color: 'black', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
                   💾 Salvar no Bestiário
                 </button>
               </div>
@@ -1119,15 +1207,22 @@ export function Mesa() {
                 <p style={{ color: '#666', gridColumn: '1 / -1' }}>Nenhuma ameaça na mesa no momento.</p>
               ) : (
                 listaNpcs.map(npc => {
-                  const porcentagemNpc = Math.min(100, (npc.vidaAtual / npc.vidaMaxima) * 100);
-                  const isMorto = npc.vidaAtual === 0;
+                  
+                  // 👇 BLINDAGEM DE LEITURA DE HP 👇
+                  const hpMaximaCalculada = parseInt(npc.vidaMaxima) || parseInt(npc.hp) || 1;
+                  const hpAtualCalculada = npc.vidaAtual !== undefined ? npc.vidaAtual : hpMaximaCalculada;
+                  const porcentagemNpc = Math.min(100, (hpAtualCalculada / hpMaximaCalculada) * 100);
+                  const isMorto = hpAtualCalculada === 0;
+
+                  // 👇 BLINDAGEM DOS ATRIBUTOS 👇
+                  const attrSalvos = npc.atributos || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 };
 
                   let corBaseNpc = '#ff4444'; 
                   let iconeFaccao = '👹';
                   if (npc.faccao === 'neutro') { corBaseNpc = '#ffcc00'; iconeFaccao = '😐'; }
                   if (npc.faccao === 'aliado') { corBaseNpc = '#4caf50'; iconeFaccao = '🛡️'; }
 
-                  const corVidaNpc = porcentagemNpc > 50 ? corBaseNpc : porcentagemNpc > 0 ? '#ff9800' : '#555';
+                  const corVidaNpc = porcentagemNpc > 50 ? corBaseNpc : porcentagemNpc > 25 ? '#ff9800' : porcentagemNpc > 1 ? '#f44336' : '#555';
 
                   return (
                     <div key={npc.id} className="card-npc" style={{ background: '#1a1a1a', border: `1px solid ${corBaseNpc}`, borderRadius: '8px', padding: '15px', position: 'relative', opacity: isMorto ? 0.6 : 1 }}>
@@ -1162,35 +1257,36 @@ export function Mesa() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const r = Math.floor(Math.random() * 20) + 1;
-                                  const mod = npc.iniciativa || 0;
+                                  const mod = parseInt(npc.iniciativa) || parseInt(npc.ini) || 0;
                                   const sinal = mod >= 0 ? `+${mod}` : mod;
                                   enviarMensagemOuDado(npc.nome, `rolou **Iniciativa**: d20(${r}) ${sinal} = **[ ${r + mod} ]**`, "sistema");
                                 }}
                                 style={{ background: 'transparent', border: '1px solid #555', color: '#ffcc00', borderRadius: '4px', cursor: 'pointer', padding: '0 4px' }}
                                 title="Rolar Iniciativa pra este NPC"
                               >
-                                ⚡ Ini {npc.iniciativa >= 0 ? `+${npc.iniciativa || 0}` : npc.iniciativa}
+                                ⚡ Ini {parseInt(npc.iniciativa) >= 0 ? `+${parseInt(npc.iniciativa)}` : parseInt(npc.iniciativa) || 0}
                               </button>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      {isMestre && !isMorto && npc.atributos && (
+                      {/* MOSTRA ATRIBUTOS BLINDADOS */}
+                      {isMestre && !isMorto && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', background: '#111', padding: '4px 6px', borderRadius: '4px', marginTop: '6px', fontSize: '0.68rem', color: '#ccc', border: '1px solid #333', marginBottom: '8px' }}>
-                          <span title="Força">FOR <strong>{npc.atributos.for}</strong></span>
-                          <span title="Destreza">DES <strong>{npc.atributos.des}</strong></span>
-                          <span title="Constituição">CON <strong>{npc.atributos.con}</strong></span>
-                          <span title="Inteligência">INT <strong>{npc.atributos.int}</strong></span>
-                          <span title="Sabedoria">SAB <strong>{npc.atributos.sab}</strong></span>
-                          <span title="Carisma">CAR <strong>{npc.atributos.car}</strong></span>
+                          <span title="Força">FOR <strong>{attrSalvos.for}</strong></span>
+                          <span title="Destreza">DES <strong>{attrSalvos.des}</strong></span>
+                          <span title="Constituição">CON <strong>{attrSalvos.con}</strong></span>
+                          <span title="Inteligência">INT <strong>{attrSalvos.int}</strong></span>
+                          <span title="Sabedoria">SAB <strong>{attrSalvos.sab}</strong></span>
+                          <span title="Carisma">CAR <strong>{attrSalvos.car}</strong></span>
                         </div>
                       )}
 
                       <div className="barra-vida-mestre" onClick={() => isMestre && setModalHpNpc(npc.id)} style={{ cursor: isMestre ? 'pointer' : 'default', padding: '8px', border: `1px solid ${corBaseNpc}` }}>
                         <div className="info-vida" style={{ fontSize: '0.75rem' }}>
                           <span style={{color: '#ccc'}}>{isMorto ? 'Morto' : 'HP'}</span>
-                          <div>{isMestre && <span className="texto-editar-hp" style={{color: corBaseNpc}}>✎ Editar</span>}<strong>{npc.vidaAtual} / {npc.vidaMaxima}</strong></div>
+                          <div>{isMestre && <span className="texto-editar-hp" style={{color: corBaseNpc}}>✎ Editar</span>}<strong>{hpAtualCalculada} / {hpMaximaCalculada}</strong></div>
                         </div>
                         <div className="trilho-vida" style={{ height: '6px', background: '#333' }}>
                           <div className="preenchimento-vida" style={{ width: `${Math.max(0, porcentagemNpc)}%`, background: corVidaNpc }}></div>
@@ -1222,68 +1318,75 @@ export function Mesa() {
                         )}
                       </div>
 
-                      {isMestre && !isMorto && npc.ataques && npc.ataques.length > 0 && (
+                      {/* BLINDAGEM DE ATAQUES */}
+                      {isMestre && !isMorto && Array.isArray(npc.ataques) && npc.ataques.length > 0 && (
                         <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                          {npc.ataques.map((atk, i) => (
-                            <div key={i} style={{ display: 'flex', background: '#222', borderRadius: '4px', border: '1px solid #333', overflow: 'hidden' }}>
-                              
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const buffs = aplicarEfeitos("ataque", npc.condicoes);
-                                  const r = Math.floor(Math.random() * 20) + 1;
-                                  
-                                  const somaGeral = r + atk.bonusAtaque + buffs.totalExtra;
-                                  const sinal = atk.bonusAtaque >= 0 ? `+${atk.bonusAtaque}` : atk.bonusAtaque;
-                                  const txtCrit = r === 20 ? "🔥 CRÍTICO!" : r === 1 ? "💀 FALHA CRÍTICA" : "";
-                                  
-                                  enviarMensagemOuDado(npc.nome, `atacou com **${atk.nome}**: d20(${r}) ${sinal} = **[ ${somaGeral} ]** ${txtCrit} ${buffs.logs}`, "dado");
-                                }}
-                                style={{ flex: 1, padding: '6px', background: 'transparent', border: 'none', color: '#fff', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', borderRight: '1px solid #333' }}
-                              >
-                                ⚔️ {atk.nome} ({atk.bonusAtaque >= 0 ? `+${atk.bonusAtaque}` : atk.bonusAtaque})
-                              </button>
+                          {npc.ataques.map((atk, i) => {
+                            if (!atk || !atk.nome) return null;
+                            const bonusAtaqueTratado = parseInt(atk.bonusAtaque) || 0;
+                            const danoTratado = atk.dano || "1";
 
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const buffs = aplicarEfeitos("dano", npc.condicoes);
+                            return (
+                              <div key={i} style={{ display: 'flex', background: '#222', borderRadius: '4px', border: '1px solid #333', overflow: 'hidden' }}>
+                                
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const buffs = aplicarEfeitos("ataque", npc.condicoes);
+                                    const r = Math.floor(Math.random() * 20) + 1;
+                                    
+                                    const somaGeral = r + bonusAtaqueTratado + buffs.totalExtra;
+                                    const sinal = bonusAtaqueTratado >= 0 ? `+${bonusAtaqueTratado}` : bonusAtaqueTratado;
+                                    const txtCrit = r === 20 ? "🔥 CRÍTICO!" : r === 1 ? "💀 FALHA CRÍTICA" : "";
+                                    
+                                    enviarMensagemOuDado(npc.nome, `atacou com **${atk.nome}**: d20(${r}) ${sinal} = **[ ${somaGeral} ]** ${txtCrit} ${buffs.logs}`, "dado");
+                                  }}
+                                  style={{ flex: 1, padding: '6px', background: 'transparent', border: 'none', color: '#fff', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'left', borderRight: '1px solid #333' }}
+                                >
+                                  ⚔️ {atk.nome} ({bonusAtaqueTratado >= 0 ? `+${bonusAtaqueTratado}` : bonusAtaqueTratado})
+                                </button>
 
-                                  let expressaoLimpa = atk.dano.toLowerCase().replace(/\s/g, ''); 
-                                  let totalDano = 0;
-                                  let logDados = "";
-                                  let match = expressaoLimpa.match(/(\d+)d(\d+)(?:([+-])(\d+))?/);
-                                  
-                                  if(match) {
-                                      let qtd = parseInt(match[1]);
-                                      let faces = parseInt(match[2]);
-                                      let sinal = match[3];
-                                      let mod = parseInt(match[4]) || 0;
-                                      
-                                      let rolagens = [];
-                                      for(let k = 0; k < qtd; k++){
-                                          let r = Math.floor(Math.random() * faces) + 1;
-                                          rolagens.push(r);
-                                          totalDano += r;
-                                      }
-                                      if(sinal === '+') totalDano += mod;
-                                      if(sinal === '-') totalDano -= mod;
-                                      logDados = `[ ${rolagens.join(' + ')} ] ${sinal ? sinal + ' ' + mod : ''}`;
-                                  } else {
-                                     totalDano = parseInt(expressaoLimpa) || 0;
-                                     logDados = `${totalDano}`;
-                                  }
-                                  
-                                  totalDano += buffs.totalExtra;
-                                  
-                                  enviarMensagemOuDado(npc.nome, `causou dano com **${atk.nome}**: 🎲 ${logDados} = **[ ${totalDano} ]** <br/><small>${atk.tipo}</small> ${buffs.logs}`, "dado");
-                                }}
-                                style={{ padding: '6px 10px', background: '#331a00', border: 'none', color: '#ffcc00', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold' }}
-                              >
-                                💥 {atk.dano.split(' ').join('')}
-                              </button>
-                            </div>
-                          ))}
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const buffs = aplicarEfeitos("dano", npc.condicoes);
+
+                                    let expressaoLimpa = danoTratado.toString().toLowerCase().replace(/\s/g, ''); 
+                                    let totalDano = 0;
+                                    let logDados = "";
+                                    let match = expressaoLimpa.match(/(\d+)d(\d+)(?:([+-])(\d+))?/);
+                                    
+                                    if(match) {
+                                        let qtd = parseInt(match[1]);
+                                        let faces = parseInt(match[2]);
+                                        let sinal = match[3];
+                                        let mod = parseInt(match[4]) || 0;
+                                        
+                                        let rolagens = [];
+                                        for(let k = 0; k < qtd; k++){
+                                            let r = Math.floor(Math.random() * faces) + 1;
+                                            rolagens.push(r);
+                                            totalDano += r;
+                                        }
+                                        if(sinal === '+') totalDano += mod;
+                                        if(sinal === '-') totalDano -= mod;
+                                        logDados = `[ ${rolagens.join(' + ')} ] ${sinal ? sinal + ' ' + mod : ''}`;
+                                    } else {
+                                       totalDano = parseInt(expressaoLimpa) || 0;
+                                       logDados = `${totalDano}`;
+                                    }
+                                    
+                                    totalDano += buffs.totalExtra;
+                                    
+                                    enviarMensagemOuDado(npc.nome, `causou dano com **${atk.nome}**: 🎲 ${logDados} = **[ ${totalDano} ]** <br/><small>${atk.tipo || "Dano"}</small> ${buffs.logs}`, "dado");
+                                  }}
+                                  style={{ padding: '6px 10px', background: '#331a00', border: 'none', color: '#ffcc00', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                  💥 {danoTratado.toString().split(' ').join('')}
+                                </button>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
