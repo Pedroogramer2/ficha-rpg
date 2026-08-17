@@ -81,6 +81,7 @@ export function Mesa() {
     ataque1: { nome: '', acerto: '', dano: '', tipo: 'Concussão' },
     ataque2: { nome: '', acerto: '', dano: '', tipo: 'Cortante' }
   });
+  const [npcEditandoId, setNpcEditandoId] = useState(null);
 
   const [dialogo, setDialogo] = useState({ ativo: false, tipo: '', titulo: '', mensagem: '', acaoConfirmar: null });
 
@@ -254,6 +255,33 @@ export function Mesa() {
     });
   }
 
+  function editarNpcBestiario(npc) {
+    const atk1 = npc.ataques && npc.ataques[0] ? { nome: npc.ataques[0].nome, acerto: parseInt(npc.ataques[0].bonusAtaque)||0, dano: npc.ataques[0].dano, tipo: npc.ataques[0].tipo } : { nome: '', acerto: '', dano: '', tipo: 'Concussão' };
+    const atk2 = npc.ataques && npc.ataques[1] ? { nome: npc.ataques[1].nome, acerto: parseInt(npc.ataques[1].bonusAtaque)||0, dano: npc.ataques[1].dano, tipo: npc.ataques[1].tipo } : { nome: '', acerto: '', dano: '', tipo: 'Cortante' };
+
+    setFormNpc({
+      nome: npc.nome || '',
+      hp: parseInt(npc.hp) || parseInt(npc.vidaMaxima) || 10,
+      ca: parseInt(npc.ca) || 10,
+      ini: parseInt(npc.iniciativa) || parseInt(npc.ini) || 0,
+      foto: npc.foto || '',
+      faccao: npc.faccao || 'hostil',
+      atributos: {
+        for: parseInt(npc.atributos?.for) || 10,
+        des: parseInt(npc.atributos?.des) || 10,
+        con: parseInt(npc.atributos?.con) || 10,
+        int: parseInt(npc.atributos?.int) || 10,
+        sab: parseInt(npc.atributos?.sab) || 10,
+        car: parseInt(npc.atributos?.car) || 10
+      },
+      ataque1: atk1,
+      ataque2: atk2
+    });
+    setNpcEditandoId(npc.id);
+    setModalNpcAberto(false);
+    setModalCustomNpc(true);
+  }
+
   async function salvarCapangaFormulario(e) {
     e.preventDefault();
     if (!isMestre || !formNpc.nome) return;
@@ -275,6 +303,7 @@ export function Mesa() {
       await updateDoc(doc(db, "mesas", codigoSala), { npcs: arrayUnion(novoNPC) });
       setModalCustomNpc(false);
       setModalNpcAberto(false);
+      setNpcEditandoId(null); // 👇 Evita o bug fantasma! 👇
       limparFormularioNpc();
     } catch (err) { console.error("Erro ao adicionar NPC:", err); }
   }
@@ -295,9 +324,18 @@ export function Mesa() {
     };
 
     try {
-      await addDoc(collection(db, "mesas", codigoSala, "bestiario_campanha"), novoModelo);
-      abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi imortalizada no Bestiário da Campanha!`);
+      if (npcEditandoId) {
+        // Se tem ID, é pq tava editando! Vamos atualizar em vez de criar um novo.
+        await updateDoc(doc(db, "mesas", codigoSala, "bestiario_campanha", npcEditandoId), novoModelo);
+        abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi atualizada!`);
+      } else {
+        // Se não tem ID, é um monstro novinho.
+        await addDoc(collection(db, "mesas", codigoSala, "bestiario_campanha"), novoModelo);
+        abrirAlert("Sucesso", `A Ameaça '${formNpc.nome}' foi imortalizada no Bestiário da Campanha!`);
+      }
+      
       setModalCustomNpc(false);
+      setNpcEditandoId(null);
       limparFormularioNpc();
     } catch (err) {
       console.error(err);
@@ -786,7 +824,13 @@ export function Mesa() {
                 <div className="lista-fichas-modal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {bestiarioCampanha.map(npc => (
                     <div key={npc.id} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px', background: '#332b00', border: '1px solid #ffcc00', padding: '10px', borderRadius: '6px', cursor: 'pointer', transition: '0.2s' }}>
-                      <button onClick={(e) => { e.stopPropagation(); deletarNpcBestiarioCampanha(npc.id); }} style={{position:'absolute', top:5, right:5, background:'transparent', border:'none', color:'#ff4444', cursor:'pointer'}} title="Apagar do Bestiário">✖</button>
+                      
+                      {/* 👇 O SEGREDO TÁ AQUI: A div com position absolute grudando eles no canto! 👇 */}
+                      <div style={{ position: 'absolute', top: '5px', right: '5px', display: 'flex', gap: '8px' }}>
+                        <button onClick={(e) => { e.stopPropagation(); editarNpcBestiario(npc); }} style={{ background: 'transparent', border: 'none', color: '#ffcc00', cursor: 'pointer', fontSize: '0.9rem', padding: '0' }} title="Editar NPC">✏️</button>
+                        <button onClick={(e) => { e.stopPropagation(); deletarNpcBestiarioCampanha(npc.id); }} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '0.9rem', padding: '0' }} title="Apagar do Bestiário">✖</button>
+                      </div>
+
                       <div onClick={() => adicionarNpcDoBestiario(npc.nome, npc)} style={{display:'flex', width:'100%', gap:'10px', alignItems:'center'}}>
                          <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                             {npc.foto ? <img src={npc.foto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={npc.nome} /> : '👹'}
@@ -804,7 +848,7 @@ export function Mesa() {
 
             <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px', textAlign: 'center' }}>
               <button 
-                onClick={() => { setModalNpcAberto(false); setModalCustomNpc(true); }} 
+                onClick={() => { setModalNpcAberto(false); setNpcEditandoId(null); limparFormularioNpc(); setModalCustomNpc(true); }} 
                 style={{ background: 'transparent', color: '#ffcc00', border: '1px dashed #ffcc00', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
               >
                 + Forjar NPC Customizado
@@ -820,7 +864,7 @@ export function Mesa() {
           <div className="modal-fichas" onClick={(e) => e.stopPropagation()} style={{ border: '2px solid #ffcc00' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
               <h3 style={{ margin: 0, color: '#ffcc00' }}>Criar Ameaça Manual</h3>
-              <button onClick={() => setModalCustomNpc(false)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
+              <button onClick={() => { setModalCustomNpc(false); setNpcEditandoId(null); limparFormularioNpc(); }} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✖</button>
             </div>
             
             <form style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -841,12 +885,15 @@ export function Mesa() {
 
               {/* ATRIBUTOS */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '5px', background: '#1a1a1a', padding: '5px', borderRadius: '6px', border: '1px solid #333' }}>
-                {['for', 'des', 'con', 'int', 'sab', 'car'].map(attr => (
-                  <div key={attr} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <label style={{ fontSize: '0.6rem', color: '#ffcc00', textTransform: 'uppercase', fontWeight: 'bold' }}>{attr}</label>
-                    <input type="number" value={formNpc.atributos?.[attr] || 10} onChange={e => setFormNpc({...formNpc, atributos: {...formNpc.atributos, [attr]: e.target.value}})} style={{ width: '100%', padding: '6px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', textAlign: 'center', fontSize: '0.85rem', boxSizing: 'border-box' }} />
-                  </div>
-                ))}
+                {['for', 'des', 'con', 'int', 'sab', 'car'].map(attr => {
+                  const valorAttr = (formNpc.atributos && formNpc.atributos[attr]) !== undefined ? formNpc.atributos[attr] : 10;
+                  return (
+                    <div key={attr} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <label style={{ fontSize: '0.6rem', color: '#ffcc00', textTransform: 'uppercase', fontWeight: 'bold' }}>{attr}</label>
+                      <input type="number" value={valorAttr} onChange={e => setFormNpc({...formNpc, atributos: {...(formNpc.atributos || {}), [attr]: parseInt(e.target.value) || 0}})} style={{ width: '100%', padding: '6px', background: '#111', color: 'white', border: '1px solid #444', borderRadius: '4px', textAlign: 'center', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* ATAQUES RÁPIDOS */}
@@ -875,7 +922,7 @@ export function Mesa() {
                   ⚔️ Apenas Gerar no Mapa
                 </button>
                 <button type="button" onClick={salvarNpcNoBestiarioCampanha} style={{ flex: 1, background: '#ffcc00', color: 'black', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  💾 Salvar no Bestiário
+                  {npcEditandoId ? "🔄 Atualizar Ficha" : "💾 Salvar no Bestiário"}
                 </button>
               </div>
             </form>
